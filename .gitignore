@@ -32,6 +32,8 @@
 *.app
 
 .vs/
+Debug/
+
 *.sln
 *.vcxproj
 *.vcxproj.*
