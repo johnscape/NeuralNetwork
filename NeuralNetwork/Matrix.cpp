@@ -1,4 +1,8 @@
 #include "Matrix.h"
+#include "Constants.h"
+#include "MatrixException.hpp"
+
+//TODO: Throw error at DEBUG errors
 
 Matrix::Matrix()
 {
@@ -56,58 +60,67 @@ size_t Matrix::GetRowCount() const
 float Matrix::GetValue(size_t row, size_t col) const
 {
 	size_t pos = RowColToPosition(row, col);
+#if DEBUG
 	if (pos < 0 || pos >= MaxValue)
 		return 0;
+#endif // DEBUG
 	return Values[pos];
 }
 
 float Matrix::GetValue(size_t pos) const
 {
+#if DEBUG
 	if (pos < 0 || pos >= MaxValue)
-		return 0;
+		throw MatrixIndexException();
+#endif // DEBUG
 	return Values[pos];
 }
 
 void Matrix::SetValue(size_t row, size_t col, float val)
 {
 	size_t pos = RowColToPosition(row, col);
+#if DEBUG
 	if (pos < 0 || pos >= MaxValue)
-		return;
+		throw MatrixIndexException();
+#endif // DEBUG
 	Values[pos] = val;
 }
 
 void Matrix::SetValue(size_t pos, float val)
 {
+#if DEBUG
 	if (pos < 0 || pos >= MaxValue)
-		return;
+		throw MatrixIndexException();
+#endif // DEBUG
 	Values[pos] = val;
 }
 
 void Matrix::AdjustValue(size_t row, size_t col, float val)
 {
 	size_t pos = RowColToPosition(row, col);
+#if DEBUG
 	if (pos < 0 || pos >= MaxValue)
-		return;
+		throw MatrixIndexException();
+#endif // DEBUG == true
 	Values[pos] += val;
 }
 
 void Matrix::AdjustValue(size_t pos, float val)
 {
+#if DEBUG
 	if (pos < 0 || pos >= MaxValue)
-		return;
+		throw MatrixIndexException();
+#endif // DEBUG
 	Values[pos] += val;
 }
 
 float& Matrix::operator[](size_t id)
 {
-	if (id < 0 || MaxValue >= id)
-		return Values[0];
+#if DEBUG
+	if (id < 0 || MaxValue <= id)
+		throw MatrixIndexException();
+#endif // DEBUG
 	return Values[id];
-}
-
-Matrix Matrix::operator+(const Matrix& matrix)
-{
-	return Matrix();
 }
 
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const

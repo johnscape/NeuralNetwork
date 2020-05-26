@@ -1,4 +1,5 @@
 #include "MatrixMath.h"
+#include <iostream>
 
 bool MatrixMath::SizeCheck(const Matrix* a, const Matrix* b)
 {
@@ -250,4 +251,16 @@ Matrix* MatrixMath::Eye(unsigned int size)
 	for (size_t i = 0; i < size; i++)
 		m->SetValue(i, i, 1);
 	return m;
+}
+
+void MatrixMath::PrintMatrix(Matrix* m)
+{
+	for (unsigned int r = 0; r < m->GetRowCount(); r++)
+	{
+		for (unsigned int c = 0; c < m->GetColumnCount(); c++)
+		{
+			std::cout << m->GetValue(r, c) << " ";
+		}
+		std::cout << std::endl;
+	}
 }

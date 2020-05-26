@@ -68,6 +68,8 @@ namespace MatrixMath
 	float DotProduct(Matrix* a, Matrix* b);
 	float Sum(Matrix* m);
 	Matrix* Eye(unsigned int size);
+
+	void PrintMatrix(Matrix* m);
 }
 
 #endif // !MATRIXMATH_GUARD

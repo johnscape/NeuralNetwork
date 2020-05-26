@@ -2,10 +2,51 @@
 //
 
 #include <iostream>
+#include "Matrix.h"
+#include "InputLayer.h"
+#include "FeedForwardLayer.h"
+#include "ActivationFunctions.hpp"
+#include "Constants.h"
 
 int main()
 {
+    Matrix* t = new Matrix(5, 5);
+    delete t;
+
+    InputLayer inp(2);
+    FeedForwardLayer hidden(&inp, 3);
+    FeedForwardLayer output(&hidden, 1);
+
+    Matrix a(2, 1);
+
+    a[0] = 1;
+    a[1] = 1;
+
+    hidden.SetActivationFunction(new Sigmoid());
+    output.SetActivationFunction(new Sigmoid());
+
+    inp.SetInput(&a);
+    
+    hidden.GetBias()->SetValue(0, 0);
+    hidden.GetBias()->SetValue(1, 0);
+    hidden.GetBias()->SetValue(2, 0);
+
+    output.GetBias()->SetValue(0, 0);
+
+    for (unsigned int i = 0; i < hidden.GetWeights()->GetRowCount(); i++)
+        for (unsigned int j = 0; j < hidden.GetWeights()->GetColumnCount(); j++)
+            hidden.GetWeights()->SetValue(i, j, 1);
+
+    for (unsigned int i = 0; i < output.GetWeights()->GetRowCount(); i++)
+        for (unsigned int j = 0; j < output.GetWeights()->GetColumnCount(); j++)
+            output.GetWeights()->SetValue(i, j, 1);
+
+    Matrix* o = output.GetOutput();
+
+
     std::cout << "Hello World!\n";
+
+    o = nullptr;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

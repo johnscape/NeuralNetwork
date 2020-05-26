@@ -18,3 +18,11 @@ class MatrixSizeException : public std::exception
 		return "Error code: 11 - Matrix size is incorrect";
 	}
 };
+
+class MatrixIndexException : public std::exception
+{
+	const char* what() const throw()
+	{
+		return "Error code: 12 - Matrix index is out of bounds";
+	}
+};

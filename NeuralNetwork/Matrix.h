@@ -97,13 +97,6 @@ public:
 	/// <returns></returns>
 	float& operator[](size_t id);
 
-	/// <summary>
-	/// Addition operator, used to add two matrices
-	/// </summary>
-	/// <param name="matrix">The other matrix</param>
-	/// <returns></returns>
-	Matrix operator+(const Matrix& matrix);
-
 private:
 	float* Values;
 	size_t Rows;
