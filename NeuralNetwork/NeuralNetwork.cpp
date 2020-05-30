@@ -8,45 +8,53 @@
 #include "ActivationFunctions.hpp"
 #include "Constants.h"
 
+#include "GradientDescent.h"
+#include "LossFunctions.hpp"
+
+//TODO: Freeze layers
+
 int main()
 {
-    Matrix* t = new Matrix(5, 5);
-    delete t;
-
     InputLayer inp(2);
-    FeedForwardLayer hidden(&inp, 3);
-    FeedForwardLayer output(&hidden, 1);
+    FeedForwardLayer hidden(&inp, 2);
+    FeedForwardLayer output(&hidden, 2);
 
-    Matrix a(2, 1);
+    hidden.GetWeights()->SetValue(0, 0, 0.15);
+    hidden.GetWeights()->SetValue(1, 0, 0.2);
+    hidden.GetWeights()->SetValue(0, 1, 0.25);
+    hidden.GetWeights()->SetValue(1, 1, 0.3);
 
-    a[0] = 1;
-    a[1] = 1;
+    output.GetWeights()->SetValue(0, 0, 0.4);
+    output.GetWeights()->SetValue(1, 0, 0.45);
+    output.GetWeights()->SetValue(0, 1, 0.5);
+    output.GetWeights()->SetValue(1, 1, 0.55);
+
+    hidden.GetBias()->SetValue(0, 0.35);
+    hidden.GetBias()->SetValue(1, 0.35);
+
+    output.GetBias()->SetValue(0, 0.6);
+    output.GetBias()->SetValue(1, 0.6);
 
     hidden.SetActivationFunction(new Sigmoid());
     output.SetActivationFunction(new Sigmoid());
 
-    inp.SetInput(&a);
-    
-    hidden.GetBias()->SetValue(0, 0);
-    hidden.GetBias()->SetValue(1, 0);
-    hidden.GetBias()->SetValue(2, 0);
+    Matrix input(1, 2);
+    input[0] = 0.05;
+    input[1] = 0.1;
 
-    output.GetBias()->SetValue(0, 0);
+    inp.SetInput(&input);
+    Matrix* outval = output.GetOutput();
 
-    for (unsigned int i = 0; i < hidden.GetWeights()->GetRowCount(); i++)
-        for (unsigned int j = 0; j < hidden.GetWeights()->GetColumnCount(); j++)
-            hidden.GetWeights()->SetValue(i, j, 1);
+    //start training
 
-    for (unsigned int i = 0; i < output.GetWeights()->GetRowCount(); i++)
-        for (unsigned int j = 0; j < output.GetWeights()->GetColumnCount(); j++)
-            output.GetWeights()->SetValue(i, j, 1);
+    Matrix expected(1, 2);
+    expected[0] = 0.01;
+    expected[1] = 0.99;
 
-    Matrix* o = output.GetOutput();
-
+    GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &output, 0.5);
+    trainer.Train(&input, &expected);
 
     std::cout << "Hello World!\n";
-
-    o = nullptr;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

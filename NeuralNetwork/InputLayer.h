@@ -9,6 +9,8 @@ public:
 
 	virtual void Compute();
 
-	void SetInput(Matrix* input);
+	virtual void SetInput(Matrix* input);
+
+	virtual void GetBackwardPass(Matrix* error);
 };
 

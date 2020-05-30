@@ -1,5 +1,7 @@
 #include "MatrixMath.h"
 #include <iostream>
+#include "Constants.h"
+#include "MatrixException.hpp"
 
 bool MatrixMath::SizeCheck(const Matrix* a, const Matrix* b)
 {
@@ -96,7 +98,7 @@ Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 {
 	if (!c)
 		Matrix* c = new Matrix(a->GetRowCount(), a->GetColumnCount());
-	CacheVector col, row, temp;
+	CacheVector col, row;
 	size_t br;
 	for (size_t bc = 0; bc < b->GetColumnCount(); bc++)
 	{
@@ -109,8 +111,15 @@ Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 			{
 				for (size_t i = 0; i < 4; i++)
 					row.fl[i] = a->GetValue(ar, br + i);
-				temp.vec = _mm_dp_ps(col.vec, row.vec, 0xff);
-				c->AdjustValue(ar, bc, temp.fl[0]);
+				//temp.vec = _mm_dp_ps(col.vec, row.vec, 0xff);
+				__m128 mul = _mm_mul_ps(col.vec, row.vec);
+				__m128 shuf = _mm_shuffle_ps(mul, mul, _MM_SHUFFLE(2, 3, 0, 1));
+				__m128 sums = _mm_add_ps(mul, shuf);
+				shuf = _mm_movehl_ps(shuf, sums);
+				sums = _mm_add_ss(sums, shuf);
+				float result = _mm_cvtss_f32(sums);
+
+				c->AdjustValue(ar, bc, result);
 			}
 
 			br += 4;
@@ -118,6 +127,21 @@ Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 
 	}
 	return c;
+}
+
+void MatrixMath::ElementviseMultiply(Matrix* a, Matrix* b)
+{
+#if DEBUG
+	if (!SizeCheck(a, b))
+		throw MatrixException();
+#endif // DEBUG
+	for (unsigned int row = 0; row < a->GetRowCount(); row++)
+	{
+		for (unsigned int col = 0; col < a->GetColumnCount(); col++)
+		{
+			a->SetValue(row, col, a->GetValue(row, col) * b->GetValue(row, col));
+		}
+	}
 }
 
 Matrix* MatrixMath::SlowMultiply(Matrix* a, Matrix* b)

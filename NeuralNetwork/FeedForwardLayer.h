@@ -8,7 +8,7 @@ class FeedForwardLayer :
 {
 public:
 	FeedForwardLayer(Layer* inputLayer, unsigned int count);
-	~FeedForwardLayer();
+	virtual ~FeedForwardLayer();
 
 	virtual void SetInput(Layer* input);
 	virtual void Compute();
@@ -16,14 +16,9 @@ public:
 
 	void SetActivationFunction(ActivationFunction* func);
 
-	Matrix* GetWeights();
-	Matrix* GetBias();
+	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
 
 private:
-	Matrix* weights;
-	Matrix* bias;
-	Matrix* inner;
-	unsigned int size;
 
 	ActivationFunction* function;
 

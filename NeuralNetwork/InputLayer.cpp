@@ -21,3 +21,8 @@ void InputLayer::SetInput(Matrix* input)
 	MatrixMath::Copy(input, Output);
 }
 
+void InputLayer::GetBackwardPass(Matrix* error)
+{
+	throw LayerInputException();
+}
+

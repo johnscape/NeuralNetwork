@@ -1,21 +1,20 @@
 #include "FeedForwardLayer.h"
 
-FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer, count), size(count)
+FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer, count)
 {
-	weights = new Matrix(inputLayer->GetSize(), count);
+	Weights = new Matrix(inputLayer->GetSize(), count);
 	Output = new Matrix(1, count);
-	bias = new Matrix(1, count);
-	inner = new Matrix(1, count);
-
+	Bias = new Matrix(1, count);
+	InnerState = new Matrix(1, count);
+	WeightError = new Matrix(inputLayer->GetSize(), count);
+	LayerError = new Matrix(1, inputLayer->GetSize());
 	function = new TanhFunction();
+
+	MatrixMath::FillWith(Bias, 1);
 }
 
 FeedForwardLayer::~FeedForwardLayer()
 {
-	if (weights)
-		delete weights;
-	delete bias;
-	delete inner;
 	if (function)
 		delete function;
 }
@@ -23,16 +22,16 @@ FeedForwardLayer::~FeedForwardLayer()
 void FeedForwardLayer::SetInput(Layer* input)
 {
 	inputLayer = input;
-	weights = new Matrix(input->OutputSize(), size);
+	Weights = new Matrix(input->OutputSize(), Size);
 }
 
 void FeedForwardLayer::Compute()
 {
-	MatrixMath::FillWith(inner, 0);
+	MatrixMath::FillWith(InnerState, 0);
 	Matrix* prev_out = inputLayer->GetOutput();
-	MatrixMath::Multiply(prev_out, weights, inner);
-	MatrixMath::AddIn(inner, bias);
-	function->CalculateInto(inner, Output);
+	MatrixMath::Multiply(prev_out, Weights, InnerState);
+	MatrixMath::AddIn(InnerState, Bias);
+	function->CalculateInto(InnerState, Output);
 }
 
 Matrix* FeedForwardLayer::GetOutput()
@@ -48,12 +47,25 @@ void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 	function = func;
 }
 
-Matrix* FeedForwardLayer::GetWeights()
+void FeedForwardLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
-	return weights;
-}
+	Matrix* derivate = function->CalculateDerivateMatrix(Output);
+	MatrixMath::FillWith(LayerError, 0);
 
-Matrix* FeedForwardLayer::GetBias()
-{
-	return bias;
+	for (unsigned int neuron = 0; neuron < Size; neuron++)
+	{
+		float delta = error->GetValue(neuron);
+		delta *= derivate->GetValue(neuron);
+		for (unsigned int incoming = 0; incoming < inputLayer->GetSize(); incoming++)
+		{
+			float wt = inputLayer->GetFrozenOutput()->GetValue(incoming) * delta;
+			WeightError->SetValue(incoming, neuron, wt);
+			LayerError->AdjustValue(incoming, delta * Weights->GetValue(incoming, neuron));
+		}
+	}
+
+	delete derivate;
+
+	if (recursive)
+		inputLayer->GetBackwardPass(LayerError);
 }

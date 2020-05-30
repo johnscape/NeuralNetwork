@@ -9,6 +9,12 @@ Layer::Layer(Layer* inputLayer, unsigned int size)
 	this->Output = nullptr;
 	this->inputLayer = inputLayer;
 	this->Size = size;
+
+	Weights = nullptr;
+	Bias = nullptr;
+	InnerState = nullptr;
+	WeightError = nullptr;
+
 	Id++;
 }
 
@@ -16,6 +22,16 @@ Layer::~Layer()
 {
 	if (Output)
 		delete Output;
+	if (Weights)
+		delete Weights;
+	if (Bias)
+		delete Bias;
+	if (InnerState)
+		delete InnerState;
+	if (WeightError)
+		delete WeightError;
+	if (LayerError)
+		delete LayerError;
 }
 
 void Layer::SetInput(Layer* input)
@@ -42,4 +58,34 @@ unsigned int Layer::OutputSize()
 unsigned int Layer::GetSize()
 {
 	return Size;
+}
+
+Layer* Layer::GetInputLayer()
+{
+	return inputLayer;
+}
+
+Matrix* Layer::GetWeights()
+{
+	return Weights;
+}
+
+Matrix* Layer::GetBias()
+{
+	return Bias;
+}
+
+Matrix* Layer::GetInnerState()
+{
+	return InnerState;
+}
+
+Matrix* Layer::GetFrozenOutput()
+{
+	return Output;
+}
+
+Matrix* Layer::GetLayerError()
+{
+	return LayerError;
 }

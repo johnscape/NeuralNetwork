@@ -58,6 +58,7 @@ namespace MatrixMath
 	void MultiplyIn(Matrix* a, float b);
 	Matrix* Multiply(Matrix* a, float b);
 	Matrix* Multiply(Matrix* a, Matrix* b, Matrix* c = nullptr);
+	void ElementviseMultiply(Matrix* a, Matrix* b);
 	Matrix* SlowMultiply(Matrix* a, Matrix* b);
 	void Transpose(Matrix* m);
 	Matrix* GetRowMatrix(Matrix* m, size_t row);
