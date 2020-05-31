@@ -1,4 +1,5 @@
 #include "FeedForwardLayer.h"
+#include "Optimizer.h"
 
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer, count)
 {
@@ -8,6 +9,7 @@ FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Laye
 	InnerState = new Matrix(1, count);
 	WeightError = new Matrix(inputLayer->GetSize(), count);
 	LayerError = new Matrix(1, inputLayer->GetSize());
+	BiasError = new Matrix(1, count);
 	function = new TanhFunction();
 
 	MatrixMath::FillWith(Bias, 1);
@@ -17,6 +19,7 @@ FeedForwardLayer::~FeedForwardLayer()
 {
 	if (function)
 		delete function;
+	delete BiasError;
 }
 
 void FeedForwardLayer::SetInput(Layer* input)
@@ -62,10 +65,18 @@ void FeedForwardLayer::GetBackwardPass(Matrix* error, bool recursive)
 			WeightError->SetValue(incoming, neuron, wt);
 			LayerError->AdjustValue(incoming, delta * Weights->GetValue(incoming, neuron));
 		}
+
+		BiasError->SetValue(neuron, delta);
 	}
 
 	delete derivate;
 
 	if (recursive)
 		inputLayer->GetBackwardPass(LayerError);
+}
+
+void FeedForwardLayer::Train(Optimizer* optimizer)
+{
+	optimizer->ModifyWeights(Weights, WeightError);
+	optimizer->ModifyWeights(Bias, BiasError);
 }

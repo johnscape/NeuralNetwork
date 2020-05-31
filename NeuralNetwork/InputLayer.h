@@ -11,6 +11,7 @@ public:
 
 	virtual void SetInput(Matrix* input);
 
-	virtual void GetBackwardPass(Matrix* error);
+	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
+	virtual void Train(Optimizer* optimizer) {}
 };
 

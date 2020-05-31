@@ -2,6 +2,8 @@
 
 #include "Matrix.h"
 
+class Optimizer;
+
 class Layer
 {
 public:
@@ -30,9 +32,11 @@ public:
 
 	virtual Matrix* GetFrozenOutput();
 
-	virtual void GetBackwardPass(Matrix* error) = 0;
+	virtual void GetBackwardPass(Matrix* error, bool recursive = false) = 0;
 
 	virtual Matrix* GetLayerError();
+
+	virtual void Train(Optimizer* optimizer) = 0;
 
 protected:
 	Layer* inputLayer;

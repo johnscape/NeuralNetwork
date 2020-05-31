@@ -8,8 +8,14 @@ public:
     virtual ~GradientDescent();
 
     virtual void Train(Matrix* input, Matrix* expected);
+    virtual void ModifyWeights(Matrix* weights, Matrix* errors);
 
 private:
     float LearningRate;
+
+    LossFuction loss;
+    LossDerivate derivate;
+
+    Matrix* CalculateOutputError(Matrix* output, Matrix* expected);
 };
 

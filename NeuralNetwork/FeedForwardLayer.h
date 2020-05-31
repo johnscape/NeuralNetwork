@@ -18,9 +18,13 @@ public:
 
 	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
 
+	virtual void Train(Optimizer* optimizer);
+
 private:
 
 	ActivationFunction* function;
+
+	Matrix* BiasError;
 
 };
 

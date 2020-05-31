@@ -11,22 +11,15 @@ typedef float (*LossDerivate)(Matrix*, Matrix*, unsigned int);
 class Optimizer
 {
 public:
-	Optimizer(LossFuction loss, LossDerivate derivate, Layer* output);
+	Optimizer(Layer* output);
 	virtual ~Optimizer();
 
 	virtual void Train(Matrix* input, Matrix* expected) = 0;
+	virtual void ModifyWeights(Matrix* weights, Matrix* errors) = 0;
 
 protected:
-	
-	LossFuction loss;
-	LossDerivate derivate;
-
-	std::vector<Matrix*> errors;
 	Layer* outputLayer;
 
-	virtual void CalculateErrors(Layer* currentLayer);
-	virtual void CalculateOutputError(Matrix* output, Matrix* expected);
-
-	void ClearErrors();
+	
 };
 
