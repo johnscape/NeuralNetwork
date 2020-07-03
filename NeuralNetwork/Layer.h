@@ -53,6 +53,6 @@ protected:
 
 	static unsigned int Id;
 
-	bool Frozen;
+	//bool Frozen;
 };
 

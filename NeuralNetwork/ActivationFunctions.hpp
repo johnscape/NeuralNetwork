@@ -38,14 +38,14 @@ public:
 	~Sigmoid() {}
 	virtual Matrix* CalculateMatrix(Matrix* input)
 	{
-		Matrix* c(input);
+		Matrix* c = new Matrix(*input);
 		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
 			c->SetValue(i, Calculate(c->GetValue(i)));
 		return c;
 	}
 	virtual Matrix* CalculateDerivateMatrix(Matrix* output, float extra = 0)
 	{
-		Matrix* c(output);
+		Matrix* c = new Matrix(*output);
 		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
 			c->SetValue(i, CalculateDerivate(c->GetValue(i)));
 		return c;
@@ -82,7 +82,7 @@ public:
 	}
 	virtual Matrix* CalculateDerivateMatrix(Matrix* output, float extra = 0)
 	{
-		Matrix* c(output);
+		Matrix* c = new Matrix(*output);
 		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
 			c->SetValue(i, CalculateDerivate(c->GetValue(i)));
 		return c;
