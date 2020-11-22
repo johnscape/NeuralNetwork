@@ -97,6 +97,8 @@ public:
 	/// <returns></returns>
 	float& operator[](size_t id);
 
+	unsigned int GetVectorSize();
+
 private:
 	float* Values;
 	size_t Rows;

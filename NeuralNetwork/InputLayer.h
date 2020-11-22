@@ -8,10 +8,11 @@ public:
 	~InputLayer() {}
 
 	virtual void Compute();
+	virtual std::shared_ptr<Matrix> ComputeAndGetOutput();
 
-	virtual void SetInput(Matrix* input);
+	virtual void SetInput(std::shared_ptr<Matrix> input);
 
-	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
+	virtual void GetBackwardPass(std::shared_ptr<Matrix> error, bool recursive = false);
 	virtual void Train(Optimizer* optimizer) {}
 };
 

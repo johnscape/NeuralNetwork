@@ -7,24 +7,34 @@ class FeedForwardLayer :
 	public Layer
 {
 public:
-	FeedForwardLayer(Layer* inputLayer, unsigned int count);
+	FeedForwardLayer(std::shared_ptr<Layer> inputLayer, unsigned int count);
 	virtual ~FeedForwardLayer();
 
-	virtual void SetInput(Layer* input);
+	virtual void SetInput(std::shared_ptr<Layer> input);
 	virtual void Compute();
-	virtual Matrix* GetOutput();
+	virtual std::shared_ptr<Matrix> ComputeAndGetOutput();
 
-	void SetActivationFunction(ActivationFunction* func);
+	void SetActivationFunction(std::shared_ptr<ActivationFunction> func);
 
-	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
+	virtual void GetBackwardPass(std::shared_ptr<Matrix> error, bool recursive = false);
 
 	virtual void Train(Optimizer* optimizer);
 
+	std::shared_ptr<Matrix> GetBias();
+	std::shared_ptr<Matrix> GetWeights();
+
 private:
 
-	ActivationFunction* function;
+	std::shared_ptr<ActivationFunction> function;
 
-	Matrix* BiasError;
 
+	std::shared_ptr<Matrix> Weights;
+	std::shared_ptr<Matrix> Bias;
+	std::shared_ptr<Matrix> InnerState;
+
+	std::shared_ptr<Matrix> WeightError;
+	std::shared_ptr<Matrix> BiasError;
+
+	unsigned int Size;
 };
 

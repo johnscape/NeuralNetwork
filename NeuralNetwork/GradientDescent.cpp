@@ -5,7 +5,7 @@
 #include "MatrixMath.h"
 #include <iostream>
 
-GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, Layer* output, float learningRate) : Optimizer(output), LearningRate(learningRate)
+GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, std::shared_ptr<Layer> output, float learningRate) : Optimizer(output), LearningRate(learningRate)
 {
 	this->derivate = derivate;
 	this->loss = loss;
@@ -15,9 +15,9 @@ GradientDescent::~GradientDescent()
 {
 }
 
-Matrix* GradientDescent::CalculateOutputError(Matrix* output, Matrix* expected)
+std::shared_ptr<Matrix> GradientDescent::CalculateOutputError(std::shared_ptr<Matrix> output, std::shared_ptr<Matrix> expected)
 {
-	Matrix* outputError = new Matrix(1, output->GetColumnCount());
+	std::shared_ptr<Matrix> outputError(new Matrix(1, output->GetColumnCount()));
 	for (unsigned int i = 0; i < output->GetColumnCount(); i++)
 	{
 		outputError->SetValue(i, derivate(output, expected, i));
@@ -25,17 +25,20 @@ Matrix* GradientDescent::CalculateOutputError(Matrix* output, Matrix* expected)
 	return outputError;
 }
 
-void GradientDescent::Train(Matrix* input, Matrix* expected)
+void GradientDescent::Train(std::shared_ptr<Matrix> input, std::shared_ptr<Matrix> expected)
 {
 	//find input layer
-	Layer* currentLayer = outputLayer;
+	std::shared_ptr<Layer> currentLayer = outputLayer;
 	while (currentLayer->GetInputLayer())
+	{
+		currentLayer->SetTrainingMode(true);
 		currentLayer = currentLayer->GetInputLayer();
+	}
 	//calculate
 	currentLayer->SetInput(input);
-	Matrix* outputValue = outputLayer->GetOutput();
+	std::shared_ptr<Matrix> outputValue = outputLayer->ComputeAndGetOutput();
 	//calculate errors
-	Matrix* outputError = CalculateOutputError(outputValue, expected);
+	std::shared_ptr<Matrix> outputError = CalculateOutputError(outputValue, expected);
 	outputLayer->GetBackwardPass(outputError, true);
 
 	currentLayer = outputLayer;
@@ -45,11 +48,18 @@ void GradientDescent::Train(Matrix* input, Matrix* expected)
 		currentLayer = currentLayer->GetInputLayer();
 	}
 
-	delete outputError;
+	currentLayer = outputLayer;
+	while (currentLayer->GetInputLayer())
+	{
+		currentLayer->SetTrainingMode(false);
+		currentLayer = currentLayer->GetInputLayer();
+	}
+
+	outputError.reset();
 
 }
 
-void GradientDescent::ModifyWeights(Matrix* weights, Matrix* errors)
+void GradientDescent::ModifyWeights(std::shared_ptr<Matrix> weights, std::shared_ptr<Matrix> errors)
 {
 	for (unsigned int row = 0; row < weights->GetRowCount(); row++)
 	{

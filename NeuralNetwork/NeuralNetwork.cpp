@@ -5,17 +5,17 @@
 #include "Matrix.h"
 #include "InputLayer.h"
 #include "FeedForwardLayer.h"
+#include "RecurrentLayer.h"
 #include "ActivationFunctions.hpp"
 #include "Constants.h"
 
 #include "GradientDescent.h"
 #include "LossFunctions.hpp"
 
-//TODO: Freeze layers
-
+#include <memory>
 int main()
 {
-    InputLayer inp(2);
+    /*InputLayer inp(2);
     FeedForwardLayer hidden(&inp, 2);
     FeedForwardLayer output(&hidden, 2);
 
@@ -43,7 +43,9 @@ int main()
     input[1] = 0.1;
 
     inp.SetInput(&input);
-    Matrix* outval = output.GetOutput();
+    Matrix* outval = output.ComputeAndGetOutput();
+    std::cout << "Before training:" << std::endl;
+    MatrixMath::PrintMatrix(outval);
 
     //start training
 
@@ -52,18 +54,26 @@ int main()
     expected[1] = 0.99;
 
     GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &output, 0.5);
-    trainer.Train(&input, &expected);
+    for (size_t i = 0; i < 500; i++)
+    {
+        trainer.Train(&input, &expected);
+    }
+    std::cout << "After training:" << std::endl;
+    output.Compute();
+    MatrixMath::PrintMatrix(outval);*/
+
+    InputLayer inp(2);
+    RecurrentLayer rec(std::make_shared<InputLayer>(inp), 5);
+
+    Matrix input(1, 2);
+    input[0] = 0.05;
+    input[1] = 0.1;
+
+    rec.SetTrainingMode(true);
+
+    inp.SetInput(std::make_shared<Matrix>(input));
+    rec.Compute();
+
 
     std::cout << "Hello World!\n";
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

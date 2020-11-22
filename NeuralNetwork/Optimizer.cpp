@@ -1,6 +1,6 @@
 #include "Optimizer.h"
 
-Optimizer::Optimizer(Layer* output)
+Optimizer::Optimizer(std::shared_ptr<Layer> output)
 {
 	outputLayer = output;
 }

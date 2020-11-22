@@ -3,17 +3,17 @@
 #include "Constants.h"
 #include "MatrixException.hpp"
 
-bool MatrixMath::SizeCheck(const Matrix* a, const Matrix* b)
+bool MatrixMath::SizeCheck(const std::shared_ptr<Matrix> a, const std::shared_ptr<Matrix> b)
 {
 	return (a->GetColumnCount() == b->GetColumnCount()) && (a->GetRowCount() == b->GetRowCount());
 }
 
-bool MatrixMath::IsVector(Matrix* matrix)
+bool MatrixMath::IsVector(std::shared_ptr<Matrix> matrix)
 {
 	return (matrix->GetColumnCount() == 1 || matrix->GetRowCount() == 1);
 }
 
-bool MatrixMath::IsEqual(Matrix* a, Matrix* b)
+bool MatrixMath::IsEqual(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 	if (!SizeCheck(a, b))
 		throw MatrixSizeException();
@@ -29,24 +29,24 @@ bool MatrixMath::IsEqual(Matrix* a, Matrix* b)
 	return true;
 }
 
-void MatrixMath::FillWith(Matrix* m, float value)
+void MatrixMath::FillWith(std::shared_ptr<Matrix> m, float value)
 {
 	for (unsigned int i = 0; i < m->GetColumnCount() * m->GetRowCount(); i++)
 		m->SetValue(i, value);
 }
 
-void MatrixMath::FillWithRandom(Matrix* m)
+void MatrixMath::FillWithRandom(std::shared_ptr<Matrix> m)
 {
 
 }
 
-void MatrixMath::Copy(Matrix* from, Matrix* to)
+void MatrixMath::Copy(std::shared_ptr<Matrix> from, std::shared_ptr<Matrix> to)
 {
 	for (size_t i = 0; i < to->GetColumnCount() * to->GetRowCount(); i++)
 		to->SetValue(i, (*from)[i]);
 }
 
-void MatrixMath::AddIn(Matrix* a, Matrix* b)
+void MatrixMath::AddIn(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 	if (!SizeCheck(a, b))
 		throw MatrixSizeException();
@@ -54,50 +54,57 @@ void MatrixMath::AddIn(Matrix* a, Matrix* b)
 		a->AdjustValue(i, (*b)[i]);
 }
 
-void Add(Matrix* matrix, float value)
+void MatrixMath::Add(std::shared_ptr<Matrix> matrix, float value)
+{
+	for (unsigned int i = 0; i < matrix->GetColumnCount() * matrix->GetRowCount(); i++)
+		matrix->AdjustValue(i, value);
+}
+
+void Add(std::shared_ptr<Matrix> matrix, float value)
 {
 	for (size_t i = 0; i < matrix->GetColumnCount() * matrix->GetRowCount(); i++)
 		matrix->AdjustValue(i, value);
 }
 
-Matrix* MatrixMath::Add(const Matrix* a, const Matrix* b)
+std::shared_ptr<Matrix> MatrixMath::Add(const std::shared_ptr<Matrix> a, const std::shared_ptr<Matrix> b)
 {
 	if (!SizeCheck(a, b))
 		throw MatrixException(); //the two matrices doesn't have the same column/row count!
-	Matrix* c = new Matrix(a->GetRowCount(), a->GetColumnCount());
+	//std::shared_ptr<Matrix> c = new Matrix(a->GetRowCount(), a->GetColumnCount());
+	std::shared_ptr<Matrix> c(new Matrix(a->GetRowCount(), a->GetColumnCount()));
 	for (size_t i = 0; i < a->GetRowCount() * a->GetColumnCount(); i++)
 		c->SetValue(i, a->GetValue(i) + b->GetValue(i));
 	return c;
 }
 
-Matrix* MatrixMath::Substract(Matrix* a, Matrix* b)
+std::shared_ptr<Matrix> MatrixMath::Substract(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 	if (!SizeCheck(a, b))
 		throw MatrixException(); //the two matrices doesn't have the same column/row count!
-	Matrix* c = new Matrix(a->GetRowCount(), a->GetColumnCount());
+	std::shared_ptr<Matrix> c(new Matrix(a->GetRowCount(), a->GetColumnCount()));
 	for (size_t i = 0; i < a->GetRowCount() * a->GetColumnCount(); i++)
 		c->SetValue(i, (*a)[i] - (*b)[i]);
 	return c;
 }
 
-void MatrixMath::MultiplyIn(Matrix* a, float b)
+void MatrixMath::MultiplyIn(std::shared_ptr<Matrix> a, float b)
 {
 	for (size_t i = 0; i < a->GetColumnCount() * a->GetRowCount(); i++)
 		a->SetValue(i, (*a)[i] * b);
 }
 
-Matrix* MatrixMath::Multiply(Matrix* a, float b)
+std::shared_ptr<Matrix> MatrixMath::Multiply(std::shared_ptr<Matrix> a, float b)
 {
-	Matrix* c = new Matrix(a->GetRowCount(), a->GetColumnCount());
+	std::shared_ptr<Matrix> c(new Matrix(a->GetRowCount(), a->GetColumnCount()));
 	for (size_t i = 0; i < a->GetColumnCount() * a->GetRowCount(); i++)
 		c->SetValue(i, (*a)[i] * b);
 	return c;
 }
 
-Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
+std::shared_ptr<Matrix> MatrixMath::Multiply(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b, std::shared_ptr<Matrix> c)
 {
 	if (!c)
-		Matrix* c = new Matrix(a->GetRowCount(), a->GetColumnCount());
+		std::shared_ptr<Matrix> c(new Matrix(a->GetRowCount(), a->GetColumnCount()));
 	CacheVector col, row;
 	size_t br;
 	for (size_t bc = 0; bc < b->GetColumnCount(); bc++)
@@ -129,7 +136,7 @@ Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 	return c;
 }
 
-void MatrixMath::ElementviseMultiply(Matrix* a, Matrix* b)
+void MatrixMath::ElementviseMultiply(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 #if DEBUG
 	if (!SizeCheck(a, b))
@@ -144,9 +151,9 @@ void MatrixMath::ElementviseMultiply(Matrix* a, Matrix* b)
 	}
 }
 
-Matrix* MatrixMath::SlowMultiply(Matrix* a, Matrix* b)
+std::shared_ptr<Matrix> MatrixMath::SlowMultiply(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
-	Matrix* c = new Matrix(a->GetRowCount(), b->GetColumnCount());
+	std::shared_ptr<Matrix> c(new Matrix(a->GetRowCount(), b->GetColumnCount()));
 	MatrixMath::FillWith(c, 0);
 	for (unsigned int i = 0; i < a->GetRowCount(); i++)
 		for (unsigned int j = 0; j < b->GetColumnCount(); j++)
@@ -155,7 +162,7 @@ Matrix* MatrixMath::SlowMultiply(Matrix* a, Matrix* b)
 	return c;
 }
 
-void MatrixMath::Transpose(Matrix* m)
+void MatrixMath::Transpose(std::shared_ptr<Matrix> m)
 {
 	if (m->GetColumnCount() == m->GetRowCount())
 	{
@@ -178,52 +185,52 @@ void MatrixMath::Transpose(Matrix* m)
 		for (unsigned int i = 0; i < m->GetRowCount(); i++)
 			for (unsigned int j = 0; j < m->GetColumnCount(); j++)
 				trans.SetValue(j, i, m->GetValue(i, j));
-		Copy(&trans, m);
+		Copy(std::make_shared<Matrix>(trans), m);
 	}
 }
 
-Matrix* MatrixMath::GetRowMatrix(Matrix* m, size_t row)
+std::shared_ptr<Matrix> MatrixMath::GetRowMatrix(std::shared_ptr<Matrix> m, size_t row)
 {
-	Matrix* rowm = new Matrix(1, m->GetColumnCount());
+	std::shared_ptr<Matrix> rowm(new Matrix(1, m->GetColumnCount()));
 	for (size_t i = 0; i < m->GetColumnCount(); i++)
 		rowm->SetValue(i, m->GetValue(row, i));
 	return rowm;
 }
 
-Matrix* MatrixMath::GetColumnMatrix(Matrix* m, size_t column)
+std::shared_ptr<Matrix> MatrixMath::GetColumnMatrix(std::shared_ptr<Matrix> m, size_t column)
 {
-	Matrix* colm = new Matrix(m->GetRowCount(), 1);
+	std::shared_ptr<Matrix> colm(new Matrix(m->GetRowCount(), 1));
 	for (size_t i = 0; i < m->GetRowCount(); i++)
 		colm->SetValue(i, m->GetValue(i, column));
 	return colm;
 }
 
-Matrix* MatrixMath::Hadamard(Matrix* a, Matrix* b)
+std::shared_ptr<Matrix> MatrixMath::Hadamard(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 	if (!SizeCheck(a, b))
 		throw MatrixException(); //the two matrices doesn't have the same column/row count!
-	Matrix* cmat = new Matrix(a->GetRowCount(), a->GetColumnCount());
+	std::shared_ptr<Matrix> cmat(new Matrix(a->GetRowCount(), a->GetColumnCount()));
 	for (size_t r = 0; r < a->GetRowCount(); r++)
 		for (size_t c = 0; c < a->GetColumnCount(); c++)
 			cmat->SetValue(r, c, a->GetValue(r, c) * b->GetValue(r, c));
 	return cmat;
 }
 
-Matrix* MatrixMath::OuterProduct(Matrix* a, Matrix* b)
+std::shared_ptr<Matrix> MatrixMath::OuterProduct(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 	if ((!IsVector(a) && !IsVector(b)) || (a->GetRowCount() == b->GetRowCount()))
 		throw MatrixException(); //the two matrices must be vectors
-	Matrix* cmat;
+	std::shared_ptr<Matrix> cmat;
 	if (a->GetRowCount() == 1)
 	{
-		cmat = new Matrix(b->GetRowCount(), a->GetColumnCount());
+		cmat.reset(new Matrix(b->GetRowCount(), a->GetColumnCount()));
 		for (size_t r = 0; r < b->GetRowCount(); r++)
 			for (size_t c = 0; c < a->GetColumnCount(); c++)
 				cmat->SetValue(r, c, (*b)[r] * (*a)[c]);
 	}
 	else
 	{
-		cmat = new Matrix(a->GetRowCount(), b->GetColumnCount());
+		cmat.reset(new Matrix(a->GetRowCount(), b->GetColumnCount()));
 		for (size_t r = 0; r < a->GetRowCount(); r++)
 			for (size_t c = 0; c < b->GetColumnCount(); c++)
 				cmat->SetValue(r, c, (*a)[r] * (*b)[c]);
@@ -232,11 +239,11 @@ Matrix* MatrixMath::OuterProduct(Matrix* a, Matrix* b)
 	return cmat;
 }
 
-Matrix* MatrixMath::CreateSubMatrix(Matrix* m, size_t startRow, size_t startCol, size_t rowCount, size_t colCount)
+std::shared_ptr<Matrix> MatrixMath::CreateSubMatrix(std::shared_ptr<Matrix> m, size_t startRow, size_t startCol, size_t rowCount, size_t colCount)
 {
 	if (startRow + rowCount >= m->GetRowCount() || startCol + colCount >= m->GetColumnCount())
 		throw MatrixException();
-	Matrix* mat = new Matrix(rowCount, colCount);
+	std::shared_ptr<Matrix> mat(new Matrix(rowCount, colCount));
 	for (size_t row = 0; row < rowCount; row++)
 	{
 		for (size_t col = 0; col < colCount; col++)
@@ -248,7 +255,7 @@ Matrix* MatrixMath::CreateSubMatrix(Matrix* m, size_t startRow, size_t startCol,
 	return mat;
 }
 
-float MatrixMath::DotProduct(Matrix* a, Matrix* b)
+float MatrixMath::DotProduct(std::shared_ptr<Matrix> a, std::shared_ptr<Matrix> b)
 {
 	if ((!IsVector(a) && !IsVector(b)))
 		throw MatrixException(); //the two matrices must be vectors
@@ -261,7 +268,7 @@ float MatrixMath::DotProduct(Matrix* a, Matrix* b)
 	return value;
 }
 
-float MatrixMath::Sum(Matrix* m)
+float MatrixMath::Sum(std::shared_ptr<Matrix> m)
 {
 	float value = 0;
 	for (size_t i = 0; i < m->GetColumnCount() * m->GetRowCount(); i++)
@@ -269,15 +276,15 @@ float MatrixMath::Sum(Matrix* m)
 	return value;
 }
 
-Matrix* MatrixMath::Eye(unsigned int size)
+std::shared_ptr<Matrix> MatrixMath::Eye(unsigned int size)
 {
-	Matrix* m = new Matrix(size, size);
+	std::shared_ptr<Matrix> m(new Matrix(size, size));
 	for (size_t i = 0; i < size; i++)
 		m->SetValue(i, i, 1);
 	return m;
 }
 
-void MatrixMath::PrintMatrix(Matrix* m)
+void MatrixMath::PrintMatrix(std::shared_ptr<Matrix> m)
 {
 	for (unsigned int r = 0; r < m->GetRowCount(); r++)
 	{
@@ -287,4 +294,11 @@ void MatrixMath::PrintMatrix(Matrix* m)
 		}
 		std::cout << std::endl;
 	}
+}
+
+std::shared_ptr<Matrix> MatrixMath::Power(std::shared_ptr<Matrix> original, unsigned int power)
+{
+	std::shared_ptr<Matrix> pow(new Matrix(*original));
+
+	return pow;
 }

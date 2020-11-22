@@ -123,6 +123,19 @@ float& Matrix::operator[](size_t id)
 	return Values[id];
 }
 
+unsigned int Matrix::GetVectorSize()
+{
+	if (Columns == 1 && Rows > 1)
+		return Rows;
+	if (Rows == 1 && Columns > 1)
+		return Columns;
+#ifdef DEBUG
+	throw MatrixVectorException();
+#endif // DEBUG
+
+	return 0;
+}
+
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
 {
 	return row * Columns + col;
