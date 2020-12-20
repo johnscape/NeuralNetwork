@@ -2,7 +2,7 @@
 #include "MatrixMath.h"
 #include "LayerException.hpp"
 
-InputLayer::InputLayer(unsigned int size) : Layer(*this)
+InputLayer::InputLayer(unsigned int size) : Layer()
 {
 	LayerInput.reset();
 	Output.reset(new Matrix(1, size));

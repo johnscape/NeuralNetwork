@@ -1,7 +1,7 @@
 #include "FeedForwardLayer.h"
 #include "Optimizer.h"
 
-FeedForwardLayer::FeedForwardLayer(std::shared_ptr<Layer> inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
+FeedForwardLayer::FeedForwardLayer(Layer& inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
 {
 	Weights.reset(new Matrix(LayerInput->GetOutput()->GetVectorSize(), count));
 	Output.reset(new Matrix(1, count));

@@ -12,10 +12,10 @@ typedef float (*LossDerivate)(std::shared_ptr<Matrix>, std::shared_ptr<Matrix>, 
 class Optimizer
 {
 public:
-	Optimizer(std::shared_ptr<Layer> output);
+	Optimizer(Layer& output);
 	virtual ~Optimizer();
 
-	virtual void Train(std::shared_ptr<Matrix> input, std::shared_ptr<Matrix> expected) = 0;
+	virtual void Train(Matrix& input, Matrix& expected) = 0;
 	virtual void ModifyWeights(std::shared_ptr<Matrix> weights, std::shared_ptr<Matrix> errors) = 0;
 
 protected:

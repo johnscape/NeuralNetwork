@@ -1,8 +1,8 @@
 #include "Optimizer.h"
 
-Optimizer::Optimizer(std::shared_ptr<Layer> output)
+Optimizer::Optimizer(Layer& output)
 {
-	outputLayer = output;
+	outputLayer.reset(&output);
 }
 
 Optimizer::~Optimizer()

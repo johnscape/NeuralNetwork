@@ -13,6 +13,16 @@ Layer::Layer(std::shared_ptr<Layer> inputLayer) : TrainingMode(false)
 	Id++;
 }
 
+Layer::Layer(Layer& inputLayer) : TrainingMode(false)
+{
+	LayerInput.reset(&inputLayer);
+}
+
+Layer::Layer()
+{
+	LayerInput.reset();
+}
+
 Layer::~Layer()
 {
 	if (Output)
@@ -54,7 +64,9 @@ std::shared_ptr<Matrix> Layer::GetLayerError()
 	return LayerError;
 }
 
-void Layer::SetTrainingMode(bool mode)
+void Layer::SetTrainingMode(bool mode, bool recursive)
 {
 	TrainingMode = mode;
+	if (recursive && LayerInput)
+		LayerInput->SetTrainingMode(mode);
 }

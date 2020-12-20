@@ -7,7 +7,8 @@ class FeedForwardLayer :
 	public Layer
 {
 public:
-	FeedForwardLayer(std::shared_ptr<Layer> inputLayer, unsigned int count);
+	FeedForwardLayer(Layer& inputLayer, unsigned int count);
+
 	virtual ~FeedForwardLayer();
 
 	virtual void SetInput(std::shared_ptr<Layer> input);

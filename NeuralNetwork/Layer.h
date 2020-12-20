@@ -9,6 +9,8 @@ class Layer
 {
 public:
 	Layer(std::shared_ptr<Layer> inputLayer);
+	Layer(Layer& inputLayer);
+	Layer();
 	~Layer();
 
 	virtual void SetInput(std::shared_ptr<Layer> input);
@@ -25,7 +27,7 @@ public:
 	virtual void Train(Optimizer* optimizer) = 0;
 	virtual std::shared_ptr<Matrix> GetLayerError();
 
-	virtual void SetTrainingMode(bool mode);
+	virtual void SetTrainingMode(bool mode, bool recursive = true);
 
 protected:
 	std::shared_ptr<Layer> LayerInput;

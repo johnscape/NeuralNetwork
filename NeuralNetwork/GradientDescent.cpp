@@ -5,7 +5,7 @@
 #include "MatrixMath.h"
 #include <iostream>
 
-GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, std::shared_ptr<Layer> output, float learningRate) : Optimizer(output), LearningRate(learningRate)
+GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, Layer& output, float learningRate) : Optimizer(output), LearningRate(learningRate)
 {
 	this->derivate = derivate;
 	this->loss = loss;
@@ -25,7 +25,7 @@ std::shared_ptr<Matrix> GradientDescent::CalculateOutputError(std::shared_ptr<Ma
 	return outputError;
 }
 
-void GradientDescent::Train(std::shared_ptr<Matrix> input, std::shared_ptr<Matrix> expected)
+void GradientDescent::Train(Matrix& input, Matrix& expected)
 {
 	//find input layer
 	std::shared_ptr<Layer> currentLayer = outputLayer;
@@ -35,10 +35,10 @@ void GradientDescent::Train(std::shared_ptr<Matrix> input, std::shared_ptr<Matri
 		currentLayer = currentLayer->GetInputLayer();
 	}
 	//calculate
-	currentLayer->SetInput(input);
+	currentLayer->SetInput(std::make_shared<Matrix>(input));
 	std::shared_ptr<Matrix> outputValue = outputLayer->ComputeAndGetOutput();
 	//calculate errors
-	std::shared_ptr<Matrix> outputError = CalculateOutputError(outputValue, expected);
+	std::shared_ptr<Matrix> outputError = CalculateOutputError(outputValue, std::make_shared<Matrix>(expected));
 	outputLayer->GetBackwardPass(outputError, true);
 
 	currentLayer = outputLayer;
