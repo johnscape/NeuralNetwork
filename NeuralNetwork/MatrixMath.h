@@ -50,7 +50,7 @@ namespace MatrixMath
 	/// <param name="value">The value</param>
 	void FillWith(Matrix* m, float value);
 
-	void FillWithRandom(Matrix* m, float min, float max);
+	void FillWithRandom(Matrix* m, float min = -1, float max = 1);
 
 	void Copy(Matrix* from, Matrix* to);
 	void AddIn(Matrix* a, Matrix* b);

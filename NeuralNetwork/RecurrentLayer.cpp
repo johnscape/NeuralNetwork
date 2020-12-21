@@ -35,6 +35,11 @@ RecurrentLayer::~RecurrentLayer()
 		delete TrainingStates[0];
 		TrainingStates.pop_front();
 	}
+	while (!IncomingValues.empty())
+	{
+		delete IncomingValues[0];
+		IncomingValues.pop_front();
+	}
 }
 
 void RecurrentLayer::Compute()
@@ -47,10 +52,15 @@ void RecurrentLayer::Compute()
 	function->CalculateInto(InnerState, Output);
 	if (TrainingMode)
 	{
-		Matrix* tmp(new Matrix(*Output));
-		TrainingStates.push_back(tmp);
+		TrainingStates.push_back(new Matrix(*InnerState));
+		IncomingValues.push_back(new Matrix(*(LayerInput->GetOutput())));
 		if (TrainingStates.size() > TimeSteps)
+		{
+			delete TrainingStates[0];
 			TrainingStates.pop_front();
+			delete IncomingValues[0];
+			IncomingValues.pop_front();
+		}
 	}
 }
 
@@ -65,20 +75,27 @@ Matrix* RecurrentLayer::ComputeAndGetOutput()
 	return Output;
 }
 
+void RecurrentLayer::SetActivationFunction(ActivationFunction* func)
+{
+	if (function)
+		delete function;
+	function = func;
+}
+
 void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
 	Matrix* derivate = function->CalculateDerivateMatrix(Output);
 	MatrixMath::FillWith(LayerError, 0);
 
 	std::vector<Matrix*> powers;
-	for (unsigned int i = 0; i < TimeSteps; i++)
+	for (unsigned int i = 0; i <= TimeSteps; i++)
 	{
 		if (!i)
 			continue;
 		powers.push_back(MatrixMath::Power(RecursiveWeight, i));
 	}
 
-	for (unsigned int neuron = 0; neuron < Size; neuron++)
+	/*for (unsigned int neuron = 0; neuron < Size; neuron++)
 	{
 		float delta = error->GetValue(neuron);
 		delta *= derivate->GetValue(neuron);
@@ -90,19 +107,62 @@ void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 		}
 		for (signed int time = 0; time < TimeSteps; time++)
 		{
+			if (time >= TrainingStates.size()) //ennek nem kéne megtörténnie
+				continue;
 			for (unsigned int recursive = 0; recursive < Size; recursive++)
 			{
 				float rt = TrainingStates[time]->GetValue(recursive) * delta;
-				if (recursive)
+				if (time)
 					rt *= powers[time - 1]->GetValue(recursive, neuron);
 				RecursiveWeightError->AdjustValue(recursive, neuron, rt);
 			}
 		}
 
 		BiasError->SetValue(neuron, delta);
+	}*/
+	for (unsigned int neuron = 0; neuron < Size; neuron++)
+	{
+		float delta = error->GetValue(neuron);
+		delta *= derivate->GetValue(neuron);
+		for (unsigned int time = 0; time < TimeSteps; time++)
+		{
+			if (TimeSteps - time >= TrainingStates.size())
+				continue;
+			for (unsigned int incoming = 0; incoming < LayerInput->GetOutput()->GetVectorSize(); incoming++)
+			{
+				float wt = 0;
+				if (time)
+				{
+					for (unsigned int recursive = 0; recursive < Size; recursive++)
+						wt += error->GetValue(recursive) * derivate->GetValue(recursive) * powers[time]->GetValue(neuron, recursive) * IncomingValues[TimeSteps - time]->GetValue(incoming);
+				}
+				else
+					wt = IncomingValues[IncomingValues.size() - 1]->GetValue(incoming) * delta;
+				WeightError->AdjustValue(incoming, neuron, wt);
+				LayerError->AdjustValue(incoming, delta * Weights->GetValue(incoming, neuron));
+			}
+			for (unsigned int recursive = 0; recursive < Size; recursive++)
+			{
+				float wt = 0;
+				if (time)
+				{
+					for (unsigned int r = 0; r < Size; r++)
+						wt += error->GetValue(r) * derivate->GetValue(r) * powers[time]->GetValue(neuron, r) * TrainingStates[TimeSteps - time]->GetValue(recursive);
+				}
+				else
+					wt = TrainingStates[TrainingStates.size() - 1]->GetValue(recursive) * delta;
+
+				RecursiveWeightError->AdjustValue(recursive, neuron, wt);
+			}
+
+		}
+
+		BiasError->AdjustValue(neuron, delta);
 	}
 
 	delete derivate;
+	for (size_t i = 0; i < powers.size(); i++)
+		delete powers[i];
 	powers.clear();
 
 	if (recursive)
@@ -124,5 +184,20 @@ void RecurrentLayer::SetTrainingMode(bool mode)
 		while (!TrainingStates.empty())
 			TrainingStates.pop_front();
 	}
+}
+
+Matrix* RecurrentLayer::GetWeights()
+{
+	return Weights;
+}
+
+Matrix* RecurrentLayer::GetBias()
+{
+	return Bias;
+}
+
+Matrix* RecurrentLayer::GetRecurrentWeights()
+{
+	return RecursiveWeight;
 }
 

@@ -27,6 +27,11 @@ Matrix* GradientDescent::CalculateOutputError(Matrix* output, Matrix* expected)
 
 void GradientDescent::TrainStep(Matrix* input, Matrix* output)
 {
+	inputLayer->SetInput(input);
+	Matrix* outputValue = outputLayer->ComputeAndGetOutput();
+	Matrix* outputError = CalculateOutputError(outputValue, output);
+	outputLayer->GetBackwardPass(outputError, true);
+	delete outputError;
 }
 
 void GradientDescent::Train(Matrix* input, Matrix* expected)
@@ -65,11 +70,12 @@ void GradientDescent::Train(Matrix* input, Matrix* expected)
 
 void GradientDescent::ModifyWeights(Matrix* weights, Matrix* errors)
 {
+	//MatrixMath::PrintMatrix(errors);
 	for (unsigned int row = 0; row < weights->GetRowCount(); row++)
 	{
 		for (unsigned int col = 0; col < weights->GetColumnCount(); col++)
 		{
-			float edit = -LearningRate * errors->GetValue(row, col) / 1;
+			float edit = -LearningRate * errors->GetValue(row, col) / 1; //TODO: set to current batch
 			weights->AdjustValue(row, col, edit);
 		}
 	}

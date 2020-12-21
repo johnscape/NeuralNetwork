@@ -20,6 +20,7 @@ public:
 	virtual void Reset() = 0;
 	virtual void TrainFor(Matrix* input, Matrix* expected, unsigned int times, unsigned int batch = 32);
 	virtual void TrainUntil(Matrix* input, Matrix* expected, float error, unsigned int batch = 32);
+	virtual void SetTrainingMode(bool mode);
 
 protected:
 	Layer* outputLayer;

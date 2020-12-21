@@ -15,11 +15,16 @@ public:
 	virtual void Compute();
 	virtual Matrix* GetOutput();
 	virtual Matrix* ComputeAndGetOutput();
+	virtual void SetActivationFunction(ActivationFunction* func);
 
 	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
 
 	virtual void Train(Optimizer* optimizer);
 	virtual void SetTrainingMode(bool mode);
+
+	Matrix* GetWeights();
+	Matrix* GetBias();
+	Matrix* GetRecurrentWeights();
 private:
 	unsigned int TimeSteps;
 	ActivationFunction* function;
@@ -37,6 +42,7 @@ private:
 	Matrix* RecursiveWeightError;
 
 	std::deque<Matrix*> TrainingStates;
+	std::deque<Matrix*> IncomingValues;
 
 };
 

@@ -14,6 +14,7 @@ Optimizer::~Optimizer()
 void Optimizer::TrainFor(Matrix* input, Matrix* expected, unsigned int times, unsigned int batch)
 {
 	FindInputLayer();
+	SetTrainingMode(true);
 	for (unsigned int time = 0; time < times; time++)
 	{
 		currentBatch = 0;
@@ -21,8 +22,8 @@ void Optimizer::TrainFor(Matrix* input, Matrix* expected, unsigned int times, un
 		{
 			Matrix* inp = MatrixMath::GetRowMatrix(input, pos);
 			Matrix* exp = MatrixMath::GetRowMatrix(expected, pos);
-			TrainStep(inp, exp);
 			currentBatch++;
+			TrainStep(inp, exp);
 			if (currentBatch >= batch)
 			{
 				TrainLayers();
@@ -35,10 +36,21 @@ void Optimizer::TrainFor(Matrix* input, Matrix* expected, unsigned int times, un
 		if (currentBatch > 0)
 			TrainLayers();
 	}
+	SetTrainingMode(false);
 }
 
 void Optimizer::TrainUntil(Matrix* input, Matrix* expected, float error, unsigned int batch)
 {
+}
+
+void Optimizer::SetTrainingMode(bool mode)
+{
+	Layer* currentLayer = outputLayer;
+	while (currentLayer->GetInputLayer())
+	{
+		currentLayer->SetTrainingMode(mode);
+		currentLayer = currentLayer->GetInputLayer();
+	}
 }
 
 void Optimizer::FindInputLayer()

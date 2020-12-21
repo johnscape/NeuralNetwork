@@ -29,6 +29,5 @@ void InputLayer::SetInput(Matrix* input)
 
 void InputLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
-	throw LayerInputException();
 }
 

@@ -33,7 +33,12 @@ void MatrixMath::FillWith(Matrix* m, float value)
 
 void MatrixMath::FillWithRandom(Matrix* m, float min, float max)
 {
-
+	srand(time(0));
+	for (size_t i = 0; i < m->GetRowCount() * m->GetColumnCount(); i++)
+	{
+		signed int r = rand() % ((int)(max * 1000) - (int)(min * 1000) + 1) + (int)(min * 1000);
+		m->SetValue(i, r / 1000.0f);
+	}
 }
 
 void MatrixMath::Copy(Matrix* from, Matrix* to)
@@ -100,7 +105,7 @@ Matrix* MatrixMath::Multiply(Matrix* a, float b)
 Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 {
 	if (!c)
-		Matrix* c = new Matrix(a->GetRowCount(), a->GetColumnCount());
+		c = new Matrix(a->GetRowCount(), b->GetColumnCount());
 	CacheVector col, row;
 	size_t br;
 	for (size_t bc = 0; bc < b->GetColumnCount(); bc++)
@@ -292,7 +297,7 @@ Matrix* MatrixMath::Power(Matrix* original, unsigned int power)
 	if (power <= 0)
 		return nullptr;
 	if (power == 1)
-		return original;
+		return new Matrix(*original);
 
 	Matrix* pow = new Matrix(*original);
 	Matrix* tmp = nullptr;
