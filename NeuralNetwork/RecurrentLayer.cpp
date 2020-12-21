@@ -1,18 +1,17 @@
 #include "RecurrentLayer.h"
 
-RecurrentLayer::RecurrentLayer(std::shared_ptr<Layer> inputLayer, unsigned int size, unsigned int timeSteps) :
+RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
 	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size)
 {
-	Weights.reset(new Matrix(inputLayer->GetOutput()->GetVectorSize(), size));
-	Output.reset(new Matrix(1, size));
-	Bias.reset(new Matrix(1, size));
-	InnerState.reset(new Matrix(1, size));
-	WeightError.reset(new Matrix(inputLayer->GetOutput()->GetVectorSize(), size));
-	LayerError.reset(new Matrix(1, inputLayer->GetOutput()->GetVectorSize()));
-	SavedState.reset(new Matrix(1, size));
-	BiasError.reset(new Matrix(1, size));
-	RecursiveWeight.reset(new Matrix(size, size));
-	RecursiveWeightError.reset(new Matrix(size, size));
+	Weights = new Matrix(LayerInput->GetOutput()->GetVectorSize(), size);
+	Output = new Matrix(1, size);
+	Bias = new Matrix(1, size);
+	InnerState = new Matrix(1, size);
+	WeightError = new Matrix(LayerInput->GetOutput()->GetVectorSize(), size);
+	LayerError = new Matrix(1, LayerInput->GetOutput()->GetVectorSize());
+	BiasError = new Matrix(1, size);
+	RecursiveWeight = new Matrix(size, size);
+	RecursiveWeightError = new Matrix(size, size);
 	function = new TanhFunction();
 
 	MatrixMath::FillWith(Bias, 1);
@@ -21,19 +20,21 @@ RecurrentLayer::RecurrentLayer(std::shared_ptr<Layer> inputLayer, unsigned int s
 
 RecurrentLayer::~RecurrentLayer()
 {
-	Weights.reset();
-	Bias.reset();
-	RecursiveWeight.reset();
-	InnerState.reset();
-	SavedState.reset();
+	delete Weights;
+	delete Bias;
+	delete RecursiveWeight;
+	delete InnerState;
 
-	WeightError.reset();
-	BiasError.reset();
-	RecursiveWeightError.reset();
+	delete WeightError;
+	delete BiasError;
+	delete RecursiveWeightError;
 
 
 	while (!TrainingStates.empty())
-		TrainingStates.pop();
+	{
+		delete TrainingStates[0];
+		TrainingStates.pop_front();
+	}
 }
 
 void RecurrentLayer::Compute()
@@ -41,34 +42,41 @@ void RecurrentLayer::Compute()
 	MatrixMath::FillWith(InnerState, 0);
 	LayerInput->Compute();
 	MatrixMath::Multiply(LayerInput->GetOutput(), Weights, InnerState);
-	MatrixMath::Multiply(SavedState, RecursiveWeight, InnerState);
+	MatrixMath::Multiply(Output, RecursiveWeight, InnerState);
 	MatrixMath::AddIn(InnerState, Bias);
-	MatrixMath::Copy(InnerState, SavedState);
+	function->CalculateInto(InnerState, Output);
 	if (TrainingMode)
 	{
-		std::shared_ptr<Matrix> tmp(new Matrix(*InnerState));
-		TrainingStates.push(tmp);
+		Matrix* tmp(new Matrix(*Output));
+		TrainingStates.push_back(tmp);
 		if (TrainingStates.size() > TimeSteps)
-			TrainingStates.pop();
+			TrainingStates.pop_front();
 	}
-	function->CalculateInto(InnerState, Output);
 }
 
-std::shared_ptr<Matrix> RecurrentLayer::GetOutput()
+Matrix* RecurrentLayer::GetOutput()
 {
 	return Output;
 }
 
-std::shared_ptr<Matrix> RecurrentLayer::ComputeAndGetOutput()
+Matrix* RecurrentLayer::ComputeAndGetOutput()
 {
 	Compute();
 	return Output;
 }
 
-void RecurrentLayer::GetBackwardPass(std::shared_ptr<Matrix> error, bool recursive)
+void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
-	std::shared_ptr<Matrix> derivate = function->CalculateDerivateMatrix(Output);
+	Matrix* derivate = function->CalculateDerivateMatrix(Output);
 	MatrixMath::FillWith(LayerError, 0);
+
+	std::vector<Matrix*> powers;
+	for (unsigned int i = 0; i < TimeSteps; i++)
+	{
+		if (!i)
+			continue;
+		powers.push_back(MatrixMath::Power(RecursiveWeight, i));
+	}
 
 	for (unsigned int neuron = 0; neuron < Size; neuron++)
 	{
@@ -80,19 +88,22 @@ void RecurrentLayer::GetBackwardPass(std::shared_ptr<Matrix> error, bool recursi
 			WeightError->AdjustValue(incoming, neuron, wt);
 			LayerError->AdjustValue(incoming, delta * Weights->GetValue(incoming, neuron));
 		}
-		for (unsigned int hidden = 0; hidden < Size; hidden++)
+		for (signed int time = 0; time < TimeSteps; time++)
 		{
-
-		}
-		for (unsigned int time = 0; time < TimeSteps; time++)
-		{
-
+			for (unsigned int recursive = 0; recursive < Size; recursive++)
+			{
+				float rt = TrainingStates[time]->GetValue(recursive) * delta;
+				if (recursive)
+					rt *= powers[time - 1]->GetValue(recursive, neuron);
+				RecursiveWeightError->AdjustValue(recursive, neuron, rt);
+			}
 		}
 
 		BiasError->SetValue(neuron, delta);
 	}
 
-	derivate.reset();
+	delete derivate;
+	powers.clear();
 
 	if (recursive)
 		LayerInput->GetBackwardPass(LayerError);
@@ -100,6 +111,9 @@ void RecurrentLayer::GetBackwardPass(std::shared_ptr<Matrix> error, bool recursi
 
 void RecurrentLayer::Train(Optimizer* optimizer)
 {
+	optimizer->ModifyWeights(Weights, WeightError);
+	optimizer->ModifyWeights(RecursiveWeight, RecursiveWeightError);
+	optimizer->ModifyWeights(Bias, BiasError);
 }
 
 void RecurrentLayer::SetTrainingMode(bool mode)
@@ -108,7 +122,7 @@ void RecurrentLayer::SetTrainingMode(bool mode)
 	if (!mode)
 	{
 		while (!TrainingStates.empty())
-			TrainingStates.pop();
+			TrainingStates.pop_front();
 	}
 }
 

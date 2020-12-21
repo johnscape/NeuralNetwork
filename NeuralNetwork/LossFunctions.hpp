@@ -7,7 +7,7 @@
 
 namespace LossFunctions
 {
-	float MSE(std::shared_ptr<Matrix> output, std::shared_ptr<Matrix> expected)
+	float MSE(Matrix* output, Matrix* expected)
 	{
 		float sum = 0;
 		unsigned int elements = output->GetColumnCount() * output->GetRowCount();
@@ -16,7 +16,7 @@ namespace LossFunctions
 		return sum / (float)elements;
 	}
 
-	float MSE_Derivate(std::shared_ptr<Matrix> output, std::shared_ptr<Matrix> expected, unsigned int selected)
+	float MSE_Derivate(Matrix* output, Matrix* expected, unsigned int selected)
 	{
 		return output->GetValue(selected) - expected->GetValue(selected);
 	}

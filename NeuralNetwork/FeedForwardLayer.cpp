@@ -1,16 +1,16 @@
 #include "FeedForwardLayer.h"
 #include "Optimizer.h"
 
-FeedForwardLayer::FeedForwardLayer(Layer& inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
+FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
 {
-	Weights.reset(new Matrix(LayerInput->GetOutput()->GetVectorSize(), count));
-	Output.reset(new Matrix(1, count));
-	Bias.reset(new Matrix(1, count));
-	InnerState.reset(new Matrix(1, count));
-	WeightError.reset(new Matrix(LayerInput->GetOutput()->GetVectorSize(), count));
-	LayerError.reset(new Matrix(1, LayerInput->GetOutput()->GetVectorSize()));
-	BiasError.reset(new Matrix(1, count));
-	function.reset(new TanhFunction());
+	Weights = new Matrix(LayerInput->GetOutput()->GetVectorSize(), count);
+	Output = new Matrix(1, count);
+	Bias = new Matrix(1, count);
+	InnerState = new Matrix(1, count);
+	WeightError = new Matrix(LayerInput->GetOutput()->GetVectorSize(), count);
+	LayerError = new Matrix(1, LayerInput->GetOutput()->GetVectorSize());
+	BiasError = new Matrix(1, count);
+	function = new TanhFunction();
 
 	MatrixMath::FillWith(Bias, 1);
 }
@@ -18,48 +18,48 @@ FeedForwardLayer::FeedForwardLayer(Layer& inputLayer, unsigned int count) : Laye
 FeedForwardLayer::~FeedForwardLayer()
 {
 	if (function)
-		function.reset();
-	Weights.reset();
-	Bias.reset();
-	InnerState.reset();
+		delete function;
+	delete Weights;
+	delete Bias;
+	delete InnerState;
 
-	BiasError.reset();
-	WeightError.reset();
+	delete BiasError;
+	delete WeightError;
 }
 
-void FeedForwardLayer::SetInput(std::shared_ptr<Layer> input)
+void FeedForwardLayer::SetInput(Layer* input)
 {
-	LayerInput.reset();
 	LayerInput = input;
-	Weights.reset(new Matrix(LayerInput->OutputSize(), Size));
+	delete Weights;
+	Weights = new Matrix(LayerInput->OutputSize(), Size);
 }
 
 void FeedForwardLayer::Compute()
 {
 	MatrixMath::FillWith(InnerState, 0);
 	LayerInput->Compute();
-	std::shared_ptr<Matrix> prev_out = LayerInput->GetOutput();
+	Matrix* prev_out = LayerInput->GetOutput();
 	MatrixMath::Multiply(prev_out, Weights, InnerState);
 	MatrixMath::AddIn(InnerState, Bias);
 	function->CalculateInto(InnerState, Output);
 }
 
-std::shared_ptr<Matrix> FeedForwardLayer::ComputeAndGetOutput()
+Matrix* FeedForwardLayer::ComputeAndGetOutput()
 {
 	Compute();
 	return Output;
 }
 
-void FeedForwardLayer::SetActivationFunction(std::shared_ptr<ActivationFunction> func)
+void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 {
 	if (function)
-		function.reset();
+		delete function;
 	function = func;
 }
 
-void FeedForwardLayer::GetBackwardPass(std::shared_ptr<Matrix> error, bool recursive)
+void FeedForwardLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
-	std::shared_ptr<Matrix> derivate = function->CalculateDerivateMatrix(Output);
+	Matrix* derivate = function->CalculateDerivateMatrix(Output);
 	MatrixMath::FillWith(LayerError, 0);
 
 	for (unsigned int neuron = 0; neuron < Size; neuron++)
@@ -76,7 +76,7 @@ void FeedForwardLayer::GetBackwardPass(std::shared_ptr<Matrix> error, bool recur
 		BiasError->SetValue(neuron, delta);
 	}
 
-	derivate.reset();
+	delete derivate;
 
 	if (recursive)
 		LayerInput->GetBackwardPass(LayerError);
@@ -86,14 +86,17 @@ void FeedForwardLayer::Train(Optimizer* optimizer)
 {
 	optimizer->ModifyWeights(Weights, WeightError);
 	optimizer->ModifyWeights(Bias, BiasError);
+
+	MatrixMath::FillWith(WeightError, 0);
+	MatrixMath::FillWith(BiasError, 0);
 }
 
-std::shared_ptr<Matrix> FeedForwardLayer::GetBias()
+Matrix* FeedForwardLayer::GetBias()
 {
 	return Bias;
 }
 
-std::shared_ptr<Matrix> FeedForwardLayer::GetWeights()
+Matrix* FeedForwardLayer::GetWeights()
 {
 	return Weights;
 }

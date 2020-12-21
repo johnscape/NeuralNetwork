@@ -4,8 +4,8 @@
 
 InputLayer::InputLayer(unsigned int size) : Layer()
 {
-	LayerInput.reset();
-	Output.reset(new Matrix(1, size));
+	LayerInput = nullptr;
+	Output = new Matrix(1, size);
 }
 
 void InputLayer::Compute()
@@ -13,12 +13,12 @@ void InputLayer::Compute()
 	return;
 }
 
-std::shared_ptr<Matrix> InputLayer::ComputeAndGetOutput()
+Matrix* InputLayer::ComputeAndGetOutput()
 {
 	return Output;
 }
 
-void InputLayer::SetInput(std::shared_ptr<Matrix> input)
+void InputLayer::SetInput(Matrix* input)
 {
 #if DEBUG
 	if (!MatrixMath::SizeCheck(input, Output))
@@ -27,7 +27,7 @@ void InputLayer::SetInput(std::shared_ptr<Matrix> input)
 	MatrixMath::Copy(input, Output);
 }
 
-void InputLayer::GetBackwardPass(std::shared_ptr<Matrix> error, bool recursive)
+void InputLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
 	throw LayerInputException();
 }

@@ -4,41 +4,32 @@
 
 unsigned int Layer::Id = 0;
 
-Layer::Layer(std::shared_ptr<Layer> inputLayer) : TrainingMode(false)
+Layer::Layer(Layer* inputLayer) : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 {
-	this->Output = nullptr;
 	this->LayerInput = inputLayer;
-	this->LayerError = nullptr;
-
 	Id++;
 }
 
-Layer::Layer(Layer& inputLayer) : TrainingMode(false)
+Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 {
-	LayerInput.reset(&inputLayer);
-}
-
-Layer::Layer()
-{
-	LayerInput.reset();
+	LayerInput = nullptr;
+	Id++;
 }
 
 Layer::~Layer()
 {
 	if (Output)
-		Output.reset();
+		delete Output;
 	if (LayerError)
-		LayerError.reset();
+		delete LayerError;
 }
 
-void Layer::SetInput(std::shared_ptr<Layer> input)
+void Layer::SetInput(Layer* input)
 {
-	if (LayerInput)
-		LayerInput.reset();
 	LayerInput = input;
 }
 
-std::shared_ptr<Matrix> Layer::GetOutput()
+Matrix* Layer::GetOutput()
 {
 	if (!Output)
 		throw LayerInputException();
@@ -54,12 +45,12 @@ unsigned int Layer::OutputSize()
 	return Output->GetRowCount();
 }
 
-std::shared_ptr<Layer> Layer::GetInputLayer()
+Layer* Layer::GetInputLayer()
 {
 	return LayerInput;
 }
 
-std::shared_ptr<Matrix> Layer::GetLayerError()
+Matrix* Layer::GetLayerError()
 {
 	return LayerError;
 }

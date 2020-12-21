@@ -16,8 +16,8 @@
 int main()
 {
     /*InputLayer inp(2);
-    FeedForwardLayer hidden(inp, 2);
-    FeedForwardLayer output(hidden, 2);
+    FeedForwardLayer hidden(&inp, 2);
+    FeedForwardLayer output(&hidden, 2);
 
     hidden.GetWeights()->SetValue(0, 0, 0.15);
     hidden.GetWeights()->SetValue(1, 0, 0.2);
@@ -35,17 +35,15 @@ int main()
     output.GetBias()->SetValue(0, 0.6);
     output.GetBias()->SetValue(1, 0.6);
 
-    std::shared_ptr<ActivationFunction> func;
-    func.reset(new Sigmoid());
-    hidden.SetActivationFunction(func);
-    output.SetActivationFunction(func);
+    hidden.SetActivationFunction(new Sigmoid());
+    output.SetActivationFunction(new Sigmoid());
 
     Matrix input(1, 2);
     input[0] = 0.05;
     input[1] = 0.1;
 
-    inp.SetInput(std::make_shared<Matrix>(input));
-    std::shared_ptr<Matrix> outval = output.ComputeAndGetOutput();
+    inp.SetInput(&input);
+    Matrix* outval = output.ComputeAndGetOutput();
     std::cout << "Before training:" << std::endl;
     MatrixMath::PrintMatrix(outval);
 
@@ -55,17 +53,17 @@ int main()
     expected[0] = 0.01;
     expected[1] = 0.99;
 
-    GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, output, 0.5);
+    GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &output, 0.5);
     for (size_t i = 0; i < 500; i++)
     {
-        trainer.Train(input, expected);
+        trainer.Train(&input, &expected);
     }
     std::cout << "After training:" << std::endl;
     output.Compute();
     MatrixMath::PrintMatrix(outval);*/
 
-    /*InputLayer inp(2);
-    RecurrentLayer rec(std::make_shared<InputLayer>(inp), 5);
+    InputLayer inp(2);
+    RecurrentLayer rec(&inp, 5);
 
     Matrix input(1, 2);
     input[0] = 0.05;
@@ -73,9 +71,11 @@ int main()
 
     rec.SetTrainingMode(true);
 
-    inp.SetInput(std::make_shared<Matrix>(input));
-    rec.Compute();*/
+    inp.SetInput(&input);
+    rec.Compute();
 
 
     std::cout << "Hello World!\n";
+    //trainer.Train(input, expected);
+    //trainer.Reset();
 }

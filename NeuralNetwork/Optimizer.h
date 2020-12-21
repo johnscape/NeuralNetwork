@@ -6,19 +6,31 @@
 
 #include <vector>
 
-typedef float (*LossFuction)(std::shared_ptr<Matrix>, std::shared_ptr<Matrix>);
-typedef float (*LossDerivate)(std::shared_ptr<Matrix>, std::shared_ptr<Matrix>, unsigned int);
+typedef float (*LossFuction)(Matrix*, Matrix*);
+typedef float (*LossDerivate)(Matrix*, Matrix*, unsigned int);
 
 class Optimizer
 {
 public:
-	Optimizer(Layer& output);
+	Optimizer(Layer* output);
 	virtual ~Optimizer();
 
-	virtual void Train(Matrix& input, Matrix& expected) = 0;
-	virtual void ModifyWeights(std::shared_ptr<Matrix> weights, std::shared_ptr<Matrix> errors) = 0;
+	virtual void Train(Matrix* input, Matrix* expected) = 0;
+	virtual void ModifyWeights(Matrix* weights, Matrix* errors) = 0;
+	virtual void Reset() = 0;
+	virtual void TrainFor(Matrix* input, Matrix* expected, unsigned int times, unsigned int batch = 32);
+	virtual void TrainUntil(Matrix* input, Matrix* expected, float error, unsigned int batch = 32);
 
 protected:
-	std::shared_ptr<Layer> outputLayer;
+	Layer* outputLayer;
+	Layer* inputLayer;
+
+	float lastError;
+	unsigned int currentBatch;
+
+	virtual void FindInputLayer();
+	virtual void TrainStep(Matrix* input, Matrix* expected) = 0;
+	virtual void TrainLayers();
+
 };
 
