@@ -75,7 +75,7 @@ void GradientDescent::ModifyWeights(Matrix* weights, Matrix* errors)
 	{
 		for (unsigned int col = 0; col < weights->GetColumnCount(); col++)
 		{
-			float edit = -LearningRate * errors->GetValue(row, col) / 1; //TODO: set to current batch
+			float edit = -LearningRate * errors->GetValue(row, col) / currentBatch;
 			weights->AdjustValue(row, col, edit);
 		}
 	}

@@ -99,6 +99,8 @@ public:
 
 	unsigned int GetVectorSize();
 
+	void ReloadFromOther(Matrix* m);
+
 private:
 	float* Values;
 	size_t Rows;

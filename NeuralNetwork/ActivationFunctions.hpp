@@ -103,7 +103,7 @@ public:
 
 private:
 	float Calculate(float a) {
-		return ((exp(a) - exp(-a) / (exp(a) + exp(-a))));
+		return tanh(a);
 	}
 
 	float CalculateDerivate(float a) { return (float)(1 - pow(a, 2)); }

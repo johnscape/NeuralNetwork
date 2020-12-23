@@ -57,6 +57,7 @@ namespace MatrixMath
 	void Add(Matrix* matrix, float value);
 	Matrix* Add(const Matrix* a, const Matrix* b);
 	Matrix* Substract(Matrix* a, Matrix* b);
+	void SubstractIn(Matrix* a, Matrix* b);
 	void MultiplyIn(Matrix* a, float b);
 	Matrix* Multiply(Matrix* a, float b);
 	Matrix* Multiply(Matrix* a, Matrix* b, Matrix* c = nullptr);
@@ -75,6 +76,7 @@ namespace MatrixMath
 	void PrintMatrix(Matrix* m);
 
 	Matrix* Power(Matrix* original, unsigned int power);
+	Matrix* Concat(Matrix* a, Matrix* b, unsigned int dimension, Matrix* c);
 }
 
 #endif // !MATRIXMATH_GUARD

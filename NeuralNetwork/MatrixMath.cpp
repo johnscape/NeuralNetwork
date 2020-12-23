@@ -88,6 +88,14 @@ Matrix* MatrixMath::Substract(Matrix* a, Matrix* b)
 	return c;
 }
 
+void MatrixMath::SubstractIn(Matrix* a, Matrix* b)
+{
+	if (!SizeCheck(a, b))
+		throw MatrixException(); //the two matrices doesn't have the same column/row count!
+	for (size_t i = 0; i < a->GetRowCount() * a->GetColumnCount(); i++)
+		a->AdjustValue(i, -b->GetValue(i));
+}
+
 void MatrixMath::MultiplyIn(Matrix* a, float b)
 {
 	for (size_t i = 0; i < a->GetColumnCount() * a->GetRowCount(); i++)
@@ -181,7 +189,7 @@ void MatrixMath::Transpose(Matrix* m)
 		for (unsigned int i = 0; i < m->GetRowCount(); i++)
 			for (unsigned int j = 0; j < m->GetColumnCount(); j++)
 				trans.SetValue(j, i, m->GetValue(i, j));
-		Copy(&trans, m);
+		m->ReloadFromOther(&trans);
 	}
 }
 
@@ -310,4 +318,60 @@ Matrix* MatrixMath::Power(Matrix* original, unsigned int power)
 	}
 
 	return pow;
+}
+
+Matrix* MatrixMath::Concat(Matrix* a, Matrix* b, unsigned int dimension, Matrix* c)
+{
+	if (dimension == 0) //concat on rows
+	{
+#ifdef DEBUG
+		if (a->GetColumnCount() != b->GetColumnCount())
+			throw MatrixException();
+#endif // DEBUG
+		if (!c)
+			c = new Matrix(a->GetRowCount() + b->GetRowCount(), a->GetColumnCount());
+		for (unsigned int row = 0; row < a->GetRowCount(); row++)
+		{
+			for (unsigned int col = 0; col < a->GetColumnCount(); col++)
+			{
+				c->SetValue(row, col, a->GetValue(row, col));
+			}
+		}
+
+		for (unsigned int row = 0; row < b->GetRowCount(); row++)
+		{
+			for (unsigned int col = 0; col < a->GetColumnCount(); col++)
+			{
+				c->SetValue(a->GetRowCount() + row, col, b->GetValue(row, col));
+			}
+		}
+
+		return c;
+	}
+	if (dimension == 1) //concat on rows
+	{
+#ifdef DEBUG
+		if (a->GetRowCount() != b->GetRowCount())
+			throw MatrixException();
+#endif // DEBUG
+		if (!c)
+			c = new Matrix(a->GetRowCount(), a->GetColumnCount() + b->GetColumnCount());
+		for (unsigned int row = 0; row < a->GetRowCount(); row++)
+		{
+			for (unsigned int col = 0; col < a->GetColumnCount(); col++)
+			{
+				c->SetValue(row, col, a->GetValue(row, col));
+			}
+		}
+
+		for (unsigned int row = 0; row < a->GetRowCount(); row++)
+		{
+			for (unsigned int col = 0; col < b->GetColumnCount(); col++)
+			{
+				c->SetValue(row, col + a->GetColumnCount(), a->GetValue(row, col));
+			}
+		}
+
+		return c;
+	}
 }

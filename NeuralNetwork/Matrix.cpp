@@ -136,6 +136,17 @@ unsigned int Matrix::GetVectorSize()
 	return 0;
 }
 
+void Matrix::ReloadFromOther(Matrix* m)
+{
+	delete[] Values;
+	Columns = m->GetColumnCount();
+	Rows = m->GetRowCount();
+	MaxValue = Rows * Columns;
+	Values = new float[MaxValue];
+	for (size_t i = 0; i < MaxValue; i++)
+		Values[i] = m->GetValue(i);
+}
+
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
 {
 	return row * Columns + col;

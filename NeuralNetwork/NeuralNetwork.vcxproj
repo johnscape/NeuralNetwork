@@ -143,6 +143,7 @@
     <ClCompile Include="GradientDescent.cpp" />
     <ClCompile Include="InputLayer.cpp" />
     <ClCompile Include="Layer.cpp" />
+    <ClCompile Include="LSTM.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MatrixMath.cpp" />
     <ClCompile Include="NeuralNetwork.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LayerException.hpp" />
     <ClInclude Include="LossFunctions.hpp" />
+    <ClInclude Include="LSTM.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="MatrixException.hpp" />
     <ClInclude Include="MatrixMath.h" />
