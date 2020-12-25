@@ -42,6 +42,15 @@ RecurrentLayer::~RecurrentLayer()
 	}
 }
 
+Layer* RecurrentLayer::Clone()
+{
+	RecurrentLayer* r = new RecurrentLayer(LayerInput, Size, TimeSteps);
+	MatrixMath::Copy(Weights, r->GetWeights());
+	MatrixMath::Copy(RecursiveWeight, r->GetRecurrentWeights());
+	MatrixMath::Copy(Bias, r->GetBias());
+	return r;
+}
+
 void RecurrentLayer::Compute()
 {
 	MatrixMath::FillWith(InnerState, 0);
@@ -174,6 +183,10 @@ void RecurrentLayer::Train(Optimizer* optimizer)
 	optimizer->ModifyWeights(Weights, WeightError);
 	optimizer->ModifyWeights(RecursiveWeight, RecursiveWeightError);
 	optimizer->ModifyWeights(Bias, BiasError);
+
+	MatrixMath::FillWith(WeightError, 0);
+	MatrixMath::FillWith(RecursiveWeightError, 0);
+	MatrixMath::FillWith(BiasError, 0);
 }
 
 void RecurrentLayer::SetTrainingMode(bool mode)

@@ -6,6 +6,7 @@ class InputLayer :
 public:
 	InputLayer(unsigned int size);
 	virtual ~InputLayer() {}
+	virtual Layer* Clone();
 
 	virtual void Compute();
 	virtual Matrix* ComputeAndGetOutput();
@@ -14,5 +15,7 @@ public:
 
 	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
 	virtual void Train(Optimizer* optimizer) {}
+private:
+	unsigned int Size;
 };
 

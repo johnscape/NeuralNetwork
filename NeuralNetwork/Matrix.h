@@ -101,6 +101,9 @@ public:
 
 	void ReloadFromOther(Matrix* m);
 
+	void SaveToFile(const char* fileName);
+	void LoadFromFile(const char* fileName);
+
 private:
 	float* Values;
 	size_t Rows;

@@ -15,6 +15,18 @@ FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Laye
 	MatrixMath::FillWith(Bias, 1);
 }
 
+Layer* FeedForwardLayer::Clone()
+{
+	FeedForwardLayer* l = new FeedForwardLayer(LayerInput, Size);
+
+	MatrixMath::Copy(Weights, l->GetWeights());
+	MatrixMath::Copy(Output, l->GetOutput());
+	MatrixMath::Copy(Bias, l->GetBias());
+
+	l->SetActivationFunction(function);
+	return l;
+}
+
 FeedForwardLayer::~FeedForwardLayer()
 {
 	if (function)

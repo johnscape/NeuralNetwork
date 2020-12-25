@@ -8,7 +8,7 @@ class FeedForwardLayer :
 {
 public:
 	FeedForwardLayer(Layer* inputLayer, unsigned int count);
-
+	virtual Layer* Clone();
 	virtual ~FeedForwardLayer();
 
 	virtual void SetInput(Layer* input);

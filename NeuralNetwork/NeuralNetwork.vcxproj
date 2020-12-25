@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FeedForwardLayer.cpp" />
+    <ClCompile Include="GeneticAlgorithm.cpp" />
     <ClCompile Include="GradientDescent.cpp" />
     <ClCompile Include="InputLayer.cpp" />
     <ClCompile Include="Layer.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="ActivationFunctions.hpp" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FeedForwardLayer.h" />
+    <ClInclude Include="GeneticAlgorithm.h" />
     <ClInclude Include="GradientDescent.h" />
     <ClInclude Include="InputLayer.h" />
     <ClInclude Include="Layer.h" />

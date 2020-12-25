@@ -11,6 +11,7 @@ class LSTM :
 public:
     LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps = 3);
     virtual ~LSTM();
+    virtual Layer* Clone();
 
     virtual void Compute();
     virtual Matrix* GetOutput();

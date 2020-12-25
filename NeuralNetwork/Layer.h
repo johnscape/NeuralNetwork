@@ -10,6 +10,7 @@ class Layer
 public:
 	Layer(Layer* inputLayer);
 	Layer();
+	virtual Layer* Clone() = 0;
 	virtual ~Layer();
 
 	virtual void SetInput(Layer* input);

@@ -57,6 +57,9 @@
     <ClCompile Include="LSTM.cpp">
       <Filter>Source Files\Layers</Filter>
     </ClCompile>
+    <ClCompile Include="GeneticAlgorithm.cpp">
+      <Filter>Source Files\Optimizers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix.h">
@@ -100,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="LSTM.h">
       <Filter>Header Files\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneticAlgorithm.h">
+      <Filter>Header Files\Optimizers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

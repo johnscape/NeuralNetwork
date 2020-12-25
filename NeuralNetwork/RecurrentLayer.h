@@ -10,6 +10,7 @@ class RecurrentLayer : public Layer
 public:
 	RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps = 3);
 	virtual ~RecurrentLayer();
+	virtual Layer* Clone();
 
 
 	virtual void Compute();

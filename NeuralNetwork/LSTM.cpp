@@ -1,4 +1,5 @@
 #include "LSTM.h"
+#include "Optimizer.h"
 
 LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps) : Layer(inputLayer), CellStateSize(cellStateSize), TimeSteps(timeSteps)
 {
@@ -53,6 +54,18 @@ LSTM::~LSTM()
         delete RecursiveWeightErrors[i];
         delete RecursiveWeightOuputs[i];
     }
+}
+
+Layer* LSTM::Clone()
+{
+    LSTM* r = new LSTM(LayerInput, CellStateSize, TimeSteps);
+    for (unsigned char i = 0; i < 4; i++)
+    {
+        MatrixMath::Copy(InputWeights[i], r->GetWeight(i));
+        MatrixMath::Copy(RecursiveWeights[i], r->GetRecursiveWeight(i));
+        MatrixMath::Copy(Biases[i], r->GetBias(i));
+    }
+    return r;
 }
 
 void LSTM::Compute()
@@ -294,10 +307,22 @@ void LSTM::UpdateWeightErrors(Matrix* gateIError, Matrix* gateRError, Matrix* in
 
     MatrixMath::AddIn(InputWeightErrors[weight], gateIError);
     MatrixMath::AddIn(RecursiveWeightErrors[weight], gateRError);
+
+    MatrixMath::AddIn(BiasErrors[weight], dGate);
 }
 
 void LSTM::Train(Optimizer* optimizer)
 {
+    for (unsigned char i = 0; i < 4; i++)
+    {
+        optimizer->ModifyWeights(InputWeights[i], InputWeightErrors[i]);
+        optimizer->ModifyWeights(RecursiveWeights[i], RecursiveWeightErrors[i]);
+        optimizer->ModifyWeights(Biases[i], BiasErrors[i]);
+
+        MatrixMath::FillWith(InputWeightErrors[i], 0);
+        MatrixMath::FillWith(RecursiveWeightErrors[i], 0);
+        MatrixMath::FillWith(BiasErrors[i], 0);
+    }
 }
 
 void LSTM::SetTrainingMode(bool mode)

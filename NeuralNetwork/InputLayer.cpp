@@ -2,10 +2,15 @@
 #include "MatrixMath.h"
 #include "LayerException.hpp"
 
-InputLayer::InputLayer(unsigned int size) : Layer()
+InputLayer::InputLayer(unsigned int size) : Layer(), Size(size)
 {
 	LayerInput = nullptr;
 	Output = new Matrix(1, size);
+}
+
+Layer* InputLayer::Clone()
+{
+	return new InputLayer(Size);
 }
 
 void InputLayer::Compute()
