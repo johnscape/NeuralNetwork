@@ -2,6 +2,11 @@
 #include "MatrixMath.h"
 #include "LayerException.hpp"
 
+#include "InputLayer.h"
+#include "FeedForwardLayer.h"
+#include "RecurrentLayer.h"
+#include "LSTM.h"
+
 unsigned int Layer::Id = 0;
 
 Layer::Layer(Layer* inputLayer) : TrainingMode(false), LayerError(nullptr), Output(nullptr)
@@ -14,6 +19,19 @@ Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 {
 	LayerInput = nullptr;
 	Id++;
+}
+
+Layer* Layer::Create(unsigned int id, unsigned int size)
+{
+	if (id == 0)
+		return new InputLayer(size);
+	if (id == 1)
+		return new FeedForwardLayer(nullptr, size);
+	if (id == 2)
+		return new RecurrentLayer(nullptr, size);
+	if (id == 3)
+		return new LSTM(nullptr, size);
+	return nullptr;
 }
 
 Layer::~Layer()

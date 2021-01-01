@@ -4,6 +4,7 @@
 //TODO: Delete
 #include "MatrixMath.h"
 #include <iostream>
+#include "pch.h"
 
 GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, Layer* output, float learningRate) : Optimizer(output), LearningRate(learningRate)
 {

@@ -11,6 +11,7 @@ public:
 	Layer(Layer* inputLayer);
 	Layer();
 	virtual Layer* Clone() = 0;
+	Layer* Create(unsigned int id, unsigned int size);
 	virtual ~Layer();
 
 	virtual void SetInput(Layer* input);

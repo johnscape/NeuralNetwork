@@ -1,6 +1,6 @@
 #include "FeedForwardLayer.h"
 #include "Optimizer.h"
-
+#include "pch.h"
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
 {
 	Weights = new Matrix(LayerInput->GetOutput()->GetVectorSize(), count);
