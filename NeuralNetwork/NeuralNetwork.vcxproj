@@ -147,6 +147,7 @@
     <ClCompile Include="LSTM.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MatrixMath.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="NeuralNetwork.cpp" />
     <ClCompile Include="Optimizer.cpp" />
     <ClCompile Include="RecurrentLayer.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="MatrixException.hpp" />
     <ClInclude Include="MatrixMath.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Optimizer.h" />
     <ClInclude Include="RecurrentLayer.h" />
   </ItemGroup>
