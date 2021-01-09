@@ -1,4 +1,8 @@
 #pragma once
+
+#include <string>
+#include "rapidjson/document.h"
+
 class Matrix
 {
 public:
@@ -101,8 +105,8 @@ public:
 
 	void ReloadFromOther(Matrix* m);
 
-	void SaveToFile(const char* fileName);
-	void LoadFromFile(const char* fileName);
+	void LoadFromJSON(const char* data, bool isFile = false);
+	std::string SaveToJSON(const char* fileName = nullptr);
 
 private:
 	float* Values;

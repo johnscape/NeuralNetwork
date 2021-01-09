@@ -1,7 +1,6 @@
 #include "GeneticAlgorithm.h"
 #include "Layer.h"
 #include <time.h>
-#include "pch.h"
 
 GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count) :
 	Optimizer(output), MaxGenerations(generations), IndividialCount(individual_count), CurrentGeneration(0),

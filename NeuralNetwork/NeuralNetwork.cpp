@@ -9,44 +9,48 @@
 #include "GradientDescent.h"
 #include "LossFunctions.hpp"
 
-#include <memory>
+#include "rapidjson/document.h"
+#include "rapidjson/rapidjson.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/ostreamwrapper.h"
+#include <fstream>
+
 int main()
 {
-	InputLayer inp(2);
-	LSTM lstm(&inp, 1);
 
-	lstm.GetWeight(2)->SetValue(0, 0.45f);
-	lstm.GetWeight(2)->SetValue(1, 0.25f);
-	lstm.GetWeight(1)->SetValue(0, 0.95f);
-	lstm.GetWeight(1)->SetValue(1, 0.8f);
-	lstm.GetWeight(0)->SetValue(0, 0.7f);
-	lstm.GetWeight(0)->SetValue(1, 0.45f);
-	lstm.GetWeight(3)->SetValue(0, 0.6f);
-	lstm.GetWeight(3)->SetValue(1, 0.4f);
+	//creating matrix json
+	/*rapidjson::Document document;
+	document.SetObject();
 
-	lstm.GetRecursiveWeight(2)->SetValue(0, 0.15f);
-	lstm.GetRecursiveWeight(1)->SetValue(0, 0.8f);
-	lstm.GetRecursiveWeight(0)->SetValue(0, 0.1f);
-	lstm.GetRecursiveWeight(3)->SetValue(0, 0.25f);
+	rapidjson::Value rows, cols;
+	rows = 5;
+	cols = 5;
 
-	lstm.GetBias(2)->SetValue(0, 0.2f);
-	lstm.GetBias(1)->SetValue(0, 0.65f);
-	lstm.GetBias(0)->SetValue(0, 0.15f);
-	lstm.GetBias(3)->SetValue(0, 0.1f);
+	rapidjson::Value values(rapidjson::kArrayType);
+	for (size_t i = 0; i < 25; i++)
+		values.PushBack(i, document.GetAllocator());
 
-	Matrix input(2, 2);
-	input.SetValue(0, 1);
-	input.SetValue(1, 2);
-	input.SetValue(2, 0.5f);
-	input.SetValue(3, 3);
+	rapidjson::Value root(rapidjson::kObjectType);
+	root.AddMember("rows", rows, document.GetAllocator());
+	root.AddMember("cols", cols, document.GetAllocator());
+	root.AddMember("values", values, document.GetAllocator());
 
-	Matrix expected(2, 1);
-	expected.SetValue(0, 0.5f);
-	expected.SetValue(1, 1.25f);
+	document.AddMember("root", root, document.GetAllocator());
 
-	GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &lstm, 0.5);
+	std::ofstream writer("output.json");
+	rapidjson::OStreamWrapper osw(writer);
+	rapidjson::Writer<rapidjson::OStreamWrapper> w(osw);
+	document.Accept(w);
+	writer.close();*/
 
-	trainer.TrainFor(&input, &expected, 10, 1);
+	Matrix m(5, 2);
+	MatrixMath::FillWithRandom(&m);
+	m.SaveToJSON("local.json");
+
+	Matrix m2(3, 3);
+	m2.LoadFromJSON("local.json", true);
+
+	std::cout << MatrixMath::IsEqual(&m, &m2);
 
 	return 0;
 }

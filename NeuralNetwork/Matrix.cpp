@@ -4,6 +4,12 @@
 #include <fstream>
 #include <string>
 
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/ostreamwrapper.h"
+#include "rapidjson/istreamwrapper.h"
+
 //TODO: Throw error at DEBUG errors
 
 Matrix::Matrix()
@@ -149,40 +155,69 @@ void Matrix::ReloadFromOther(Matrix* m)
 		Values[i] = m->GetValue(i);
 }
 
-void Matrix::SaveToFile(const char* fileName)
-{
-	std::ofstream writer(fileName);
-	writer << Rows << " " << Columns;
-	for (size_t i = 0; i < Rows * Columns; i++)
-		writer << " " << Values[i];
-	writer.close();
-}
-
-void Matrix::LoadFromFile(const char* fileName)
+void Matrix::LoadFromJSON(const char* data, bool isFile)
 {
 	if (Values)
 		delete[] Values;
-	std::ifstream reader(fileName);
-	std::string txt;
-	Rows = 0;
-	Columns = 0;
-	size_t count = 0;
-	while (std::getline(reader, txt, ' '))
+	rapidjson::Document document;
+	if (!isFile)
+		document.Parse(data);
+	else
 	{
-		if (!Rows)
-			Rows = std::stoi(txt);
-		else if (!Columns)
-		{
-			Columns = std::stoi(txt);
-			Values = new float[Rows * Columns];
-		}
-		else
-		{
-			Values[count] = std::stof(txt);
-			count++;
-		}
+		std::ifstream r(data);
+		rapidjson::IStreamWrapper isw(r);
+		document.ParseStream(isw);
 	}
-	reader.close();
+	rapidjson::Value val;
+	val = document["matrix"]["rows"];
+	Rows = val.GetUint64();
+	val = document["matrix"]["cols"];
+	Columns = val.GetUint64();
+	MaxValue = Rows * Columns;
+	Values = new float[MaxValue];
+	val = document["matrix"]["values"];
+	size_t count = 0;
+	for (rapidjson::Value::ConstValueIterator itr = val.Begin(); itr != val.End(); itr++)
+	{
+		Values[count] = itr->GetFloat();
+		count++;
+	}
+}
+
+std::string Matrix::SaveToJSON(const char* fileName)
+{
+	rapidjson::Document doc;
+	doc.SetObject();
+
+	rapidjson::Value rows, cols, values;
+	rapidjson::Value matrix(rapidjson::kObjectType);
+
+	rows.SetUint64(Rows);
+	cols.SetUint64(Columns);
+	values.SetArray();
+	for (size_t i = 0; i < Rows * Columns; i++)
+		values.PushBack(Values[i], doc.GetAllocator());
+
+	matrix.AddMember("rows", rows, doc.GetAllocator());
+	matrix.AddMember("cols", cols, doc.GetAllocator());
+	matrix.AddMember("values", values, doc.GetAllocator());
+
+	doc.AddMember("matrix", matrix, doc.GetAllocator());
+
+	if (fileName)
+	{
+		std::ofstream w(fileName);
+		rapidjson::OStreamWrapper osw(w);
+		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+		doc.Accept(writer);
+		w.close();
+	}
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	return std::string(buffer.GetString());
 }
 
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
