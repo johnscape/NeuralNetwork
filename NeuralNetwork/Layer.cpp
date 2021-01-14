@@ -27,10 +27,10 @@ Layer* Layer::Create(unsigned int id, unsigned int size)
 		return new InputLayer(size);
 	if (id == 1)
 		return new FeedForwardLayer(nullptr, size);
-	if (id == 2)
+	/*if (id == 2)
 		return new RecurrentLayer(nullptr, size);
 	if (id == 3)
-		return new LSTM(nullptr, size);
+		return new LSTM(nullptr, size);*/
 	return nullptr;
 }
 
@@ -78,4 +78,35 @@ void Layer::SetTrainingMode(bool mode, bool recursive)
 	TrainingMode = mode;
 	if (recursive && LayerInput)
 		LayerInput->SetTrainingMode(mode);
+}
+
+Layer* Layer::CreateFromJSON(const char* data, bool isFile)
+{
+	rapidjson::Document doc;
+	if (!isFile)
+		doc.Parse(data);
+	else
+	{
+		std::ifstream r(data);
+		rapidjson::IStreamWrapper isw(r);
+		doc.ParseStream(isw);
+	}
+
+	unsigned int layerType;
+	rapidjson::Value val;
+	val = doc["layer"]["type"];
+	Layer* ret = nullptr;
+	if (val == 0)
+		ret = new InputLayer(1);
+	else if (val == 1)
+		ret = new FeedForwardLayer(nullptr, 1);
+	
+	if (ret)
+		ret->LoadFromJSON(data, isFile);
+	return ret;
+}
+
+unsigned int Layer::GetId()
+{
+	return Id;
 }

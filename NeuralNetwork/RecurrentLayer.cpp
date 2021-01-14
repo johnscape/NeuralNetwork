@@ -214,3 +214,12 @@ Matrix* RecurrentLayer::GetRecurrentWeights()
 	return RecursiveWeight;
 }
 
+void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
+{
+}
+
+std::string RecurrentLayer::SaveToJSON(const char* fileName)
+{
+	return std::string();
+}
+

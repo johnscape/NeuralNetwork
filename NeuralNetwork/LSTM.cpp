@@ -350,3 +350,12 @@ Matrix* LSTM::GetBias(unsigned char weight)
         return nullptr;
     return Biases[weight];
 }
+
+void LSTM::LoadFromJSON(const char* data, bool isFile)
+{
+}
+
+std::string LSTM::SaveToJSON(const char* fileName)
+{
+    return std::string();
+}

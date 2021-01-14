@@ -26,6 +26,9 @@ public:
     Matrix* GetRecursiveWeight(unsigned char weight);
     Matrix* GetBias(unsigned char weight);
 
+    virtual void LoadFromJSON(const char* data, bool isFile = false);
+    virtual std::string SaveToJSON(const char* fileName = nullptr);
+
 private:
     std::vector<Matrix*> InputWeights;
     std::vector<Matrix*> RecursiveWeights;

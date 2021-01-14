@@ -1,13 +1,17 @@
 #include "FeedForwardLayer.h"
 #include "Optimizer.h"
+
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
 {
-	Weights = new Matrix(LayerInput->GetOutput()->GetVectorSize(), count);
+	unsigned int inputSize = 1;
+	if (LayerInput)
+		inputSize = LayerInput->GetOutput()->GetVectorSize();
+	Weights = new Matrix(inputSize, count);
 	Output = new Matrix(1, count);
 	Bias = new Matrix(1, count);
 	InnerState = new Matrix(1, count);
-	WeightError = new Matrix(LayerInput->GetOutput()->GetVectorSize(), count);
-	LayerError = new Matrix(1, LayerInput->GetOutput()->GetVectorSize());
+	WeightError = new Matrix(inputSize, count);
+	LayerError = new Matrix(1, inputSize);
 	BiasError = new Matrix(1, count);
 	function = new TanhFunction();
 
@@ -110,4 +114,77 @@ Matrix* FeedForwardLayer::GetBias()
 Matrix* FeedForwardLayer::GetWeights()
 {
 	return Weights;
+}
+
+void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
+{
+	rapidjson::Document document;
+	if (!isFile)
+		document.Parse(data);
+	else
+	{
+		std::ifstream r(data);
+		rapidjson::IStreamWrapper isw(r);
+		document.ParseStream(isw);
+	}
+	rapidjson::Value val;
+
+	delete Weights;
+	delete WeightError;
+	delete Bias;
+	delete BiasError;
+
+	unsigned int InputSize = 1;
+	val = document["layer"]["size"];
+	Size = val.GetUint();
+	val = document["layer"]["inputSize"];
+	//recreate matrices with new sizes
+
+	
+}
+
+std::string FeedForwardLayer::SaveToJSON(const char* fileName)
+{
+	rapidjson::Document doc;
+	doc.SetObject();
+
+	rapidjson::Value layerSize, id, type, inputSize;
+	layerSize.SetUint(Size);
+	id.SetUint(Id);
+	type.SetUint(1);
+	if (LayerInput)
+		inputSize.SetUint(LayerInput->GetOutput()->GetVectorSize());
+	else
+		inputSize.SetUint(1);
+
+	rapidjson::Document weight, bias;
+
+	weight.Parse(Weights->SaveToJSON().c_str());
+	bias.Parse(Bias->SaveToJSON().c_str());
+
+	rapidjson::Value root(rapidjson::kObjectType);
+	root.AddMember("id", id, doc.GetAllocator());
+	root.AddMember("type", type, doc.GetAllocator());
+	root.AddMember("size", layerSize, doc.GetAllocator());
+	root.AddMember("inputSize", inputSize, doc.GetAllocator());
+	root.AddMember("weights", weight, doc.GetAllocator());
+	root.AddMember("bias", bias, doc.GetAllocator());
+
+	doc.AddMember("layer", root, doc.GetAllocator());
+
+	if (fileName)
+	{
+		std::ofstream w(fileName);
+		rapidjson::OStreamWrapper osw(w);
+		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+		doc.Accept(writer);
+		w.close();
+	}
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	return std::string(buffer.GetString());
+
 }

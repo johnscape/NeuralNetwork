@@ -1,0 +1,1 @@
+{"layer":{"id":1,"type":0,"inputSize":5,"weights":{"matrix":{"rows":1,"cols":5,"values":[0.0,0.0,0.0,0.0,0.0]}},"bias":{"matrix":{"rows":1,"cols":5,"values":[1.0,1.0,1.0,1.0,1.0]}}}}

@@ -15,6 +15,9 @@ public:
 
 	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
 	virtual void Train(Optimizer* optimizer) {}
+
+	virtual void LoadFromJSON(const char* data, bool isFile = false);
+	virtual std::string SaveToJSON(const char* fileName = nullptr);
 private:
 	unsigned int Size;
 };

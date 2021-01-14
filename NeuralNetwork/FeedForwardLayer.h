@@ -24,6 +24,9 @@ public:
 	Matrix* GetBias();
 	Matrix* GetWeights();
 
+	virtual void LoadFromJSON(const char* data, bool isFile = false);
+	virtual std::string SaveToJSON(const char* fileName = nullptr);
+
 private:
 
 	ActivationFunction* function;

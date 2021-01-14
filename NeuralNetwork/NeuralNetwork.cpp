@@ -43,14 +43,8 @@ int main()
 	document.Accept(w);
 	writer.close();*/
 
-	Matrix m(5, 2);
-	MatrixMath::FillWithRandom(&m);
-	m.SaveToJSON("local.json");
-
-	Matrix m2(3, 3);
-	m2.LoadFromJSON("local.json", true);
-
-	std::cout << MatrixMath::IsEqual(&m, &m2);
+	FeedForwardLayer layer(nullptr, 5);
+	layer.SaveToJSON("layer.json");
 
 	return 0;
 }
