@@ -140,6 +140,16 @@ Layer* Model::GetLastLayer()
 	return nullptr;
 }
 
+Layer* Model::GetOutput()
+{
+	return outputLayer;
+}
+
+Layer* Model::GetInput()
+{
+	return inputLayer;
+}
+
 void Model::FindOutput()
 {
 	for (unsigned int i = 0; i < layers.size(); i++)

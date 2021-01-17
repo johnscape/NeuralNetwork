@@ -20,6 +20,8 @@ public:
 	Matrix Compute(Matrix* input);
 
 	Layer* GetLastLayer();
+	Layer* GetOutput();
+	Layer* GetInput();
 
 private:
 	std::vector<Layer*> layers;
