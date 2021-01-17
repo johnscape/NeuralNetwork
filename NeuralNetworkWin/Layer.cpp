@@ -23,7 +23,7 @@ Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 	LayerCount++;
 }
 
-Layer* Layer::Create(unsigned int id, unsigned int size)
+Layer* Layer::Create(unsigned int type, unsigned int size)
 {
 	if (id == 0)
 		return new InputLayer(size);

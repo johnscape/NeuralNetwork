@@ -5,15 +5,6 @@
 
 int main()
 {
-	/*FeedForwardLayer layer(nullptr, 5);
-	MatrixMath::FillWithRandom(layer.GetWeights());
-	MatrixMath::FillWithRandom(layer.GetBias());
-	layer.SaveToJSON("layer.json");
-
-	FeedForwardLayer layer2(nullptr, 5);
-	layer2.LoadFromJSON("layer.json", true);
-
-	MatrixMath::PrintMatrix(layer.GetWeights());*/
 	Model model;
 	model.AddLayer(new InputLayer(3));
 	model.AddLayer(new FeedForwardLayer(model.GetLastLayer(), 3));
