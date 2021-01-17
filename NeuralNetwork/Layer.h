@@ -18,7 +18,7 @@ public:
 	Layer(Layer* inputLayer);
 	Layer();
 	virtual Layer* Clone() = 0;
-	Layer* Create(unsigned int id, unsigned int size);
+	static Layer* Create(unsigned int id, unsigned int size);
 	virtual ~Layer();
 
 	virtual void SetInput(Layer* input);
@@ -42,13 +42,16 @@ public:
 	virtual std::string SaveToJSON(const char* fileName = nullptr) = 0;
 
 	unsigned int GetId();
+	void SetId(unsigned int id);
 
 protected:
 	Layer* LayerInput;
 	Matrix* Output;
 	Matrix* LayerError;
 
-	static unsigned int Id;
+	unsigned int Id;
 	bool TrainingMode;
+
+	static unsigned int LayerCount;
 };
 

@@ -5,6 +5,8 @@
 #include <math.h>
 #include <memory>
 
+//TODO: Create singletons
+
 class ActivationFunction
 {
 public:

@@ -49,7 +49,7 @@ void InputLayer::LoadFromJSON(const char* data, bool isFile)
 	}
 
 	rapidjson::Value val;
-	val = document["layer"]["inputSize"];
+	val = document["layer"]["size"];
 	Size = val.GetUint();
 }
 

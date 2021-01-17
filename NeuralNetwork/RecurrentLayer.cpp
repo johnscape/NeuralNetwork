@@ -216,10 +216,110 @@ Matrix* RecurrentLayer::GetRecurrentWeights()
 
 void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 {
+	rapidjson::Document document;
+	if (!isFile)
+		document.Parse(data);
+	else
+	{
+		std::ifstream r(data);
+		rapidjson::IStreamWrapper isw(r);
+		document.ParseStream(isw);
+	}
+	rapidjson::Value val;
+
+	delete Weights;
+	delete Output;
+	delete WeightError;
+	delete Bias;
+	delete InnerState;
+	delete BiasError;
+	delete RecursiveWeight;
+	delete RecursiveWeightError;
+	delete LayerError;
+
+
+	unsigned int InputSize = 1;
+	val = document["layer"]["size"];
+	Size = val.GetUint();
+	val = document["layer"]["inputSize"];
+
+	unsigned int inputSize = val.GetUint();
+	if (LayerInput)
+		inputSize = LayerInput->GetOutput()->GetVectorSize();
+	Weights = new Matrix(inputSize, Size);
+	Output = new Matrix(1, Size);
+	Bias = new Matrix(1, Size);
+	InnerState = new Matrix(1, Size);
+	WeightError = new Matrix(inputSize, Size);
+	LayerError = new Matrix(1, inputSize);
+	BiasError = new Matrix(1, Size);
+	RecursiveWeight = new Matrix(Size, Size);
+	RecursiveWeightError = new Matrix(Size, Size);
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+	document["layer"]["weights"].Accept(writer);
+	Weights->LoadFromJSON(buffer.GetString());
+
+	buffer.Clear();
+	writer.Reset(buffer);
+
+	document["layer"]["bias"].Accept(writer);
+	Bias->LoadFromJSON(buffer.GetString());
+
+	buffer.Clear();
+	writer.Reset(buffer);
+
+	document["layer"]["recurrent"].Accept(writer);
+	RecursiveWeight->LoadFromJSON(buffer.GetString());
+
 }
 
 std::string RecurrentLayer::SaveToJSON(const char* fileName)
 {
-	return std::string();
+	rapidjson::Document doc;
+	doc.SetObject();
+
+	rapidjson::Value layerSize, id, type, inputSize;
+	layerSize.SetUint(Size);
+	id.SetUint(Id);
+	type.SetUint(2);
+	if (LayerInput)
+		inputSize.SetUint(LayerInput->GetOutput()->GetVectorSize());
+	else
+		inputSize.SetUint(1);
+
+	rapidjson::Document weight, bias, recurrent;
+
+	weight.Parse(Weights->SaveToJSON().c_str());
+	bias.Parse(Bias->SaveToJSON().c_str());
+	recurrent.Parse(RecursiveWeight->SaveToJSON().c_str());
+
+	rapidjson::Value root(rapidjson::kObjectType);
+	root.AddMember("id", id, doc.GetAllocator());
+	root.AddMember("type", type, doc.GetAllocator());
+	root.AddMember("size", layerSize, doc.GetAllocator());
+	root.AddMember("inputSize", inputSize, doc.GetAllocator());
+	root.AddMember("weights", weight, doc.GetAllocator());
+	root.AddMember("bias", bias, doc.GetAllocator());
+	root.AddMember("recurrent", recurrent, doc.GetAllocator());
+
+	doc.AddMember("layer", root, doc.GetAllocator());
+
+	if (fileName)
+	{
+		std::ofstream w(fileName);
+		rapidjson::OStreamWrapper osw(w);
+		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+		doc.Accept(writer);
+		w.close();
+	}
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	return std::string(buffer.GetString());
 }
 

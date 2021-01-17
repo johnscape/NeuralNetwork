@@ -19,11 +19,15 @@ public:
 
 	Matrix Compute(Matrix* input);
 
+	Layer* GetLastLayer();
+
 private:
 	std::vector<Layer*> layers;
 	Layer* outputLayer;
 	Layer* inputLayer;
 
 	void FindOutput();
+	void FindInput();
+	Layer* FindLayerWithId(unsigned int id);
 };
 

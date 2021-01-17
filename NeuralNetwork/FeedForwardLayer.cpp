@@ -16,6 +16,7 @@ FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Laye
 	function = new TanhFunction();
 
 	MatrixMath::FillWith(Bias, 1);
+	MatrixMath::FillWithRandom(Weights);
 }
 
 Layer* FeedForwardLayer::Clone()
@@ -130,7 +131,10 @@ void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
 	rapidjson::Value val;
 
 	delete Weights;
+	delete Output;
+	delete InnerState;
 	delete WeightError;
+	delete LayerError;
 	delete Bias;
 	delete BiasError;
 
@@ -138,7 +142,29 @@ void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
 	val = document["layer"]["size"];
 	Size = val.GetUint();
 	val = document["layer"]["inputSize"];
-	//recreate matrices with new sizes
+	
+	unsigned int inputSize = val.GetUint();
+	if (LayerInput)
+		inputSize = LayerInput->GetOutput()->GetVectorSize();
+	Weights = new Matrix(inputSize, Size);
+	Output = new Matrix(1, Size);
+	Bias = new Matrix(1, Size);
+	InnerState = new Matrix(1, Size);
+	WeightError = new Matrix(inputSize, Size);
+	LayerError = new Matrix(1, inputSize);
+	BiasError = new Matrix(1, Size);
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+	document["layer"]["weights"].Accept(writer);
+	Weights->LoadFromJSON(buffer.GetString());
+
+	buffer.Clear();
+	writer.Reset(buffer);
+
+	document["layer"]["bias"].Accept(writer);
+	Bias->LoadFromJSON(buffer.GetString());
 
 	
 }

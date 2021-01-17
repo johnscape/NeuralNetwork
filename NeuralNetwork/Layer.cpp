@@ -7,18 +7,20 @@
 #include "RecurrentLayer.h"
 #include "LSTM.h"
 
-unsigned int Layer::Id = 0;
+unsigned int Layer::LayerCount = 0;
 
 Layer::Layer(Layer* inputLayer) : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 {
 	this->LayerInput = inputLayer;
-	Id++;
+	Id = LayerCount;
+	LayerCount++;
 }
 
 Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 {
 	LayerInput = nullptr;
-	Id++;
+	Id = LayerCount;
+	LayerCount++;
 }
 
 Layer* Layer::Create(unsigned int id, unsigned int size)
@@ -27,10 +29,10 @@ Layer* Layer::Create(unsigned int id, unsigned int size)
 		return new InputLayer(size);
 	if (id == 1)
 		return new FeedForwardLayer(nullptr, size);
-	/*if (id == 2)
+	if (id == 2)
 		return new RecurrentLayer(nullptr, size);
 	if (id == 3)
-		return new LSTM(nullptr, size);*/
+		return new LSTM(nullptr, size);
 	return nullptr;
 }
 
@@ -92,7 +94,7 @@ Layer* Layer::CreateFromJSON(const char* data, bool isFile)
 		doc.ParseStream(isw);
 	}
 
-	unsigned int layerType;
+	//unsigned int layerType;
 	rapidjson::Value val;
 	val = doc["layer"]["type"];
 	Layer* ret = nullptr;
@@ -109,4 +111,9 @@ Layer* Layer::CreateFromJSON(const char* data, bool isFile)
 unsigned int Layer::GetId()
 {
 	return Id;
+}
+
+void Layer::SetId(unsigned int id)
+{
+	Id = id;
 }
