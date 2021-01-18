@@ -138,7 +138,7 @@ namespace MatrixMath
 	 * @param b The second matrix
 	 * @return The result matrix.
 	*/
-	[[deprecated("Do not use, use Multiply instead!")]]
+	//[[deprecated("Do not use, use Multiply instead!")]]
 	Matrix* SlowMultiply(Matrix* a, Matrix* b);
 
 	/**

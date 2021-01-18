@@ -113,5 +113,9 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MatrixGPUMath.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="MatrixGPUMath.cu" />
   </ItemGroup>
 </Project>

@@ -25,13 +25,13 @@ Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 
 Layer* Layer::Create(unsigned int type, unsigned int size)
 {
-	if (id == 0)
+	if (type == 0)
 		return new InputLayer(size);
-	if (id == 1)
+	if (type == 1)
 		return new FeedForwardLayer(nullptr, size);
-	if (id == 2)
+	if (type == 2)
 		return new RecurrentLayer(nullptr, size);
-	if (id == 3)
+	if (type == 3)
 		return new LSTM(nullptr, size);
 	return nullptr;
 }

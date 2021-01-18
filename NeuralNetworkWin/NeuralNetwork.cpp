@@ -1,34 +1,41 @@
 #include <iostream>
-#include "Model.h"
-#include "InputLayer.h"
-#include "FeedForwardLayer.h"
+#include "Matrix.h"
+#include "MatrixMath.h"
+
+#include <chrono>
 
 int main()
 {
-	Model model;
-	model.AddLayer(new InputLayer(3));
-	model.AddLayer(new FeedForwardLayer(model.GetLastLayer(), 3));
-	model.AddLayer(new FeedForwardLayer(model.GetLastLayer(), 5));
+	Matrix a(512, 512);
+	Matrix b(512, 512);
+	Matrix c(512, 512);
 
-	Matrix test(1, 3);
-	MatrixMath::FillWithRandom(&test);
-	std::cout << "The input: " << std::endl;
-	MatrixMath::PrintMatrix(&test);
+	MatrixMath::FillWithRandom(&a);
+	MatrixMath::FillWithRandom(&b);
 
-	Matrix out1 = model.Compute(&test);
-	std::cout << "Return of the first model: " << std::endl;
-	MatrixMath::PrintMatrix(&out1);
+	std::chrono::steady_clock::time_point begin1 = std::chrono::steady_clock::now();
+	Matrix* c1 = MatrixMath::SlowMultiply(&a, &b);
+	std::chrono::steady_clock::time_point end1 = std::chrono::steady_clock::now();
+	std::cout << "Slow multiplication finished in: " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - begin1).count() << "[µs]" << std::endl;
 
-	model.SaveModel("model.json");
 
-	Model model2;
-	model2.LoadModel("model.json");
+	std::chrono::steady_clock::time_point begin2 = std::chrono::steady_clock::now();
+	a.CopyToGPU();
+	b.CopyToGPU();
+	c.CopyToGPU();
+	MatrixMath::Multiply(&a, &b, &c);
+	c.CopyFromGPU();
+	std::chrono::steady_clock::time_point end2 = std::chrono::steady_clock::now();
+	std::cout << "GPU multiplication finished in: " << std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2).count() << "[µs]" << std::endl;
 
-	std::cout << "Return of the second model: " << std::endl;
-	Matrix out2 = model2.Compute(&test);
-	MatrixMath::PrintMatrix(&out2);
-	if (MatrixMath::IsEqual(&out1, &out2))
-		std::cout << "The models are equal." << std::endl;
+	if (MatrixMath::IsEqual(c1, &c))
+	{
+		std::cout << "And the two outputs are equal!" << std::endl;
+	}
+	else
+	{
+		std::cout << "But there is an error in the GPU mul!" << std::endl;
+	}
 
 	return 0;
 }

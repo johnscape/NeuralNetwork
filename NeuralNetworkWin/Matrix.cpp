@@ -10,6 +10,9 @@
 #include "rapidjson/ostreamwrapper.h"
 #include "rapidjson/istreamwrapper.h"
 
+#include <cuda.h>
+#include <cuda_runtime.h>
+
 //TODO: Throw error at DEBUG errors
 
 Matrix::Matrix()
@@ -19,6 +22,12 @@ Matrix::Matrix()
 	MaxValue = 1;
 	Values = new float[1];
 	Values[0] = 0;
+
+#if USE_GPU
+	cudaMalloc((void**)&GPUValues, sizeof(float));
+	CopyToGPU();
+#endif // USE_GPU
+
 }
 
 Matrix::Matrix(size_t rows, size_t columns, float* elements)
@@ -27,6 +36,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements)
 	Rows = rows;
 	MaxValue = Rows * Columns;
 	Values = new float[MaxValue];
+
 	if (elements)
 	{
 		for (size_t i = 0; i < MaxValue; i++)
@@ -37,6 +47,11 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements)
 		for (size_t i = 0; i < MaxValue; i++)
 			Values[i] = 0;
 	}
+
+#if USE_GPU
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	CopyToGPU();
+#endif // USE_GPU
 }
 
 Matrix::Matrix(const Matrix& c)
@@ -45,14 +60,23 @@ Matrix::Matrix(const Matrix& c)
 	Rows = c.GetRowCount();
 	MaxValue = Rows * Columns;
 	Values = new float[MaxValue];
+
 	for (size_t i = 0; i < MaxValue; i++)
 		Values[i] = c.GetValue(i);
+
+#if USE_GPU
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	CopyToGPU();
+#endif // USE_GPU
 }
 
 Matrix::~Matrix()
 {
 	if (Values)
 		delete[] Values;
+#if USE_GPU
+	cudaFree(GPUValues);
+#endif
 }
 
 size_t Matrix::GetColumnCount() const
@@ -137,7 +161,7 @@ unsigned int Matrix::GetVectorSize()
 		return Rows;
 	if (Rows == 1 && Columns > 1)
 		return Columns;
-#ifdef DEBUG
+#if DEBUG
 	throw MatrixVectorException();
 #endif // DEBUG
 
@@ -151,8 +175,16 @@ void Matrix::ReloadFromOther(Matrix* m)
 	Rows = m->GetRowCount();
 	MaxValue = Rows * Columns;
 	Values = new float[MaxValue];
+
 	for (size_t i = 0; i < MaxValue; i++)
 		Values[i] = m->GetValue(i);
+
+#if USE_GPU
+	cudaFree(GPUValues);
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	CopyToGPU();
+#endif // USE_GPU
+
 }
 
 void Matrix::LoadFromJSON(const char* data, bool isFile)
@@ -182,6 +214,12 @@ void Matrix::LoadFromJSON(const char* data, bool isFile)
 		Values[count] = itr->GetFloat();
 		count++;
 	}
+
+#if USE_GPU
+	cudaFree(GPUValues);
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	CopyToGPU();
+#endif
 }
 
 std::string Matrix::SaveToJSON(const char* fileName)
@@ -218,6 +256,29 @@ std::string Matrix::SaveToJSON(const char* fileName)
 	doc.Accept(writer);
 
 	return std::string(buffer.GetString());
+}
+
+void Matrix::CopyToGPU()
+{
+#if USE_GPU
+	cudaMemcpy(GPUValues, Values, sizeof(float) * Rows * Columns, cudaMemcpyHostToDevice);
+#endif
+}
+
+void Matrix::CopyFromGPU()
+{
+#if USE_GPU
+	cudaMemcpy(Values, GPUValues, sizeof(float) * Rows * Columns, cudaMemcpyDeviceToHost);
+#endif
+}
+
+float* Matrix::GetGPUValues()
+{
+#if USE_GPU
+	return GPUValues;
+#else
+	return nullptr;
+#endif // 0
 }
 
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const

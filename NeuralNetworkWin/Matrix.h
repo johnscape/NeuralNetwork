@@ -127,6 +127,22 @@ public:
 	*/
 	std::string SaveToJSON(const char* fileName = nullptr);
 
+	/**
+	 * @brief If GPU is used, this function copies the values from the RAM to the GPU memory
+	*/
+	void CopyToGPU();
+
+	/**
+	 * @brief If GPU is used, this function copies the values from the GPU memory to the RAM
+	*/
+	void CopyFromGPU();
+
+	/**
+	 * @brief Returns the pointer for the GPU calculations
+	 * @return The pointer of the GPU
+	*/
+	float* GetGPUValues();
+
 private:
 	float* Values;
 	size_t Rows;
@@ -135,4 +151,7 @@ private:
 	size_t MaxValue;
 
 	inline size_t RowColToPosition(size_t row, size_t col) const;
+
+	float* GPUValues;
+
 };

@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Constants.h"
 #include "MatrixException.hpp"
+#include "MatrixGPUMath.cuh"
 
 bool MatrixMath::SizeCheck(const Matrix* a, const Matrix* b)
 {
@@ -112,6 +113,9 @@ Matrix* MatrixMath::Multiply(Matrix* a, float b)
 
 Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 {
+#if USE_GPU
+	return GPUMath::Multiplication(a, b, c);
+#else
 	if (!c)
 		c = new Matrix(a->GetRowCount(), b->GetColumnCount());
 	CacheVector col, row;
@@ -143,6 +147,8 @@ Matrix* MatrixMath::Multiply(Matrix* a, Matrix* b, Matrix* c)
 
 	}
 	return c;
+
+#endif // USE_GPU
 }
 
 void MatrixMath::ElementviseMultiply(Matrix* a, Matrix* b)
