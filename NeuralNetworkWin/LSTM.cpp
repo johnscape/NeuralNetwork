@@ -1,5 +1,6 @@
 #include "LSTM.h"
 #include "Optimizer.h"
+#include "Constants.h"
 
 LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps) : Layer(inputLayer), CellStateSize(cellStateSize), TimeSteps(timeSteps)
 {
@@ -72,6 +73,11 @@ void LSTM::Compute()
     {
         MatrixMath::FillWith(InputWeightOutputs[i], 0);
         MatrixMath::FillWith(RecursiveWeightOuputs[i], 0);
+#if USE_GPU
+        InputWeightOutputs[i]->CopyToGPU();
+        RecursiveWeightOuputs[i]->CopyToGPU();
+#endif // USE_GPU
+
     }
 
     LayerInput->Compute();

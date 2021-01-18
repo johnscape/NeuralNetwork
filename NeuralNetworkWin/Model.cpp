@@ -125,12 +125,11 @@ void Model::LoadModel(const char* fileName)
 	outputLayer = FindLayerWithId(document["model"]["outputLayerId"].GetUint());
 }
 
-Matrix Model::Compute(Matrix* input)
+Matrix* Model::Compute(Matrix* input)
 {
 	inputLayer->SetInput(input);
 	outputLayer->Compute();
-	Matrix ret(*outputLayer->GetOutput());
-	return ret;
+	return outputLayer->GetOutput();
 }
 
 Layer* Model::GetLastLayer()

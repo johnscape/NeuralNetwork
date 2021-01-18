@@ -3,6 +3,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include "MatrixMath.h"
 
 __global__ void CUDASigmoid(float* from, float* to, unsigned int num)
 {
@@ -15,7 +16,7 @@ __global__ void CUDATanh(float* from, float* to, unsigned int num)
 {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < num)
-		to[i] = tanf(from[i]);
+		to[i] = tanh(from[i]);
 }
 
 __global__ void CUDASigmoidInv(float* from, float* to, unsigned int num)
@@ -50,7 +51,7 @@ void GPUActivation::SigmoidCalculate(Matrix* from, Matrix* to)
 	CUDASigmoid << <grid, threads >> > (from->GetGPUValues(), to->GetGPUValues(), from->GetRowCount() * from->GetColumnCount());
 }
 
-Matrix* ::GPUActivationSigmoidInvCalculate(Matrix* original)
+Matrix* GPUActivation::SigmoidInvCalculate(Matrix* original)
 {
 	unsigned int blockNum = GPUMath::CalculateMaxBlockSize(original, nullptr, 16);
 	Matrix* ret = new Matrix(original->GetRowCount(), original->GetColumnCount());
@@ -80,10 +81,13 @@ Matrix* GPUActivation::TanhCalculate(Matrix* original)
 
 void GPUActivation::TanhCalculate(Matrix* from, Matrix* to)
 {
+	MatrixMath::PrintMatrix(from);
 	unsigned int blockNum = GPUMath::CalculateMaxBlockSize(from, nullptr, 16);
 	dim3 threads(blockNum, blockNum);
 	dim3 grid(from->GetColumnCount() / threads.x, from->GetRowCount() / threads.y);
 	CUDATanh << <grid, threads >> > (from->GetGPUValues(), to->GetGPUValues(), from->GetRowCount() * from->GetColumnCount());
+	to->CopyFromGPU();
+	MatrixMath::PrintMatrix(to);
 }
 
 Matrix* GPUActivation::TanhInvCalculate(Matrix* original)

@@ -47,7 +47,7 @@ public:
 	 * @param input The input of the model
 	 * @return The output of the final layer
 	*/
-	Matrix Compute(Matrix* input);
+	Matrix* Compute(Matrix* input);
 
 	/**
 	 * @brief Returns the last added layer
