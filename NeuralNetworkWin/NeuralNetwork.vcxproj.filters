@@ -114,8 +114,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MatrixGPUMath.cuh" />
+    <ClInclude Include="GPUActivation.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="MatrixGPUMath.cu" />
+    <CudaCompile Include="GPUActivation.cu" />
   </ItemGroup>
 </Project>

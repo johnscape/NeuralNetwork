@@ -12,7 +12,7 @@ RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned in
 	BiasError = new Matrix(1, size);
 	RecursiveWeight = new Matrix(size, size);
 	RecursiveWeightError = new Matrix(size, size);
-	function = new TanhFunction();
+	function = &TanhFunction::GetInstance();
 
 	MatrixMath::FillWith(Bias, 1);
 	MatrixMath::FillWith(Weights, 1);

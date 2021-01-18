@@ -52,8 +52,12 @@ void MatrixMath::AddIn(Matrix* a, Matrix* b)
 {
 	if (!SizeCheck(a, b))
 		throw MatrixSizeException();
+#if USE_GPU
+	GPUMath::AddIn(a, b);
+#else
 	for (unsigned int i = 0; i < a->GetColumnCount() * a->GetRowCount(); i++)
 		a->AdjustValue(i, b->GetValue(i));
+#endif
 }
 
 void MatrixMath::Add(Matrix* matrix, float value)

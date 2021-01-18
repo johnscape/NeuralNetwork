@@ -13,7 +13,7 @@ FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Laye
 	WeightError = new Matrix(inputSize, count);
 	LayerError = new Matrix(1, inputSize);
 	BiasError = new Matrix(1, count);
-	function = new TanhFunction();
+	function = &TanhFunction::GetInstance();
 
 	MatrixMath::FillWith(Bias, 1);
 	MatrixMath::FillWithRandom(Weights);
@@ -33,8 +33,6 @@ Layer* FeedForwardLayer::Clone()
 
 FeedForwardLayer::~FeedForwardLayer()
 {
-	if (function)
-		delete function;
 	delete Weights;
 	delete Bias;
 	delete InnerState;

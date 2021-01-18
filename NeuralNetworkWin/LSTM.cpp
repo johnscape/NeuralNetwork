@@ -27,8 +27,8 @@ LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps
     RecurrentState = new Matrix(1, CellStateSize);
     InnerState = new Matrix(1, CellStateSize);
 
-    Tanh = new TanhFunction();
-    Sig = new Sigmoid();
+    Tanh = &TanhFunction::GetInstance();
+    Sig = &Sigmoid::GetInstance();
 
     LayerError = new Matrix(1, LayerInput->GetOutput()->GetVectorSize());
 }
@@ -41,8 +41,6 @@ LSTM::~LSTM()
     delete cellTanh;
     delete DeltaOut;
 
-    delete Tanh;
-    delete Sig;
     for (unsigned char i = 0; i < 4; i++)
     {
         delete InputWeights[i];

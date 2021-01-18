@@ -41,20 +41,29 @@ template <int BLOCK_SIZE> __global__ void MatMulKernel(float* A, float* B, float
 	C[c + wB * ty + tx] = Csub;
 }
 
-Matrix* GPUMath::Multiplication(Matrix* a, Matrix* b, Matrix* c)
+__global__ void MatAddInKernel(float* A, float* B, unsigned int maxNum)
 {
-	if (!c)
-		c = new Matrix(a->GetRowCount(), b->GetColumnCount());
+	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	if (i < maxNum)
+		A[i] += B[i];
+}
+
+
+unsigned int GPUMath::CalculateMaxBlockSize(Matrix* a, Matrix* b, unsigned int max)
+{
 	unsigned int blockSize = 1;
 	unsigned int smallest = a->GetColumnCount();
 	if (a->GetRowCount() < smallest)
 		smallest = a->GetRowCount();
-	if (b->GetColumnCount() < smallest)
-		smallest = b->GetColumnCount();
-	if (b->GetRowCount() < smallest)
-		smallest = b->GetRowCount();
+	if (b)
+	{
+		if (b->GetColumnCount() < smallest)
+			smallest = b->GetColumnCount();
+		if (b->GetRowCount() < smallest)
+			smallest = b->GetRowCount();
+	}
 
-	while (blockSize < 16)
+	while (blockSize < max)
 	{
 		blockSize *= 2;
 		if (blockSize > smallest)
@@ -63,8 +72,26 @@ Matrix* GPUMath::Multiplication(Matrix* a, Matrix* b, Matrix* c)
 			break;
 		}
 	}
+
+	return blockSize;
+}
+
+Matrix* GPUMath::Multiplication(Matrix* a, Matrix* b, Matrix* c)
+{
+	if (!c)
+		c = new Matrix(a->GetRowCount(), b->GetColumnCount());
+	unsigned int blockSize = CalculateMaxBlockSize(a, b, 16);
 	dim3 threads(blockSize, blockSize);
 	dim3 grid(b->GetColumnCount() / threads.x, a->GetRowCount() / threads.y);
 	MatMulKernel<16> <<<grid, threads>>> (a->GetGPUValues(), b->GetGPUValues(), c->GetGPUValues(), a->GetColumnCount(), b->GetColumnCount());
 	return c;
+}
+
+void GPUMath::AddIn(Matrix* a, Matrix* b)
+{
+	unsigned int blockSize = CalculateMaxBlockSize(a, b, 16);
+	unsigned int max = a->GetColumnCount() * a->GetRowCount();
+	dim3 threads(blockSize, blockSize);
+	dim3 grid(b->GetColumnCount() / threads.x, a->GetRowCount() / threads.y);
+	MatAddInKernel <<<grid, threads >>> (a->GetGPUValues(), b->GetGPUValues(), max);
 }
