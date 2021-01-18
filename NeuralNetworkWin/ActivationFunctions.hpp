@@ -7,6 +7,9 @@
 
 //TODO: Create singletons
 
+/**
+ * @brief Abstract class for handling activation functions
+*/
 class ActivationFunction
 {
 public:
@@ -20,6 +23,9 @@ public:
 	virtual void CalculateDerivateInto(Matrix* output, Matrix* target, float extra = 0) = 0;
 };
 
+/**
+ * @brief Indentity activation function
+*/
 class IdentityFunction : public ActivationFunction
 {
 public:
@@ -34,6 +40,9 @@ public:
 
 //TODO: Add Binary step
 
+/**
+ * @brief Sigmoid activation function
+*/
 class Sigmoid : public ActivationFunction
 {
 public:
@@ -71,6 +80,9 @@ private:
 	float CalculateDerivate(float a) { return a * (1 - a); }
 };
 
+/**
+ * @brief Tanh activation function
+*/
 class TanhFunction : public ActivationFunction
 {
 public:

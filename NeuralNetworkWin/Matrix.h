@@ -101,11 +101,30 @@ public:
 	/// <returns></returns>
 	float& operator[](size_t id);
 
+	/**
+	 * @brief If the matrix is a vector, returns its size
+	 * @return 0 if the matrix is 2D, the size of the vector otherwise
+	*/
 	unsigned int GetVectorSize();
 
+	/**
+	 * @brief Copies the values from another matrix.
+	 * @param m The other matrix.
+	*/
 	void ReloadFromOther(Matrix* m);
 
+	/**
+	 * @brief Loads the matrix from JSON data.
+	 * @param data The JSON string or a file containing the JSON data.
+	 * @param isFile Set it true if the data is in a file.
+	*/
 	void LoadFromJSON(const char* data, bool isFile = false);
+
+	/**
+	 * @brief Saves the matrix into a JSON string.
+	 * @param fileName The file to save into. If don't want to save, leave it null.
+	 * @return A string containing the JSON data of the matrix.
+	*/
 	std::string SaveToJSON(const char* fileName = nullptr);
 
 private:
