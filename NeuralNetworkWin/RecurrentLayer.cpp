@@ -1,4 +1,5 @@
 #include "RecurrentLayer.h"
+#include "MatrixGPUMath.cuh"
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
 	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size)
@@ -95,6 +96,10 @@ void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
 	Matrix* derivate = function->CalculateDerivateMatrix(Output);
 	MatrixMath::FillWith(LayerError, 0);
+#if USE_GPU
+	derivate->CopyFromGPU();
+#endif // USE_GPU
+
 
 	std::vector<Matrix*> powers;
 	for (unsigned int i = 0; i <= TimeSteps; i++)
@@ -104,31 +109,6 @@ void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 		powers.push_back(MatrixMath::Power(RecursiveWeight, i));
 	}
 
-	/*for (unsigned int neuron = 0; neuron < Size; neuron++)
-	{
-		float delta = error->GetValue(neuron);
-		delta *= derivate->GetValue(neuron);
-		for (unsigned int incoming = 0; incoming < LayerInput->GetOutput()->GetVectorSize(); incoming++)
-		{
-			float wt = LayerInput->GetOutput()->GetValue(incoming) * delta;
-			WeightError->AdjustValue(incoming, neuron, wt);
-			LayerError->AdjustValue(incoming, delta * Weights->GetValue(incoming, neuron));
-		}
-		for (signed int time = 0; time < TimeSteps; time++)
-		{
-			if (time >= TrainingStates.size()) //ennek nem kéne megtörténnie
-				continue;
-			for (unsigned int recursive = 0; recursive < Size; recursive++)
-			{
-				float rt = TrainingStates[time]->GetValue(recursive) * delta;
-				if (time)
-					rt *= powers[time - 1]->GetValue(recursive, neuron);
-				RecursiveWeightError->AdjustValue(recursive, neuron, rt);
-			}
-		}
-
-		BiasError->SetValue(neuron, delta);
-	}*/
 	for (unsigned int neuron = 0; neuron < Size; neuron++)
 	{
 		float delta = error->GetValue(neuron);
@@ -187,6 +167,13 @@ void RecurrentLayer::Train(Optimizer* optimizer)
 	MatrixMath::FillWith(WeightError, 0);
 	MatrixMath::FillWith(RecursiveWeightError, 0);
 	MatrixMath::FillWith(BiasError, 0);
+
+#if USE_GPU
+	Weights->CopyToGPU();
+	RecursiveWeight->CopyToGPU();
+	Bias->CopyToGPU();
+#endif // USE_GPU
+
 }
 
 void RecurrentLayer::SetTrainingMode(bool mode)

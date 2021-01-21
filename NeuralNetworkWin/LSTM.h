@@ -62,7 +62,7 @@ public:
      * @param mode Sets the mode.
      * @param recursive If set to true, it will call the input layer with the same information. Used to set the whole model.
     */
-    virtual void SetTrainingMode(bool mode);
+    virtual void SetTrainingMode(bool mode, bool recursive = false);
 
     /**
      * @brief Returns the input weight from a selected gate.
@@ -124,7 +124,6 @@ private:
     std::deque<Matrix*> errors;
 
     Matrix* CellState;
-    Matrix* RecurrentState;
     Matrix* InnerState;
 
     Matrix* cellTanh;

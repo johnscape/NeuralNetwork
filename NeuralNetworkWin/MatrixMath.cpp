@@ -4,6 +4,12 @@
 #include "MatrixException.hpp"
 #include "MatrixGPUMath.cuh"
 
+union Float2Int
+{
+	float f;
+	int i;
+};
+
 bool MatrixMath::SizeCheck(const Matrix* a, const Matrix* b)
 {
 	return (a->GetColumnCount() == b->GetColumnCount()) && (a->GetRowCount() == b->GetRowCount());
@@ -30,6 +36,10 @@ void MatrixMath::FillWith(Matrix* m, float value)
 {
 	for (unsigned int i = 0; i < m->GetColumnCount() * m->GetRowCount(); i++)
 		m->SetValue(i, value);
+#if USE_GPU
+	GPUMath::FillWith(m, value);
+#endif // USE_GPU
+
 }
 
 void MatrixMath::FillWithRandom(Matrix* m, float min, float max)
@@ -44,8 +54,15 @@ void MatrixMath::FillWithRandom(Matrix* m, float min, float max)
 
 void MatrixMath::Copy(Matrix* from, Matrix* to)
 {
+#if USE_GPU
+	from->CopyFromGPU();
+#endif
 	for (size_t i = 0; i < to->GetColumnCount() * to->GetRowCount(); i++)
 		to->SetValue(i, from->GetValue(i));
+#if USE_GPU
+	to->CopyToGPU();
+#endif // USE_GPU
+
 }
 
 void MatrixMath::AddIn(Matrix* a, Matrix* b)
@@ -161,8 +178,12 @@ void MatrixMath::ElementviseMultiply(Matrix* a, Matrix* b)
 	if (!SizeCheck(a, b))
 		throw MatrixException();
 #endif // DEBUG
+#if USE_GPU
+	GPUMath::ElementviseMultiply(a, b);
+#else
 	for (unsigned int i = 0; i < a->GetRowCount() * a->GetColumnCount(); i++)
 		a->SetValue(i, a->GetValue(i) * b->GetValue(i));
+#endif // USE_GPU
 }
 
 Matrix* MatrixMath::SlowMultiply(Matrix* a, Matrix* b)
@@ -322,6 +343,10 @@ Matrix* MatrixMath::Power(Matrix* original, unsigned int power)
 	for (size_t i = 2; i < power; i++)
 	{
 		tmp = Multiply(pow, original);
+#if USE_GPU
+		tmp->CopyFromGPU();
+#endif // USE_GPU
+
 		Copy(tmp, pow);
 		delete tmp; //dangling pointer?
 		//tmp = nullptr;

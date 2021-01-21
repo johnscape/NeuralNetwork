@@ -4,7 +4,8 @@
 Optimizer::Optimizer(Layer* output) : currentBatch(0), lastError(0)
 {
 	outputLayer = output;
-	inputLayer = nullptr;
+	//inputLayer = nullptr;
+	FindInputLayer();
 }
 
 Optimizer::~Optimizer()

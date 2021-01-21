@@ -1,5 +1,6 @@
 #include "FeedForwardLayer.h"
 #include "Optimizer.h"
+#include "MatrixGPUMath.cuh"
 
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
 {
@@ -75,6 +76,10 @@ void FeedForwardLayer::GetBackwardPass(Matrix* error, bool recursive)
 {
 	Matrix* derivate = function->CalculateDerivateMatrix(Output);
 	MatrixMath::FillWith(LayerError, 0);
+#if USE_GPU
+	//GPUMath::FillWith(LayerError, 0); //do i even need this?
+	derivate->CopyFromGPU();
+#endif
 
 	for (unsigned int neuron = 0; neuron < Size; neuron++)
 	{
@@ -90,6 +95,11 @@ void FeedForwardLayer::GetBackwardPass(Matrix* error, bool recursive)
 		BiasError->SetValue(neuron, delta);
 	}
 
+#if USE_GPU
+	//WeightError->CopyToGPU();
+#endif // USE_GPU
+
+
 	delete derivate;
 
 	if (recursive)
@@ -103,6 +113,12 @@ void FeedForwardLayer::Train(Optimizer* optimizer)
 
 	MatrixMath::FillWith(WeightError, 0);
 	MatrixMath::FillWith(BiasError, 0);
+
+#if USE_GPU
+	Weights->CopyToGPU();
+	Bias->CopyToGPU();
+#endif // USE_GPU
+
 }
 
 Matrix* FeedForwardLayer::GetBias()

@@ -23,16 +23,16 @@ Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
 	LayerCount++;
 }
 
-Layer* Layer::Create(unsigned int type, unsigned int size)
+Layer* Layer::Create(unsigned int type, unsigned int size, Layer* input)
 {
 	if (type == 0)
 		return new InputLayer(size);
 	if (type == 1)
-		return new FeedForwardLayer(nullptr, size);
+		return new FeedForwardLayer(input, size);
 	if (type == 2)
-		return new RecurrentLayer(nullptr, size);
+		return new RecurrentLayer(input, size);
 	if (type == 3)
-		return new LSTM(nullptr, size);
+		return new LSTM(input, size);
 	return nullptr;
 }
 

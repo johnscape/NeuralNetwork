@@ -31,10 +31,6 @@ void InputLayer::SetInput(Matrix* input)
 		return; //TODO: Throw error
 #endif // DEBUG
 	MatrixMath::Copy(input, Output);
-#if USE_GPU
-	Output->CopyToGPU();
-#endif // USE_GPU
-
 }
 
 void InputLayer::GetBackwardPass(Matrix* error, bool recursive)

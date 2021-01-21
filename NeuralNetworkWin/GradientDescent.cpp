@@ -1,5 +1,11 @@
 #include "GradientDescent.h"
 #include "InputLayer.h"
+#include "Constants.h"
+
+#if DEBUG
+#include "MatrixMath.h"
+#endif // DEBUG
+
 
 GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, Layer* output, float learningRate) : Optimizer(output), LearningRate(learningRate)
 {
@@ -41,7 +47,7 @@ void GradientDescent::Train(Matrix* input, Matrix* expected)
 	}
 	//calculate
 	currentLayer->SetInput(input);
-	Matrix* outputValue = outputLayer->ComputeAndGetOutput();
+	Matrix* outputValue = outputLayer->ComputeAndGetOutput(); 
 	//calculate errors
 	Matrix* outputError = CalculateOutputError(outputValue, expected);
 	outputLayer->GetBackwardPass(outputError, true);
@@ -66,7 +72,6 @@ void GradientDescent::Train(Matrix* input, Matrix* expected)
 
 void GradientDescent::ModifyWeights(Matrix* weights, Matrix* errors)
 {
-	//MatrixMath::PrintMatrix(errors);
 	for (unsigned int row = 0; row < weights->GetRowCount(); row++)
 	{
 		for (unsigned int col = 0; col < weights->GetColumnCount(); col++)

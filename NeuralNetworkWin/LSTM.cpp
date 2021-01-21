@@ -2,6 +2,11 @@
 #include "Optimizer.h"
 #include "Constants.h"
 
+#if USE_GPU
+#include "MatrixGPUMath.cuh"
+#endif // USE_GPU
+
+
 LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps) : Layer(inputLayer), CellStateSize(cellStateSize), TimeSteps(timeSteps)
 {
     for (unsigned char i = 0; i < 4; i++)
@@ -25,7 +30,6 @@ LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps
     DeltaOut = new Matrix(1, CellStateSize);
 
     CellState = new Matrix(1, CellStateSize);
-    RecurrentState = new Matrix(1, CellStateSize);
     InnerState = new Matrix(1, CellStateSize);
 
     Tanh = &TanhFunction::GetInstance();
@@ -37,7 +41,6 @@ LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps
 LSTM::~LSTM()
 {
     delete CellState;
-    delete RecurrentState;
     delete InnerState;
     delete cellTanh;
     delete DeltaOut;
@@ -74,16 +77,15 @@ void LSTM::Compute()
         MatrixMath::FillWith(InputWeightOutputs[i], 0);
         MatrixMath::FillWith(RecursiveWeightOuputs[i], 0);
 #if USE_GPU
-        InputWeightOutputs[i]->CopyToGPU();
-        RecursiveWeightOuputs[i]->CopyToGPU();
+        GPUMath::FillWith(InputWeightOutputs[i], 0);
+        GPUMath::FillWith(RecursiveWeightOuputs[i], 0);
 #endif // USE_GPU
-
     }
 
     LayerInput->Compute();
     Matrix* input = LayerInput->GetOutput();
     std::vector<Matrix*> currentStates;
-
+    
     //forget gate
     MatrixMath::Multiply(input, InputWeights[0], InputWeightOutputs[0]);
     MatrixMath::Multiply(InnerState, RecursiveWeights[0], RecursiveWeightOuputs[0]);
@@ -156,6 +158,10 @@ Matrix* LSTM::ComputeAndGetOutput()
 
 void LSTM::GetBackwardPass(Matrix* error, bool recursive)
 {
+#if USE_GPU
+    error->CopyToGPU();
+#endif // USE_GPU
+
     Matrix* gateIError = new Matrix(LayerInput->GetOutput()->GetVectorSize(), CellStateSize);
     Matrix* gateRError = new Matrix(CellStateSize, CellStateSize);
 
@@ -286,6 +292,11 @@ void LSTM::GetBackwardPass(Matrix* error, bool recursive)
     MatrixMath::Transpose(inputErrorSum);
     MatrixMath::AddIn(LayerError, inputErrorSum);
 
+#if USE_GPU
+    LayerError->CopyFromGPU();
+#endif // USE_GPU
+
+
     delete gateIError;
     delete gateRError;
     delete dGate;
@@ -313,6 +324,13 @@ void LSTM::UpdateWeightErrors(Matrix* gateIError, Matrix* gateRError, Matrix* in
     MatrixMath::AddIn(RecursiveWeightErrors[weight], gateRError);
 
     MatrixMath::AddIn(BiasErrors[weight], dGate);
+
+#if USE_GPU
+    InputWeightErrors[weight]->CopyFromGPU();
+    RecursiveWeightErrors[weight]->CopyFromGPU();
+    BiasErrors[weight]->CopyFromGPU();
+#endif // USE_GPU
+
 }
 
 void LSTM::Train(Optimizer* optimizer)
@@ -329,9 +347,13 @@ void LSTM::Train(Optimizer* optimizer)
     }
 }
 
-void LSTM::SetTrainingMode(bool mode)
+void LSTM::SetTrainingMode(bool mode, bool recursive)
 {
     TrainingMode = mode;
+    MatrixMath::FillWith(InnerState, 0);
+    MatrixMath::FillWith(CellState, 0);
+    if (recursive && LayerInput)
+        LayerInput->SetTrainingMode(mode, recursive);
 }
 
 Matrix* LSTM::GetWeight(unsigned char weight)
@@ -369,7 +391,6 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
     rapidjson::Value val;
 
     delete CellState;
-    delete RecurrentState;
     delete InnerState;
     delete cellTanh;
     delete DeltaOut;
@@ -385,6 +406,14 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
         delete RecursiveWeightOuputs[i];
     }
 
+    InputWeights.clear();
+    Biases.clear();
+    InputWeightOutputs.clear();
+    InputWeightErrors.clear();
+    BiasErrors.clear();
+    RecursiveWeights.clear();
+    RecursiveWeightErrors.clear();
+    RecursiveWeightOuputs.clear();
 
     unsigned int InputSize = 1;
     val = document["layer"]["size"];
@@ -398,8 +427,8 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
     {
         InputWeights.push_back(new Matrix(inputSize, CellStateSize));
         RecursiveWeights.push_back(new Matrix(CellStateSize, CellStateSize));
-        MatrixMath::FillWithRandom(InputWeights[InputWeights.size() - 1]);
-        MatrixMath::FillWithRandom(RecursiveWeights[RecursiveWeights.size() - 1]);
+        //MatrixMath::FillWithRandom(InputWeights[InputWeights.size() - 1]);
+        //MatrixMath::FillWithRandom(RecursiveWeights[RecursiveWeights.size() - 1]);
         Biases.push_back(new Matrix(1, CellStateSize));
         InputWeightOutputs.push_back(new Matrix(1, CellStateSize));
         RecursiveWeightOuputs.push_back(new Matrix(1, CellStateSize));
@@ -413,12 +442,17 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
     cellTanh = new Matrix(1, CellStateSize);
     DeltaOut = new Matrix(1, CellStateSize);
 
+    CellState = new Matrix(1, CellStateSize);
+    InnerState = new Matrix(1, CellStateSize);
+
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
     std::string varName;
 
     for (unsigned char i = 0; i < 4; i++)
     {
+
         varName = "inputWeight" + std::to_string((i + 1));
         document["layer"][varName.c_str()].Accept(writer);
         InputWeights[i]->LoadFromJSON(buffer.GetString());

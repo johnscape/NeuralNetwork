@@ -30,9 +30,7 @@ void Model::AddLayer(Layer* layer)
 
 Layer* Model::GetLayer(unsigned int id)
 {
-	if (id >= 0 && id < layers.size() - 1)
-		return layers[id];
-	return nullptr;
+	return FindLayerWithId(id);
 }
 
 void Model::SaveModel(const char* fileName)
@@ -99,11 +97,13 @@ void Model::LoadModel(const char* fileName)
 
 	for (unsigned int i = 0; i < layerCount.GetUint(); i++)
 	{
+		Layer* input = FindLayerWithId(layerList[i]["inputLayerId"].GetInt());
 		Layer* layer = Layer::Create(layerList[i]["layerData"]["layer"]["type"].GetUint(),
-			layerList[i]["layerData"]["layer"]["size"].GetUint());
+			layerList[i]["layerData"]["layer"]["size"].GetUint(), input);
 
 		layerList[i]["layerData"].Accept(writer);
-		layer->LoadFromJSON(buffer.GetString());
+		std::string layerString = buffer.GetString();
+		layer->LoadFromJSON(layerString.c_str());
 
 		buffer.Clear();
 		writer.Reset(buffer);
@@ -118,6 +118,8 @@ void Model::LoadModel(const char* fileName)
 		if (it->second < 0)
 			continue;
 		Layer* currentLayer = FindLayerWithId(it->first);
+		if (currentLayer->GetInputLayer())
+			continue;
 		currentLayer->SetInput(FindLayerWithId(it->second));
 	}
 

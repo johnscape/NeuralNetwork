@@ -261,14 +261,14 @@ std::string Matrix::SaveToJSON(const char* fileName)
 void Matrix::CopyToGPU()
 {
 #if USE_GPU
-	cudaMemcpy(GPUValues, Values, sizeof(float) * Rows * Columns, cudaMemcpyHostToDevice);
+	cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * Rows * Columns, cudaMemcpyHostToDevice);
 #endif
 }
 
 void Matrix::CopyFromGPU()
 {
 #if USE_GPU
-	cudaMemcpy(Values, GPUValues, sizeof(float) * Rows * Columns, cudaMemcpyDeviceToHost);
+	cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * Rows * Columns, cudaMemcpyDeviceToHost);
 #endif
 }
 

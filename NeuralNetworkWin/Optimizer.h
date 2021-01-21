@@ -29,7 +29,15 @@ public:
 	 * @param input The input of the model
 	 * @param expected The expected output of the model
 	*/
+	[[Obsolete("Function is obsolete, use TrainStep or TrainFor instead")]]
 	virtual void Train(Matrix* input, Matrix* expected) = 0;
+
+	/**
+	 * @brief Trains the model based on the input and the expected output
+	 * @param input The input of the model
+	 * @param expected The expected output of the model
+	*/
+	virtual void TrainStep(Matrix* input, Matrix* expected) = 0;
 
 	/**
 	 * @brief Based on the type of the optimizer, this function will modify the weights of the layers.
@@ -76,7 +84,6 @@ protected:
 	unsigned int currentBatch;
 
 	virtual void FindInputLayer();
-	virtual void TrainStep(Matrix* input, Matrix* expected) = 0;
 	virtual void TrainLayers();
 
 };

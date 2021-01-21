@@ -41,7 +41,7 @@ public:
 	 * @param size The size of the layer
 	 * @return A new layer based on the parameters
 	*/
-	static Layer* Create(unsigned int type, unsigned int size);
+	static Layer* Create(unsigned int type, unsigned int size, Layer* input = nullptr);
 	virtual ~Layer();
 
 	/**
