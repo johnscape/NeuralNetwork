@@ -1,6 +1,9 @@
 #include "FeedForwardLayer.h"
 #include "Optimizer.h"
+
+#if USE_GPU
 #include "MatrixGPUMath.cuh"
+#endif
 
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) : Layer(inputLayer), Size(count)
 {

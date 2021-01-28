@@ -1,5 +1,8 @@
 #include "RecurrentLayer.h"
+
+#if USE_GPU
 #include "MatrixGPUMath.cuh"
+#endif
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
 	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size)

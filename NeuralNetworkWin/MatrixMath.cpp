@@ -2,7 +2,10 @@
 #include <iostream>
 #include "Constants.h"
 #include "MatrixException.hpp"
+
+#if USE_GPU
 #include "MatrixGPUMath.cuh"
+#endif
 
 union Float2Int
 {
