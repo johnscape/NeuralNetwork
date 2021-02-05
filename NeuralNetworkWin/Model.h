@@ -15,6 +15,9 @@ public:
 	 * @brief Creates a new model
 	*/
 	Model();
+	Model(const Model& m);
+	Model& operator= (Model& other);
+	Model& operator= (Model* other);
 	~Model();
 
 	/**
@@ -22,6 +25,12 @@ public:
 	 * @param layer The layer
 	*/
 	void AddLayer(Layer* layer);
+
+	/**
+	 * @brief Adds a layer to the beginning of the model. Not recommended, use AddLayer instead.
+	 * @param layer The layer to insert
+	*/
+	void InsertFirstLayer(Layer* layer);
 
 	/**
 	 * @brief Returns a layer with a specified id
@@ -67,6 +76,19 @@ public:
 	*/
 	Layer* GetInput();
 
+	/**
+	 * @brief Returns the number of the layers in the network
+	 * @return The number of the layers
+	*/
+	unsigned int LayerCount() const;
+
+	/**
+	 * @brief Returns the nth layer in the model.
+	 * @param pos Which layer to return
+	 * @return The layer
+	*/
+	Layer* GetLayerAt(unsigned int n);
+
 private:
 	std::vector<Layer*> layers;
 	Layer* outputLayer;
@@ -76,4 +98,3 @@ private:
 	void FindInput();
 	Layer* FindLayerWithId(unsigned int id);
 };
-

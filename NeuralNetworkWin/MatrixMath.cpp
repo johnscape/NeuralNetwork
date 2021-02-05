@@ -53,6 +53,11 @@ void MatrixMath::FillWithRandom(Matrix* m, float min, float max)
 		signed int r = rand() % ((int)(max * 1000) - (int)(min * 1000) + 1) + (int)(min * 1000);
 		m->SetValue(i, r / 1000.0f);
 	}
+
+#if USE_GPU
+	m->CopyToGPU();
+#endif // USE_GPU
+
 }
 
 void MatrixMath::Copy(Matrix* from, Matrix* to)

@@ -47,9 +47,13 @@ FeedForwardLayer::~FeedForwardLayer()
 
 void FeedForwardLayer::SetInput(Layer* input)
 {
+	if (input == LayerInput)
+		return;
 	LayerInput = input;
+	if (input->GetOutput()->GetVectorSize() == LayerInput->GetOutput()->GetVectorSize())
+		return;
 	delete Weights;
-	Weights = new Matrix(LayerInput->OutputSize(), Size);
+	Weights = new Matrix(LayerInput->OutputSize(), Size); //TODO: nem kell új mátrix, elég ha átméretezem
 }
 
 void FeedForwardLayer::Compute()
@@ -70,8 +74,6 @@ Matrix* FeedForwardLayer::ComputeAndGetOutput()
 
 void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 {
-	if (function)
-		delete function;
 	function = func;
 }
 

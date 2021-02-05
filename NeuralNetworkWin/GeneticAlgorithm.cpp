@@ -1,39 +1,30 @@
 #include "GeneticAlgorithm.h"
 #include "Layer.h"
 #include <time.h>
+#include "Model.h"
 
 GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count) :
 	Optimizer(output), MaxGenerations(generations), IndividialCount(individual_count), CurrentGeneration(0),
 	MutationChance(0.2f), MutationMaxValue(0.5f), MaxParentCount(10)
 {
 	Layer* currentLayer = output;
+	originalModel = new Model();
 	while (currentLayer->GetInputLayer())
 	{
-		originalLayers.push_back(currentLayer);
+		//originalLayers.push_back(currentLayer);
+		originalModel->InsertFirstLayer(currentLayer);
 		currentLayer = currentLayer->GetInputLayer();
 	}
+
 	srand(time(0));
 }
 
-GeneticAlgorithm::~GeneticAlgorithm()
+GeneticAlgorithm::GeneticAlgorithm(Model* model, unsigned int generations, unsigned int individual_count) :
+	Optimizer(model->GetOutput()), MaxGenerations(generations), IndividialCount(individual_count), CurrentGeneration(0),
+	MutationChance(0.2f), MutationMaxValue(0.5f), MaxParentCount(10)
 {
-	for (size_t i = 0; i < entities.size(); i++)
-		delete entities[i];
-
-	for (size_t i = 0; i < parents.size(); i++)
-		delete parents[i];
-}
-
-std::vector<Layer*> GeneticAlgorithm::GetCopy(std::vector<Layer*>& layers)
-{
-	std::vector<Layer*> newLayers;
-	for (unsigned int i = 0; i < layers.size(); i++)
-	{
-		newLayers.push_back(layers[i]->Clone());
-		if (i)
-			newLayers[i - 1]->SetInput(newLayers[i]);
-	}
-	return newLayers;
+	originalModel = new Model(*model);
+	srand(time(0));
 }
 
 float GeneticAlgorithm::MutationGenerator()
@@ -44,18 +35,25 @@ float GeneticAlgorithm::MutationGenerator()
 	return (float)r / 1000.0f;
 }
 
-void GeneticAlgorithm::Mutate(Individual* individual)
+void GeneticAlgorithm::Mutate(Individual& individual)
 {
-	for (size_t i = 0; i < individual->layers.size(); i++)
-		individual->layers[i]->Train(this);
+	/*for (size_t i = 0; i < individual->layers.size(); i++)
+		individual->layers[i]->Train(this);*/
+	for (unsigned int i = 0; i < individual.model.LayerCount(); i++)
+		individual.model.GetLayerAt(i)->Train(this);
 }
 
-Individual* GeneticAlgorithm::CrossOver()
+Individual GeneticAlgorithm::CrossOver()
 {
-	Individual* ind = new Individual();
-	ind->fitness = 0;
-	for (size_t i = 0; i < originalLayers.size(); i++)
-		ind->layers.push_back(parents[rand() % parents.size()]->layers[i]->Clone());
+	Individual ind;
+	/*for (size_t i = 0; i < originalLayers.size(); i++)
+		ind->layers.push_back(parents[rand() % parents.size()]->layers[i]->Clone());*/
+	for (unsigned int i = 0; i < originalModel->LayerCount(); i++)
+	{
+		ind.model.AddLayer(parents[rand() % parents.size()].model.GetLayerAt(i)->Clone());
+		if (i > 0)
+			ind.model.GetLayerAt(i)->SetInput(ind.model.GetLayerAt(i - 1));
+	}
 	return ind;
 }
 
@@ -67,8 +65,8 @@ void GeneticAlgorithm::GenerateIndividuals()
 	{
 		for (size_t i = 0; i < IndividialCount; i++)
 		{
-			Individual* current = new Individual();
-			current->layers = GetCopy(originalLayers);
+			Individual current;
+			current.model = originalModel;
 			Mutate(current);
 			entities.push_back(current);
 		}
@@ -77,7 +75,7 @@ void GeneticAlgorithm::GenerateIndividuals()
 	{
 		for (size_t i = 0; i < IndividialCount - parents.size(); i++)
 		{
-			Individual* current = CrossOver();
+			Individual current = CrossOver();
 			Mutate(current);
 			entities.push_back(current);
 		}
@@ -86,19 +84,13 @@ void GeneticAlgorithm::GenerateIndividuals()
 
 void GeneticAlgorithm::DeleteIndividuals()
 {
-	for (size_t i = 0; i < entities.size(); i++)
-		delete entities[i];
 	entities.clear();
 }
 
 void GeneticAlgorithm::Train(Matrix* input, Matrix* expected)
 {
 	if (parents.size() > 0)
-	{
-		for (size_t i = 0; i < parents.size(); i++)
-			delete parents[i];
 		parents.clear();
-	}
 	std::vector<unsigned int> coords;
 	for (unsigned int p = 0; p < MaxParentCount; p++)
 	{
@@ -106,22 +98,23 @@ void GeneticAlgorithm::Train(Matrix* input, Matrix* expected)
 		unsigned int maxValPos = 0;
 		for (unsigned int i = 0; i < entities.size(); i++)
 		{
-			if (entities[i]->fitness > maxVal)
+			if (entities[i].fitness > maxVal)
 			{
-				maxVal = entities[i]->fitness;
+				maxVal = entities[i].fitness;
 				maxValPos = i;
 			}
 		}
 
 		coords.push_back(maxValPos);
-		entities[maxValPos]->fitness = 0;
+		entities[maxValPos].fitness = 0;
 	}
 
 	for (size_t i = 0; i < coords.size(); i++)
 	{
-		Individual* p = new Individual();
-		p->fitness = entities[coords[i]]->fitness;
-		p->layers = GetCopy(entities[coords[i]]->layers);
+		Individual p;
+		p.fitness = entities[coords[i]].fitness;
+		//p.layers = GetCopy(entities[coords[i]]->layers);
+		p.model = entities[coords[i]].model;
 		parents.push_back(p);
 	}
 }
@@ -132,9 +125,12 @@ void GeneticAlgorithm::ModifyWeights(Matrix* weights, Matrix* errors)
 		weights->AdjustValue(r, MutationGenerator());
 }
 
-Individual* GeneticAlgorithm::GetIndividual(unsigned int num)
+Individual& GeneticAlgorithm::GetIndividual(unsigned int num)
 {
 	if (num < 0 || num >= IndividialCount)
-		return nullptr;
+	{
+		Individual i;
+		return i;
+	}
 	return entities[num];
 }

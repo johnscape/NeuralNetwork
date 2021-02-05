@@ -1,6 +1,7 @@
 #pragma once
 #include "Optimizer.h"
 #include <vector>
+#include "Model.h"
 
 typedef float (*Fitness)(Matrix*);
 class Layer;
@@ -10,13 +11,12 @@ class Layer;
 */
 struct Individual //TODO: Use model instead vector
 {
-    std::vector<Layer*> layers;
+    Model model;
     float fitness;
 
-    ~Individual()
+    Individual() : model()
     {
-        for (size_t i = 0; i < layers.size(); i++)
-            delete layers[i];
+        fitness = 0;
     }
 };
 
@@ -34,19 +34,19 @@ public:
      * @param individual_count The number of individuals in a generation.
     */
     GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count);
-    ~GeneticAlgorithm();
+    GeneticAlgorithm(Model* model, unsigned int generations, unsigned int individual_count);
 
     /**
      * @brief Mutates an individual based on the mutation settings.
      * @param individual The individual to mutate.
     */
-    void Mutate(Individual* individual);
+    void Mutate(Individual& individual);
 
     /**
      * @brief Creates a new individual from the values of the parents.
      * @return A new individual.
     */
-    Individual* CrossOver();
+    Individual CrossOver();
 
     /**
      * @brief Creates a new generation of individuals.
@@ -77,7 +77,7 @@ public:
      * @param num The individual's index.
      * @return The specified individual.
     */
-    Individual* GetIndividual(unsigned int num);
+    Individual& GetIndividual(unsigned int num);
 
 private:
     float MutationChance;
@@ -86,12 +86,11 @@ private:
     unsigned int MaxGenerations;
     unsigned int CurrentGeneration;
     unsigned int IndividialCount;
-    std::vector<Layer*> originalLayers;
+    Model* originalModel;
 
-    std::vector<Individual*> entities;
-    std::vector<Individual*> parents;
+    std::vector<Individual> entities;
+    std::vector<Individual> parents;
 
-    std::vector<Layer*> GetCopy(std::vector<Layer*>& layers);
     float MutationGenerator();
 };
 

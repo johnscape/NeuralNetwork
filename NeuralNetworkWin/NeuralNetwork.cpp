@@ -2,67 +2,51 @@
 #include "Matrix.h"
 #include "MatrixMath.h"
 #include "Model.h"
-#include "LSTM.h"
+#include "FeedForwardLayer.h"
 #include "InputLayer.h"
 #include "GradientDescent.h"
 #include "LossFunctions.hpp"
 
 #include "MatrixGPUMath.cuh"
 
+#include "Model.h"
+
 #include <chrono>
 
 int main()
 {
-	/*Matrix a(5, 5);
-	Matrix b(5, 5);
-	MatrixMath::FillWith(&a, 5.0f);
-	MatrixMath::FillWith(&b, 3.0f);
 
-	MatrixMath::Copy(&a, &b);
-	b.CopyFromGPU();
-	MatrixMath::PrintMatrix(&b);*/
+	srand(time(0));
 
+	Model* m1 = new Model();
+	Model* m2;
+	Model m3;
 
-	Matrix input(1, 5);
-	for (size_t i = 0; i < 5; i++)
+	InputLayer* inp = new InputLayer(5);
+	FeedForwardLayer* hidden = new FeedForwardLayer(inp, 15);
+	FeedForwardLayer* out = new FeedForwardLayer(hidden, 8);
+
+	m1->AddLayer(inp);
+	m1->AddLayer(hidden);
+	m1->AddLayer(out);
+
+	Matrix test(1, 5);
+	for (unsigned int i = 0; i < 5; i++)
 	{
-		input.SetValue(i, (float)(i + 1) / 10);
+		test.SetValue(i, (float)i / 5);
 	}
 
-	Matrix output(1, 15);
-	for (size_t i = 0; i < 15; i++)
-	{
-		output.SetValue(i, (float)(i + 1) / 20);
-	}
+	test.CopyToGPU();
 
-	input.CopyToGPU();
-	output.CopyToGPU();
+	MatrixMath::PrintMatrix(&test);
 
-	Model m;
-	m.LoadModel("model_1.json");
-	GradientDescent descent(LossFunctions::MSE, LossFunctions::MSE_Derivate, m.GetOutput(), 0.5);
-	descent.TrainStep(&input, &output);
-	Matrix* out = m.Compute(&input);
-	out->CopyFromGPU();
-	MatrixMath::PrintMatrix(out);
-	Matrix out_old;
-	out_old.LoadFromJSON("output.json", true);
-	std::cout << MatrixMath::IsEqual(out, &out_old) << std::endl;
-	MatrixMath::PrintMatrix(&out_old);
-
-	/*input.SaveToJSON("input.json");
-	Model m;
-	m.AddLayer(new InputLayer(5));
-	m.AddLayer(new LSTM(m.GetLastLayer(), 15));
-
-	GradientDescent descent(LossFunctions::MSE, LossFunctions::MSE_Derivate, m.GetOutput(), 0.5);
-	m.SaveModel("model_1.json");
-	descent.TrainStep(&input, &output);
-	m.SaveModel("model_2.json");
-	Matrix* out = m.Compute(&input);
-	out->SaveToJSON("output.json");*/
+	m2 = new Model(*m1);
+	m3 = *m1;
 
 
+	MatrixMath::PrintMatrix(m1->Compute(&test));
+	MatrixMath::PrintMatrix(m2->Compute(&test));
+	MatrixMath::PrintMatrix(m3.Compute(&test));
 
 	return 0;
 }

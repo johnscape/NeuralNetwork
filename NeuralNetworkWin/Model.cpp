@@ -3,6 +3,7 @@
 #include "Layer.h"
 #include "Matrix.h"
 #include <map>
+#include "Constants.h"
 
 #include "rapidjson/document.h"
 #include <fstream>
@@ -10,6 +11,60 @@
 
 Model::Model() : inputLayer(nullptr), outputLayer(nullptr)
 {
+}
+
+Model::Model(const Model& m)
+{
+	Layer* currentLayer = m.outputLayer->Clone();
+	AddLayer(currentLayer);
+	while (currentLayer->GetInputLayer())
+	{
+		currentLayer = currentLayer->GetInputLayer()->Clone();
+		layers[0]->SetInput(currentLayer);
+		InsertFirstLayer(currentLayer);
+	}
+}
+
+Model& Model::operator=(Model& other)
+{
+	if (layers.size() > 0)
+	{
+		for (unsigned int i = 0; i < layers.size(); i++)
+			delete layers[i];
+		layers.clear();
+	}
+
+	Layer* currentLayer = other.outputLayer->Clone();
+	AddLayer(currentLayer);
+	while (currentLayer->GetInputLayer())
+	{
+		currentLayer = currentLayer->GetInputLayer()->Clone();
+		layers[0]->SetInput(currentLayer);
+		InsertFirstLayer(currentLayer);
+	}
+
+	return *this;
+}
+
+Model& Model::operator=(Model* other)
+{
+	if (layers.size() > 0)
+	{
+		for (unsigned int i = 0; i < layers.size(); i++)
+			delete layers[i];
+		layers.clear();
+	}
+
+	Layer* currentLayer = other->outputLayer->Clone();
+	AddLayer(currentLayer);
+	while (currentLayer->GetInputLayer())
+	{
+		currentLayer = currentLayer->GetInputLayer()->Clone();
+		layers[0]->SetInput(currentLayer);
+		InsertFirstLayer(currentLayer);
+	}
+
+	return *this;
 }
 
 Model::~Model()
@@ -25,6 +80,13 @@ void Model::AddLayer(Layer* layer)
 		layers[layers.size() - 1]->SetInput(layers[layers.size() - 2]);
 	if (!inputLayer)
 		inputLayer = layer;
+	FindOutput();
+}
+
+void Model::InsertFirstLayer(Layer* layer)
+{
+	layers.insert(layers.begin(), layer);
+	inputLayer = layer;
 	FindOutput();
 }
 
@@ -131,6 +193,10 @@ Matrix* Model::Compute(Matrix* input)
 {
 	inputLayer->SetInput(input);
 	outputLayer->Compute();
+#if USE_GPU
+	outputLayer->GetOutput()->CopyFromGPU();
+#endif // USE_GPU
+
 	return outputLayer->GetOutput();
 }
 
@@ -149,6 +215,18 @@ Layer* Model::GetOutput()
 Layer* Model::GetInput()
 {
 	return inputLayer;
+}
+
+unsigned int Model::LayerCount() const
+{
+	return layers.size();
+}
+
+Layer* Model::GetLayerAt(unsigned int n)
+{
+	if (n >= layers.size())
+		return nullptr;
+	return layers[n];
 }
 
 void Model::FindOutput()
