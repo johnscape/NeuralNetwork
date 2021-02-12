@@ -2,10 +2,13 @@
 #include "Layer.h"
 #include <time.h>
 #include "Model.h"
+#include "Constants.h"
+#include <fstream> //TODO: remove
+#include <iostream>
 
-GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count) :
+GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count, Fitness fitness) :
 	Optimizer(output), MaxGenerations(generations), IndividialCount(individual_count), CurrentGeneration(0),
-	MutationChance(0.2f), MutationMaxValue(0.5f), MaxParentCount(10)
+	MutationChance(0.5f), MutationMaxValue(0.01f), MaxParentCount(3), fitnessFunc(fitness)
 {
 	Layer* currentLayer = output;
 	originalModel = new Model();
@@ -19,9 +22,9 @@ GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsi
 	srand(time(0));
 }
 
-GeneticAlgorithm::GeneticAlgorithm(Model* model, unsigned int generations, unsigned int individual_count) :
+GeneticAlgorithm::GeneticAlgorithm(Model* model, unsigned int generations, unsigned int individual_count, Fitness fitness) :
 	Optimizer(model->GetOutput()), MaxGenerations(generations), IndividialCount(individual_count), CurrentGeneration(0),
-	MutationChance(0.2f), MutationMaxValue(0.5f), MaxParentCount(10)
+	MutationChance(0.5f), MutationMaxValue(0.01f), MaxParentCount(3), fitnessFunc(fitness)
 {
 	originalModel = new Model(*model);
 	srand(time(0));
@@ -29,10 +32,85 @@ GeneticAlgorithm::GeneticAlgorithm(Model* model, unsigned int generations, unsig
 
 float GeneticAlgorithm::MutationGenerator()
 {
-	if ((float)(rand() % 100) > MutationChance * 100.0f)
+	float g = rand() % 100;
+	g -= (1 - MutationChance) * 100.0f;
+	if (g < 0)
 		return 0;
-	unsigned int r = rand() % ((int)(MutationMaxValue * 1000) - (int)(-MutationMaxValue * 1000) + 1) + (int)(-MutationMaxValue * 1000);
-	return (float)r / 1000.0f;
+	signed int r = rand() % ((int)(MutationMaxValue * 10000) - (int)(-MutationMaxValue * 10000) + 1) + (int)(-MutationMaxValue * 10000);
+	float m = (float)r / 10000.0f;
+	return m;
+}
+
+void GeneticAlgorithm::DoGeneration()
+{
+	GenerateIndividuals();
+	float sum = 0;
+	for (unsigned int i = 0; i < entities.size(); i++)
+	{
+		entities[i].fitness = fitnessFunc(&entities[i].model);
+		sum += entities[i].fitness;
+	}
+
+	sum /= entities.size();
+	std::ofstream out;
+	out.open("data.txt", std::ios_base::app);
+	out << sum << std::endl;
+	out.close();
+	FindParents();
+
+}
+
+void GeneticAlgorithm::FindParents()
+{
+	parents.clear();
+	for (unsigned int i = 0; i < MaxParentCount; i++)
+	{
+		//find highest fitness
+		unsigned int maxPoint = 0;
+		float maxFittness = 0;
+		for (size_t ii = 0; ii < entities.size(); ii++)
+		{
+			if (entities[ii].fitness > maxFittness)
+			{
+				maxFittness = entities[ii].fitness;
+				maxPoint = ii;
+			}
+		}
+
+		//replace parent with fitness slightly worse than best fitness
+		/*if (parents.size() > 0)
+		{
+			unsigned int betterParent = 0;
+			float maxParent = -1;
+			bool replace = false;
+
+			for (size_t ii = 0; ii < parents.size(); ii++)
+			{
+				if (parents[ii].fitness > maxParent && parents[ii].fitness < maxFittness)
+				{
+					betterParent = ii;
+					maxParent = parents[ii].fitness;
+					replace = true;
+				}
+			}
+
+			if (replace)
+			{
+				//parents.erase(parents.begin() + betterParent);
+				//parents.push_back(Individual(entities[maxPoint]));
+				parents[betterParent].fitness = entities[maxPoint].fitness;
+				parents[betterParent].model = entities[maxPoint].model;
+			}
+		}
+		else
+		{
+			parents.push_back(Individual(entities[maxPoint]));
+		}*/
+		parents.push_back(Individual(entities[maxPoint]));
+	
+		entities[maxPoint].fitness = -10;
+	}
+	
 }
 
 void GeneticAlgorithm::Mutate(Individual& individual)
@@ -45,15 +123,17 @@ void GeneticAlgorithm::Mutate(Individual& individual)
 
 Individual GeneticAlgorithm::CrossOver()
 {
-	Individual ind;
-	/*for (size_t i = 0; i < originalLayers.size(); i++)
-		ind->layers.push_back(parents[rand() % parents.size()]->layers[i]->Clone());*/
-	for (unsigned int i = 0; i < originalModel->LayerCount(); i++)
+	
+	Individual ind(parents[rand() % parents.size()]); //
+
+	/*for (unsigned int l = 0; l < originalModel->LayerCount(); l++)
 	{
-		ind.model.AddLayer(parents[rand() % parents.size()].model.GetLayerAt(i)->Clone());
-		if (i > 0)
-			ind.model.GetLayerAt(i)->SetInput(ind.model.GetLayerAt(i - 1));
-	}
+		unsigned int parent = rand() % parents.size();
+		ind.model.AddLayer(parents[parent].model.GetLayerAt(l)->Clone());
+		if (l > 0)
+			ind.model.GetLayerAt(l)->SetInput(ind.model.GetLayerAt(l - 1));
+	}*/
+
 	return ind;
 }
 
@@ -65,8 +145,7 @@ void GeneticAlgorithm::GenerateIndividuals()
 	{
 		for (size_t i = 0; i < IndividialCount; i++)
 		{
-			Individual current;
-			current.model = originalModel;
+			Individual current(*originalModel, 0);
 			Mutate(current);
 			entities.push_back(current);
 		}
@@ -79,6 +158,10 @@ void GeneticAlgorithm::GenerateIndividuals()
 			Mutate(current);
 			entities.push_back(current);
 		}
+		for (size_t i = 0; i < parents.size(); i++)
+		{
+			entities.push_back(Individual(parents[i]));
+		}
 	}
 }
 
@@ -89,40 +172,19 @@ void GeneticAlgorithm::DeleteIndividuals()
 
 void GeneticAlgorithm::Train(Matrix* input, Matrix* expected)
 {
-	if (parents.size() > 0)
-		parents.clear();
-	std::vector<unsigned int> coords;
-	for (unsigned int p = 0; p < MaxParentCount; p++)
-	{
-		float maxVal = 0;
-		unsigned int maxValPos = 0;
-		for (unsigned int i = 0; i < entities.size(); i++)
-		{
-			if (entities[i].fitness > maxVal)
-			{
-				maxVal = entities[i].fitness;
-				maxValPos = i;
-			}
-		}
-
-		coords.push_back(maxValPos);
-		entities[maxValPos].fitness = 0;
-	}
-
-	for (size_t i = 0; i < coords.size(); i++)
-	{
-		Individual p;
-		p.fitness = entities[coords[i]].fitness;
-		//p.layers = GetCopy(entities[coords[i]]->layers);
-		p.model = entities[coords[i]].model;
-		parents.push_back(p);
-	}
+	CurrentGeneration = 0;
+	for (size_t g = 0; g < MaxGenerations; g++)
+		TrainStep(nullptr, nullptr);
 }
 
 void GeneticAlgorithm::ModifyWeights(Matrix* weights, Matrix* errors)
 {
 	for (size_t r = 0; r < weights->GetRowCount() * weights->GetColumnCount(); r++)
 		weights->AdjustValue(r, MutationGenerator());
+#if USE_GPU
+	weights->CopyToGPU();
+#endif // USE_GPU
+
 }
 
 Individual& GeneticAlgorithm::GetIndividual(unsigned int num)
@@ -133,4 +195,24 @@ Individual& GeneticAlgorithm::GetIndividual(unsigned int num)
 		return i;
 	}
 	return entities[num];
+}
+
+void GeneticAlgorithm::SetFitnessFunc(Fitness fitness)
+{
+	fitnessFunc = fitness;
+}
+
+void GeneticAlgorithm::TrainStep(Matrix* input, Matrix* output)
+{
+	std::cout << "Current generation: " << CurrentGeneration << std::endl;
+	DoGeneration();
+	CurrentGeneration++;
+}
+
+void GeneticAlgorithm::Reset()
+{
+	CurrentGeneration = 0;
+	entities.clear();
+	parents.clear();
+	originalModel = nullptr;
 }

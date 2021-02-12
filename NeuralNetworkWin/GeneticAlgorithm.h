@@ -3,21 +3,23 @@
 #include <vector>
 #include "Model.h"
 
-typedef float (*Fitness)(Matrix*);
+typedef float (*Fitness)(Model*);
 class Layer;
 
 /**
  * @brief Represents an individual for the genetic algorithm
 */
-struct Individual //TODO: Use model instead vector
+struct Individual
 {
     Model model;
     float fitness;
 
-    Individual() : model()
-    {
-        fitness = 0;
-    }
+    Individual() : model(), fitness() {}
+
+    Individual(const Model& m, float f = 0) : model(m), fitness(f) {}
+
+    Individual(const Individual& individual) : model(individual.model), fitness(individual.fitness) {}
+
 };
 
 /**
@@ -33,8 +35,8 @@ public:
      * @param generations The number of generations to train.
      * @param individual_count The number of individuals in a generation.
     */
-    GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count);
-    GeneticAlgorithm(Model* model, unsigned int generations, unsigned int individual_count);
+    GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count, Fitness fitness);
+    GeneticAlgorithm(Model* model, unsigned int generations, unsigned int individual_count, Fitness fitness);
 
     /**
      * @brief Mutates an individual based on the mutation settings.
@@ -63,7 +65,7 @@ public:
      * @param input The input of the model.
      * @param expected The expected output of the model.
     */
-    virtual void Train(Matrix* input, Matrix* expected);
+    virtual void Train(Matrix* input, Matrix* expected = nullptr);
 
     /**
      * @brief Based on the type of the optimizer, this function will modify the weights of the layers.
@@ -79,6 +81,11 @@ public:
     */
     Individual& GetIndividual(unsigned int num);
 
+    void SetFitnessFunc(Fitness fitness);
+
+    void TrainStep(Matrix* input, Matrix* output);
+    void Reset();
+
 private:
     float MutationChance;
     float MutationMaxValue;
@@ -92,5 +99,10 @@ private:
     std::vector<Individual> parents;
 
     float MutationGenerator();
+
+    void DoGeneration();
+    void FindParents();
+
+    Fitness fitnessFunc;
 };
 
