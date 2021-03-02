@@ -2,6 +2,7 @@
 #include "Optimizer.h"
 #include <vector>
 #include "Model.h"
+#include <random>
 
 typedef float (*Fitness)(Model*);
 class Layer;
@@ -102,6 +103,11 @@ private:
 
     void DoGeneration();
     void FindParents();
+
+    void InitializeRandom();
+
+    //std::discrete_distribution<> distribution;
+    //std::mt19937 engine;
 
     Fitness fitnessFunc;
 };
