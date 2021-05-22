@@ -24,21 +24,21 @@ public:
      * @param expected The expected output of the model.
     */
     [[Obsolete("Function is obsolete, use TrainStep or TrainFor instead")]]
-    virtual void Train(Matrix* input, Matrix* expected);
+    virtual void Train(const Matrix& input, const Matrix& expected);
 
     /**
      * @brief Trains the model based on the input and the expected output.
      * @param input The input of the model.
      * @param output The expected output of the model.
     */
-    virtual void TrainStep(Matrix* input, Matrix* output);
+    virtual void TrainStep(const Matrix& input, const Matrix& output);
 
     /**
      * @brief Based on the type of the optimizer, this function will modify the weights of the layers.
      * @param weights The weights to modify
      * @param errors The error to calculate the new weights from
     */
-    virtual void ModifyWeights(Matrix* weights, Matrix* errors);
+    virtual void ModifyWeights(Matrix& weights, const Matrix& errors);
 
     /**
      * @brief Resets the trainer and the network
@@ -51,6 +51,6 @@ private:
     LossFuction loss;
     LossDerivate derivate;
 
-    Matrix* CalculateOutputError(Matrix* output, Matrix* expected);
+    Matrix CalculateOutputError(const Matrix& output, const Matrix& expected);
 };
 

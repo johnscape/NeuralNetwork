@@ -5,17 +5,14 @@
 #endif
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
-	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size)
+	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size),
+	Weights(), Bias(1, size), InnerState(1, size), WeightError(), BiasError(1, size),
+	RecursiveWeight(size, size), RecursiveWeightError(size, size)
 {
-	Weights = new Matrix(LayerInput->GetOutput()->GetVectorSize(), size);
-	Output = new Matrix(1, size);
-	Bias = new Matrix(1, size);
-	InnerState = new Matrix(1, size);
-	WeightError = new Matrix(LayerInput->GetOutput()->GetVectorSize(), size);
-	LayerError = new Matrix(1, LayerInput->GetOutput()->GetVectorSize());
-	BiasError = new Matrix(1, size);
-	RecursiveWeight = new Matrix(size, size);
-	RecursiveWeightError = new Matrix(size, size);
+	Weights.Reset(inputLayer->GetOutput().GetVectorSize(), size);
+	Output.Reset(1, size);
+	WeightError.Reset(inputLayer->GetOutput().GetVectorSize(), size);
+	LayerError.Reset(1, inputLayer->GetOutput().GetVectorSize());
 	function = &TanhFunction::GetInstance();
 
 	MatrixMath::FillWith(Bias, 1);
@@ -24,26 +21,6 @@ RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned in
 
 RecurrentLayer::~RecurrentLayer()
 {
-	delete Weights;
-	delete Bias;
-	delete RecursiveWeight;
-	delete InnerState;
-
-	delete WeightError;
-	delete BiasError;
-	delete RecursiveWeightError;
-
-
-	while (!TrainingStates.empty())
-	{
-		delete TrainingStates[0];
-		TrainingStates.pop_front();
-	}
-	while (!IncomingValues.empty())
-	{
-		delete IncomingValues[0];
-		IncomingValues.pop_front();
-	}
 }
 
 Layer* RecurrentLayer::Clone()
@@ -65,24 +42,22 @@ void RecurrentLayer::Compute()
 	function->CalculateInto(InnerState, Output);
 	if (TrainingMode)
 	{
-		TrainingStates.push_back(new Matrix(*InnerState));
-		IncomingValues.push_back(new Matrix(*(LayerInput->GetOutput())));
+		TrainingStates.push_back(Matrix(InnerState));
+		IncomingValues.push_back(Matrix((LayerInput->GetOutput())));
 		if (TrainingStates.size() > TimeSteps)
 		{
-			delete TrainingStates[0];
 			TrainingStates.pop_front();
-			delete IncomingValues[0];
 			IncomingValues.pop_front();
 		}
 	}
 }
 
-Matrix* RecurrentLayer::GetOutput()
+Matrix& RecurrentLayer::GetOutput()
 {
 	return Output;
 }
 
-Matrix* RecurrentLayer::ComputeAndGetOutput()
+Matrix& RecurrentLayer::ComputeAndGetOutput()
 {
 	Compute();
 	return Output;
@@ -95,16 +70,16 @@ void RecurrentLayer::SetActivationFunction(ActivationFunction* func)
 	function = func;
 }
 
-void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
+void RecurrentLayer::GetBackwardPass(const Matrix& error, bool recursive)
 {
-	Matrix* derivate = function->CalculateDerivateMatrix(Output);
+	Matrix derivate = function->CalculateDerivateMatrix(Output);
 	MatrixMath::FillWith(LayerError, 0);
 #if USE_GPU
 	derivate->CopyFromGPU();
 #endif // USE_GPU
 
 
-	std::vector<Matrix*> powers;
+	std::vector<Matrix> powers;
 	for (unsigned int i = 0; i <= TimeSteps; i++)
 	{
 		if (!i)
@@ -114,24 +89,24 @@ void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 
 	for (unsigned int neuron = 0; neuron < Size; neuron++)
 	{
-		float delta = error->GetValue(neuron);
-		delta *= derivate->GetValue(neuron);
+		float delta = error.GetValue(neuron);
+		delta *= derivate.GetValue(neuron);
 		for (unsigned int time = 0; time < TimeSteps; time++)
 		{
 			if (TimeSteps - time >= TrainingStates.size())
 				continue;
-			for (unsigned int incoming = 0; incoming < LayerInput->GetOutput()->GetVectorSize(); incoming++)
+			for (unsigned int incoming = 0; incoming < LayerInput->GetOutput().GetVectorSize(); incoming++)
 			{
 				float wt = 0;
 				if (time)
 				{
 					for (unsigned int recursive = 0; recursive < Size; recursive++)
-						wt += error->GetValue(recursive) * derivate->GetValue(recursive) * powers[time]->GetValue(neuron, recursive) * IncomingValues[TimeSteps - time]->GetValue(incoming);
+						wt += error.GetValue(recursive) * derivate.GetValue(recursive) * powers[time].GetValue(neuron, recursive) * IncomingValues[TimeSteps - time].GetValue(incoming);
 				}
 				else
-					wt = IncomingValues[IncomingValues.size() - 1]->GetValue(incoming) * delta;
-				WeightError->AdjustValue(incoming, neuron, wt);
-				LayerError->AdjustValue(incoming, delta * Weights->GetValue(incoming, neuron));
+					wt = IncomingValues[IncomingValues.size() - 1].GetValue(incoming) * delta;
+				WeightError.AdjustValue(incoming, neuron, wt);
+				LayerError.AdjustValue(incoming, delta * Weights.GetValue(incoming, neuron));
 			}
 			for (unsigned int recursive = 0; recursive < Size; recursive++)
 			{
@@ -139,22 +114,19 @@ void RecurrentLayer::GetBackwardPass(Matrix* error, bool recursive)
 				if (time)
 				{
 					for (unsigned int r = 0; r < Size; r++)
-						wt += error->GetValue(r) * derivate->GetValue(r) * powers[time]->GetValue(neuron, r) * TrainingStates[TimeSteps - time]->GetValue(recursive);
+						wt += error.GetValue(r) * derivate.GetValue(r) * powers[time].GetValue(neuron, r) * TrainingStates[TimeSteps - time].GetValue(recursive);
 				}
 				else
-					wt = TrainingStates[TrainingStates.size() - 1]->GetValue(recursive) * delta;
+					wt = TrainingStates[TrainingStates.size() - 1].GetValue(recursive) * delta;
 
-				RecursiveWeightError->AdjustValue(recursive, neuron, wt);
+				RecursiveWeightError.AdjustValue(recursive, neuron, wt);
 			}
 
 		}
 
-		BiasError->AdjustValue(neuron, delta);
+		BiasError.AdjustValue(neuron, delta);
 	}
 
-	delete derivate;
-	for (size_t i = 0; i < powers.size(); i++)
-		delete powers[i];
 	powers.clear();
 
 	if (recursive)
@@ -189,17 +161,17 @@ void RecurrentLayer::SetTrainingMode(bool mode)
 	}
 }
 
-Matrix* RecurrentLayer::GetWeights()
+Matrix& RecurrentLayer::GetWeights()
 {
 	return Weights;
 }
 
-Matrix* RecurrentLayer::GetBias()
+Matrix& RecurrentLayer::GetBias()
 {
 	return Bias;
 }
 
-Matrix* RecurrentLayer::GetRecurrentWeights()
+Matrix& RecurrentLayer::GetRecurrentWeights()
 {
 	return RecursiveWeight;
 }
@@ -217,16 +189,6 @@ void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 	}
 	rapidjson::Value val;
 
-	delete Weights;
-	delete Output;
-	delete WeightError;
-	delete Bias;
-	delete InnerState;
-	delete BiasError;
-	delete RecursiveWeight;
-	delete RecursiveWeightError;
-	delete LayerError;
-
 
 	unsigned int InputSize = 1;
 	val = document["layer"]["size"];
@@ -235,34 +197,34 @@ void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 
 	unsigned int inputSize = val.GetUint();
 	if (LayerInput)
-		inputSize = LayerInput->GetOutput()->GetVectorSize();
-	Weights = new Matrix(inputSize, Size);
-	Output = new Matrix(1, Size);
-	Bias = new Matrix(1, Size);
-	InnerState = new Matrix(1, Size);
-	WeightError = new Matrix(inputSize, Size);
-	LayerError = new Matrix(1, inputSize);
-	BiasError = new Matrix(1, Size);
-	RecursiveWeight = new Matrix(Size, Size);
-	RecursiveWeightError = new Matrix(Size, Size);
+		inputSize = LayerInput->GetOutput().GetVectorSize();
+	Weights.Reset(inputSize, Size);
+	Output.Reset(1, Size);
+	Bias.Reset(1, Size);
+	InnerState.Reset(1, Size);
+	WeightError.Reset(inputSize, Size);
+	LayerError.Reset(1, inputSize);
+	BiasError.Reset(1, Size);
+	RecursiveWeight.Reset(Size, Size);
+	RecursiveWeightError.Reset(Size, Size);
 
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
 	document["layer"]["weights"].Accept(writer);
-	Weights->LoadFromJSON(buffer.GetString());
+	Weights.LoadFromJSON(buffer.GetString());
 
 	buffer.Clear();
 	writer.Reset(buffer);
 
 	document["layer"]["bias"].Accept(writer);
-	Bias->LoadFromJSON(buffer.GetString());
+	Bias.LoadFromJSON(buffer.GetString());
 
 	buffer.Clear();
 	writer.Reset(buffer);
 
 	document["layer"]["recurrent"].Accept(writer);
-	RecursiveWeight->LoadFromJSON(buffer.GetString());
+	RecursiveWeight.LoadFromJSON(buffer.GetString());
 
 }
 
@@ -276,15 +238,15 @@ std::string RecurrentLayer::SaveToJSON(const char* fileName)
 	id.SetUint(Id);
 	type.SetUint(2);
 	if (LayerInput)
-		inputSize.SetUint(LayerInput->GetOutput()->GetVectorSize());
+		inputSize.SetUint(LayerInput->GetOutput().GetVectorSize());
 	else
 		inputSize.SetUint(1);
 
 	rapidjson::Document weight, bias, recurrent;
 
-	weight.Parse(Weights->SaveToJSON().c_str());
-	bias.Parse(Bias->SaveToJSON().c_str());
-	recurrent.Parse(RecursiveWeight->SaveToJSON().c_str());
+	weight.Parse(Weights.SaveToJSON().c_str());
+	bias.Parse(Bias.SaveToJSON().c_str());
+	recurrent.Parse(RecursiveWeight.SaveToJSON().c_str());
 
 	rapidjson::Value root(rapidjson::kObjectType);
 	root.AddMember("id", id, doc.GetAllocator());

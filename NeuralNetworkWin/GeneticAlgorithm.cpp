@@ -153,17 +153,17 @@ void GeneticAlgorithm::DeleteIndividuals()
 	entities.clear();
 }
 
-void GeneticAlgorithm::Train(Matrix* input, Matrix* expected)
+void GeneticAlgorithm::Train(const Matrix& input, const Matrix& expected)
 {
 	CurrentGeneration = 0;
 	for (size_t g = 0; g < MaxGenerations; g++)
-		TrainStep(nullptr, nullptr);
+		TrainStep(Matrix(), Matrix());
 }
 
-void GeneticAlgorithm::ModifyWeights(Matrix* weights, Matrix* errors)
+void GeneticAlgorithm::ModifyWeights(Matrix& weights, const Matrix& errors)
 {
-	for (size_t r = 0; r < weights->GetRowCount() * weights->GetColumnCount(); r++)
-		weights->AdjustValue(r, MutationGenerator());
+	for (size_t r = 0; r < weights.GetRowCount() * weights.GetColumnCount(); r++)
+		weights.AdjustValue(r, MutationGenerator());
 #if USE_GPU
 	weights->CopyToGPU();
 #endif // USE_GPU
@@ -185,7 +185,7 @@ void GeneticAlgorithm::SetFitnessFunc(Fitness fitness)
 	fitnessFunc = fitness;
 }
 
-void GeneticAlgorithm::TrainStep(Matrix* input, Matrix* output)
+void GeneticAlgorithm::TrainStep(const Matrix& input, const Matrix& output)
 {
 	std::cout << "Current generation: " << CurrentGeneration << std::endl;
 	DoGeneration();

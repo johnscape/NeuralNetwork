@@ -33,74 +33,74 @@ __global__ void CUDATanhInv(float* from, float* to, unsigned int num)
 		to[i] = 1.0 - powf(from[i], 2);
 }
 
-Matrix* GPUActivation::SigmoidCalculate(Matrix* original)
+Matrix& GPUActivation::SigmoidCalculate(const Matrix& original)
 {
-	unsigned int max = original->GetColumnCount() * original->GetRowCount();
-	Matrix* ret = new Matrix(original->GetRowCount(), original->GetColumnCount());
+	unsigned int max = original.GetColumnCount() * original.GetRowCount();
+	Matrix ret(original.GetRowCount(), original.GetColumnCount());
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDASigmoid <<<grid, threads>>> (original->GetGPUValues(), ret->GetGPUValues(), original->GetRowCount() * original->GetColumnCount());
+	CUDASigmoid <<<grid, threads>>> (original.GetGPUValues(), ret.GetGPUValues(), original.GetRowCount() * original.GetColumnCount());
 	return ret;
 }
 
-void GPUActivation::SigmoidCalculate(Matrix* from, Matrix* to)
+void GPUActivation::SigmoidCalculate(const Matrix& from, Matrix& to)
 {
-	unsigned int max = from->GetColumnCount() * from->GetRowCount();
+	unsigned int max = from.GetColumnCount() * from.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDASigmoid << <grid, threads >> > (from->GetGPUValues(), to->GetGPUValues(), from->GetRowCount() * from->GetColumnCount());
+	CUDASigmoid <<<grid, threads>>> (from.GetGPUValues(), to.GetGPUValues(), from.GetRowCount() * from.GetColumnCount());
 }
 
-Matrix* GPUActivation::SigmoidInvCalculate(Matrix* original)
+Matrix& GPUActivation::SigmoidInvCalculate(const Matrix& original)
 {
-	unsigned int max = original->GetColumnCount() * original->GetRowCount();
-	Matrix* ret = new Matrix(original->GetRowCount(), original->GetColumnCount());
+	unsigned int max = original.GetColumnCount() * original.GetRowCount();
+	Matrix ret(original.GetRowCount(), original.GetColumnCount());
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDASigmoidInv << <grid, threads >> > (original->GetGPUValues(), ret->GetGPUValues(), original->GetRowCount() * original->GetColumnCount());
+	CUDASigmoidInv <<<grid, threads>>> (original.GetGPUValues(), ret.GetGPUValues(), original.GetRowCount() * original.GetColumnCount());
 	return ret;
 }
 
-void GPUActivation::SigmoidInvCalculate(Matrix* from, Matrix* to)
+void GPUActivation::SigmoidInvCalculate(const Matrix& from, Matrix& to)
 {
-	unsigned int max = from->GetColumnCount() * from->GetRowCount();
+	unsigned int max = from.GetColumnCount() * from.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDASigmoidInv << <grid, threads >> > (from->GetGPUValues(), to->GetGPUValues(), from->GetRowCount() * from->GetColumnCount());
+	CUDASigmoidInv << <grid, threads >> > (from.GetGPUValues(), to.GetGPUValues(), from.GetRowCount() * from.GetColumnCount());
 }
 
-Matrix* GPUActivation::TanhCalculate(Matrix* original)
+Matrix& GPUActivation::TanhCalculate(const Matrix& original)
 {
-	unsigned int max = original->GetColumnCount() * original->GetRowCount();
-	Matrix* ret = new Matrix(original->GetRowCount(), original->GetColumnCount());
+	unsigned int max = original.GetColumnCount() * original.GetRowCount();
+	Matrix ret(original.GetRowCount(), original.GetColumnCount());
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDATanh << <grid, threads >> > (original->GetGPUValues(), ret->GetGPUValues(), original->GetRowCount() * original->GetColumnCount());
+	CUDATanh << <grid, threads >> > (original.GetGPUValues(), ret.GetGPUValues(), original.GetRowCount() * original.GetColumnCount());
 	return ret;
 }
 
-void GPUActivation::TanhCalculate(Matrix* from, Matrix* to)
+void GPUActivation::TanhCalculate(const Matrix& from, Matrix& to)
 {
-	unsigned int max = from->GetColumnCount() * from->GetRowCount();
+	unsigned int max = from.GetColumnCount() * from.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDATanh << <grid, threads >> > (from->GetGPUValues(), to->GetGPUValues(), from->GetRowCount() * from->GetColumnCount());
+	CUDATanh << <grid, threads >> > (from.GetGPUValues(), to.GetGPUValues(), from.GetRowCount() * from.GetColumnCount());
 }
 
-Matrix* GPUActivation::TanhInvCalculate(Matrix* original)
+Matrix& GPUActivation::TanhInvCalculate(const Matrix& original)
 {
-	unsigned int max = original->GetColumnCount() * original->GetRowCount();
-	Matrix* ret = new Matrix(original->GetRowCount(), original->GetColumnCount());
+	unsigned int max = original.GetColumnCount() * original.GetRowCount();
+	Matrix ret(original.GetRowCount(), original.GetColumnCount());
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDATanhInv << <grid, threads >> > (original->GetGPUValues(), ret->GetGPUValues(), original->GetRowCount() * original->GetColumnCount());
+	CUDATanhInv << <grid, threads >> > (original.GetGPUValues(), ret.GetGPUValues(), original.GetRowCount() * original.GetColumnCount());
 	return ret;
 }
 
-void GPUActivation::TanhInvCalculate(Matrix* from, Matrix* to)
+void GPUActivation::TanhInvCalculate(const Matrix& from, Matrix& to)
 {
-	unsigned int max = from->GetColumnCount() * from->GetRowCount();
+	unsigned int max = from.GetColumnCount() * from.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	CUDATanhInv <<<grid, threads>>> (from->GetGPUValues(), to->GetGPUValues(), from->GetRowCount() * from->GetColumnCount());
+	CUDATanhInv <<<grid, threads>>> (from.GetGPUValues(), to.GetGPUValues(), from.GetRowCount() * from.GetColumnCount());
 }

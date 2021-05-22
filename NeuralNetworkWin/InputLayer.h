@@ -29,20 +29,20 @@ public:
 	 * @brief Runs the calculation and return with the output matrix.
 	 * @return A pointer of the output matrix.
 	*/
-	virtual Matrix* ComputeAndGetOutput();
+	virtual Matrix& ComputeAndGetOutput();
 
 	/**
 	 * @brief Sets a matrix as a constant input for the layer.
 	 * @param input The input matrix.
 	*/
-	virtual void SetInput(Matrix* input);
+	virtual void SetInput(const Matrix& input);
 
 	/**
 	 * @brief Calculates the error inside of the layer based on the last output, the input and the error.
 	 * @param error The error of the next layer, used to calculate this layer's error.
 	 * @param recursive If set to true, it will call its input layer with its own error. Used to train the model.
 	*/
-	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
+	virtual void GetBackwardPass(const Matrix& error, bool recursive = false);
 
 	/**
 	 * @brief Modifies the weights inside of the layer based on an optimizer algorithm.

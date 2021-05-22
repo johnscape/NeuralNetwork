@@ -10,12 +10,16 @@
 #include "rapidjson/ostreamwrapper.h"
 #include "rapidjson/istreamwrapper.h"
 
+#if USE_GPU
 #include <cuda.h>
 #include <cuda_runtime.h>
+#endif // USE_GPU
+
+#include "MatrixMath.h"
 
 //TODO: Throw error at DEBUG errors
 
-Matrix::Matrix()
+Matrix::Matrix() : GPUValues(nullptr)
 {
 	Columns = 1;
 	Rows = 1;
@@ -30,7 +34,7 @@ Matrix::Matrix()
 
 }
 
-Matrix::Matrix(size_t rows, size_t columns, float* elements)
+Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr)
 {
 	Columns = columns;
 	Rows = rows;
@@ -54,7 +58,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements)
 #endif // USE_GPU
 }
 
-Matrix::Matrix(const Matrix& c)
+Matrix::Matrix(const Matrix& c) : GPUValues(nullptr)
 {
 	Columns = c.GetColumnCount();
 	Rows = c.GetRowCount();
@@ -146,7 +150,7 @@ void Matrix::AdjustValue(size_t pos, float val)
 	Values[pos] += val;
 }
 
-float& Matrix::operator[](size_t id)
+float Matrix::operator[](size_t id) const
 {
 #if DEBUG
 	if (id < 0 || MaxValue <= id)
@@ -154,6 +158,92 @@ float& Matrix::operator[](size_t id)
 #endif // DEBUG
 	return Values[id];
 }
+
+Matrix& Matrix::operator=(const Matrix& other)
+{
+	if (this == &other)
+		return *this;
+
+	ReloadFromOther(other);
+
+	return *this;
+}
+
+Matrix& Matrix::operator=(Matrix&& other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	delete[] Values;
+	Rows = std::exchange(other.Rows, 0);
+	Columns = std::exchange(other.Columns, 0);
+	Values = std::exchange(other.Values, nullptr);
+	return *this;
+}
+
+Matrix& Matrix::operator+=(const Matrix& other)
+{
+	MatrixMath::AddIn(*this, other);
+	return *this;
+}
+
+Matrix& Matrix::operator-=(const Matrix& other)
+{
+	MatrixMath::SubstractIn(*this, other);
+	return *this;
+}
+
+Matrix& Matrix::operator*=(const Matrix& other)
+{
+	Matrix res = MatrixMath::Multiply(*this, other);
+	ReloadFromOther(res);
+	return *this;
+}
+
+Matrix& Matrix::operator+(const Matrix& other) const
+{
+	Matrix res = MatrixMath::Add(*this, other);
+	return res;
+}
+
+Matrix& Matrix::operator-(const Matrix& other) const
+{
+	Matrix res = MatrixMath::Substract(*this, other);
+	return res;
+}
+
+Matrix& Matrix::operator*(const Matrix& other) const
+{
+	Matrix res = MatrixMath::Multiply(*this, other);
+	return res;
+}
+
+bool Matrix::operator==(const Matrix& other) const
+{
+	return MatrixMath::IsEqual(*this, other);
+}
+
+bool Matrix::operator!=(const Matrix& other) const
+{
+	return !MatrixMath::IsEqual(*this, other);
+}
+
+Matrix& Matrix::operator*=(float other)
+{
+	MatrixMath::MultiplyIn(*this, other);
+	return *this;
+}
+
+Matrix& Matrix::operator*(float other)
+{
+	Matrix res = MatrixMath::Multiply(*this, other);
+	return res;
+}
+
+//std::ostream& Matrix::operator<<(std::ostream& os, const Matrix& m)
+//{
+//	// TODO: insert return statement here
+//}
 
 unsigned int Matrix::GetVectorSize()
 {
@@ -168,16 +258,17 @@ unsigned int Matrix::GetVectorSize()
 	return 0;
 }
 
-void Matrix::ReloadFromOther(Matrix* m)
+void Matrix::ReloadFromOther(const Matrix& m)
 {
 	delete[] Values;
-	Columns = m->GetColumnCount();
-	Rows = m->GetRowCount();
+	Columns = m.GetColumnCount();
+	Rows = m.GetRowCount();
 	MaxValue = Rows * Columns;
 	Values = new float[MaxValue];
 
-	for (size_t i = 0; i < MaxValue; i++)
-		Values[i] = m->GetValue(i);
+	/*for (size_t i = 0; i < MaxValue; i++)
+		Values[i] = m[i];*/
+	std::copy(m.Values, m.Values + MaxValue, Values);
 
 #if USE_GPU
 	cudaFree(GPUValues);
@@ -279,6 +370,16 @@ float* Matrix::GetGPUValues()
 #else
 	return nullptr;
 #endif // 0
+}
+
+void Matrix::Reset(size_t rows, size_t columns)
+{
+	delete[] Values;
+	Rows = rows;
+	Columns = columns;
+	Values = new float[Rows * Columns];
+	for (size_t i = 0; i < rows * columns; i++) //TODO: use std fill
+		Values[i] = 0;
 }
 
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const

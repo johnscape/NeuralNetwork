@@ -39,7 +39,7 @@ public:
 	 * @brief Runs the calculation and return with the output matrix.
 	 * @return A pointer of the output matrix.
 	*/
-	virtual Matrix* ComputeAndGetOutput();
+	virtual Matrix& ComputeAndGetOutput();
 
 	/**
 	 * @brief Sets the activation function we want to use.
@@ -52,7 +52,7 @@ public:
 	 * @param error The error of the next layer, used to calculate this layer's error.
 	 * @param recursive If set to true, it will call its input layer with its own error. Used to train the model.
 	*/
-	virtual void GetBackwardPass(Matrix* error, bool recursive = false);
+	virtual void GetBackwardPass(const Matrix& error, bool recursive = false);
 
 	/**
 	 * @brief Modifies the weights inside of the layer based on an optimizer algorithm.
@@ -64,13 +64,13 @@ public:
 	 * @brief Return the bias of the layer.
 	 * @return A matrix pointer of the bias values.
 	*/
-	Matrix* GetBias();
+	Matrix& GetBias();
 
 	/**
 	 * @brief Returns the weights of the layer.
 	 * @return A matrix pointer of the weights.
 	*/
-	Matrix* GetWeights();
+	Matrix& GetWeights();
 
 	/**
 	 * @brief Loads the layer from a JSON string.
@@ -91,12 +91,12 @@ private:
 	ActivationFunction* function;
 
 
-	Matrix* Weights;
-	Matrix* Bias;
-	Matrix* InnerState;
+	Matrix Weights;
+	Matrix Bias;
+	Matrix InnerState;
 
-	Matrix* WeightError;
-	Matrix* BiasError;
+	Matrix WeightError;
+	Matrix BiasError;
 
 	unsigned int Size;
 };

@@ -2,104 +2,90 @@
 
 #include <string>
 #include "rapidjson/document.h"
+#include <iostream>
 
 class Matrix
 {
 public:
-	/// <summary>
-	/// Creates a 1x1 matrix, with a 0 element.
-	/// </summary>
+	/**
+	 * @brief Creates a 1x1 matrix, with a 0 element.
+	*/
 	Matrix();
 
-	/// <summary>
-	/// Creates a matrix, in the shape of rows x columns.
-	/// If the elements are not null, it'll copy the values into the matrix.
-	/// It'll be filled with zeroes otherwise.
-	/// </summary>
-	/// <param name="rows">The number of the rows</param>
-	/// <param name="columns">The number of the columns</param>
-	/// <param name="elements">An array, containing the values, to fill the matrix. Default: nullptr</param>
+	/**
+	 * @brief Creates a matrix, in the shape of rows x columns.
+	 * If the elements are not null, it'll copy the values into the matrix.
+	 * It'll be filled with zeroes otherwise.
+	 * @param rows The number of the rows
+	 * @param columns The number of the columns
+	 * @param elements An array, containing the values, to fill the matrix. Default: nullptr
+	*/
 	Matrix(size_t rows, size_t columns, float* elements = nullptr);
 
-	/// <summary>
-	/// A copy constructor for the class
-	/// </summary>
-	/// <param name="c">The other instance to copy</param>
+	/**
+	 * @brief A copy constructor for the class
+	 * @param c The other instance to copy
+	*/
 	Matrix(const Matrix& c);
 
 	~Matrix();
 
-	/// <summary>
-	/// Returns the number of the columns.
-	/// </summary>
-	/// <returns>Number of the columns</returns>
+	/**
+	 * @brief Returns the number of the columns.
+	 * @return Number of the columns
+	*/
 	size_t GetColumnCount() const;
 
-	/// <summary>
-	/// Returns the number of the rows.
-	/// </summary>
-	/// <returns>Number of the rows.</returns>
+	/**
+	 * @brief Returns the number of the rows.
+	 * @return Number of the rows.
+	*/
 	size_t GetRowCount() const;
 
-
-
-	/// <summary>
-	/// Returns with the value at the position of row and col. Return 0 if out of bounds.
-	/// </summary>
-	/// <param name="row"></param>
-	/// <param name="col"></param>
-	/// <returns></returns>
+	/**
+	 * @brief Returns with the value at the position of row and col. Return 0 if out of bounds.
+	 * @param row The selected row
+	 * @param col The selected column
+	 * @return The value of the cell
+	*/
 	float GetValue(size_t row, size_t col) const;
 
-	/// <summary>
-	///  Returns with the value at the position. Return 0 if out of bounds.
-	/// </summary>
-	/// <param name="pos">The position in the matrix</param>
-	/// <returns></returns>
+	/**
+	 * @brief Returns with the value at the position. Return 0 if out of bounds.
+	 * @param pos The position in the matrix
+	 * @return The value of the cell
+	*/
 	float GetValue(size_t pos) const;
 
-
-
-	/// <summary>
-	/// Sets the value of the matrix at row and col.
-	/// </summary>
-	/// <param name="row">The selected row</param>
-	/// <param name="col">The selected column</param>
-	/// <param name="val">The new value</param>
+	/**
+	 * @brief Sets the value of the matrix at row and col.
+	 * @param row The selected row
+	 * @param col The selected column
+	 * @param val The new value
+	*/
 	void SetValue(size_t row, size_t col, float val);
 
-	/// <summary>
-	/// Sets the value of the matrix at the desired position.
-	/// </summary>
-	/// <param name="pos">The matrix pos-th element</param>
-	/// <param name="val">The new value</param>
+	/**
+	 * @brief Sets the value of the matrix at the desired position.
+	 * @param pos The matrix pos-th element
+	 * @param val The new value
+	*/
 	void SetValue(size_t pos, float val);
 
-
-
-	/// <summary>
-	/// Adjust the value at the selected cell.
-	/// </summary>
-	/// <param name="row">The selected row</param>
-	/// <param name="col">The selected column</param>
-	/// <param name="val">The value to be added</param>
+	/**
+	 * @brief Increments the value at the selected cell.
+	 * @param row The selected row
+	 * @param col The selected column
+	 * @param val The value to be added
+	*/
 	void AdjustValue(size_t row, size_t col, float val);
 
-	/// <summary>
-	/// Adjust the value at the selected cell.
-	/// </summary>
-	/// <param name="pos">The selected position</param>
-	/// <param name="val">The value to be added</param>
+	/**
+	 * @brief Increments the value at the selected cell.
+	 * @param pos The selected cell's index.
+	 * @param val The value to be added
+	*/
 	void AdjustValue(size_t pos, float val);
-
-
-
-	/// <summary>
-	/// Returns the selected value
-	/// </summary>
-	/// <param name="id">The position</param>
-	/// <returns></returns>
-	float& operator[](size_t id);
 
 	/**
 	 * @brief If the matrix is a vector, returns its size
@@ -111,7 +97,7 @@ public:
 	 * @brief Copies the values from another matrix.
 	 * @param m The other matrix.
 	*/
-	void ReloadFromOther(Matrix* m);
+	void ReloadFromOther(const Matrix& m);
 
 	/**
 	 * @brief Loads the matrix from JSON data.
@@ -142,6 +128,33 @@ public:
 	 * @return The pointer of the GPU
 	*/
 	float* GetGPUValues();
+
+	void Reset(size_t rows, size_t columns);
+
+	/**
+	 * @brief Gets a single value from the matrix, similar to GetValue
+	 * @param id The index of the value
+	 * @return The value at the specified index
+	*/
+	float operator[](size_t id) const;
+
+	Matrix& operator=(const Matrix& other);
+	Matrix& operator=(Matrix&& other) noexcept;
+	Matrix& operator+=(const Matrix& other);
+	Matrix& operator-=(const Matrix& other);
+	Matrix& operator*=(const Matrix& other);
+	Matrix& operator+(const Matrix& other) const;
+	Matrix& operator-(const Matrix& other)const;
+	Matrix& operator*(const Matrix& other) const;
+	bool operator==(const Matrix& other) const;
+	bool operator!=(const Matrix& other) const;
+
+	Matrix& operator*=(float other);
+	Matrix& operator*(float other);
+
+
+	//std::ostream& operator<<(std::ostream& os, const Matrix& m);
+
 
 private:
 	float* Values;

@@ -66,14 +66,14 @@ public:
      * @param input The input of the model.
      * @param expected The expected output of the model.
     */
-    virtual void Train(Matrix* input, Matrix* expected = nullptr);
+    virtual void Train(const Matrix& input, const Matrix& expected = Matrix());
 
     /**
      * @brief Based on the type of the optimizer, this function will modify the weights of the layers.
      * @param weights The weights to modify
      * @param errors The error to calculate the new weights from
     */
-    virtual void ModifyWeights(Matrix* weights, Matrix* errors);
+    virtual void ModifyWeights(Matrix& weights, const Matrix& errors);
 
     /**
      * @brief Returns an individual at a specific index.
@@ -84,7 +84,7 @@ public:
 
     void SetFitnessFunc(Fitness fitness);
 
-    void TrainStep(Matrix* input, Matrix* output);
+    void TrainStep(const Matrix& input, const Matrix& output);
     void Reset();
 
 private:

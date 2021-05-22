@@ -36,20 +36,20 @@ public:
      * @brief Returns the output matrix
      * @return Pointer to the output matrix
     */
-    virtual Matrix* GetOutput();
+    virtual Matrix& GetOutput();
 
     /**
      * @brief Runs the Compute method then returns with the output matrix
      * @return The pointer of the updated output matrix
     */
-    virtual Matrix* ComputeAndGetOutput();
+    virtual Matrix& ComputeAndGetOutput();
     
     /**
      * @brief Calculates the error inside of the layer based on the last output, the input and the error.
      * @param error The error of the next layer, used to calculate this layer's error.
      * @param recursive If set to true, it will call its input layer with its own error.
     */
-    virtual void GetBackwardPass(Matrix* error, bool recursive = false);
+    virtual void GetBackwardPass(const Matrix& error, bool recursive = false);
 
     /**
      * @brief Modifies the weights inside of the layer based on an optimizer algorithm.
@@ -69,21 +69,21 @@ public:
      * @param weight The selected gate
      * @return Matrix pointer of the specified input weight
     */
-    Matrix* GetWeight(unsigned char weight);
+    Matrix& GetWeight(unsigned char weight);
 
     /**
      * @brief Returns the recursive weight from a selected gate.
      * @param weight The selected gate
      * @return Matrix pointer of the specified recursive weight
     */
-    Matrix* GetRecursiveWeight(unsigned char weight);
+    Matrix& GetRecursiveWeight(unsigned char weight);
 
     /**
      * @brief Returns the bias from a selected gate.
      * @param weight The selected gate
      * @return Matrix pointer of the specified bias
     */
-    Matrix* GetBias(unsigned char weight);
+    Matrix& GetBias(unsigned char weight);
 
     //TODO: select weight by enum
 
@@ -110,24 +110,24 @@ public:
     };
 
 private:
-    std::vector<Matrix*> InputWeights;
-    std::vector<Matrix*> RecursiveWeights;
-    std::vector<Matrix*> Biases;
-    std::vector<Matrix*> InputWeightOutputs;
-    std::vector<Matrix*> RecursiveWeightOuputs;
+    std::vector<Matrix> InputWeights;
+    std::vector<Matrix> RecursiveWeights;
+    std::vector<Matrix> Biases;
+    std::vector<Matrix> InputWeightOutputs;
+    std::vector<Matrix> RecursiveWeightOuputs;
 
-    std::vector<Matrix*> InputWeightErrors;
-    std::vector<Matrix*> RecursiveWeightErrors;
-    std::vector<Matrix*> BiasErrors;
+    std::vector<Matrix> InputWeightErrors;
+    std::vector<Matrix> RecursiveWeightErrors;
+    std::vector<Matrix> BiasErrors;
 
-    std::deque<std::vector<Matrix*>> savedStates;
-    std::deque<Matrix*> errors;
+    std::deque<std::vector<Matrix>> savedStates;
+    std::deque<Matrix> errors;
 
-    Matrix* CellState;
-    Matrix* InnerState;
+    Matrix CellState;
+    Matrix InnerState;
 
-    Matrix* cellTanh;
-    Matrix* DeltaOut;
+    Matrix cellTanh;
+    Matrix DeltaOut;
 
     unsigned int CellStateSize;
     unsigned int TimeSteps;
@@ -135,6 +135,6 @@ private:
     ActivationFunction* Tanh;
     ActivationFunction* Sig;
 
-    void UpdateWeightErrors(Matrix* gateIError, Matrix* gateRError, Matrix* inputTranspose, Matrix* dGate, Matrix* outputTranspose, int weight);
+    void UpdateWeightErrors(Matrix& gateIError, Matrix& gateRError, Matrix& inputTranspose, Matrix& dGate, Matrix& outputTranspose, int weight);
 };
 

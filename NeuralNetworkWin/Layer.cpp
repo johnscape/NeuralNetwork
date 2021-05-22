@@ -9,14 +9,14 @@
 
 unsigned int Layer::LayerCount = 0;
 
-Layer::Layer(Layer* inputLayer) : TrainingMode(false), LayerError(nullptr), Output(nullptr)
+Layer::Layer(Layer* inputLayer) : TrainingMode(false), LayerError(), Output()
 {
 	this->LayerInput = inputLayer;
 	Id = LayerCount;
 	LayerCount++;
 }
 
-Layer::Layer() : TrainingMode(false), LayerError(nullptr), Output(nullptr)
+Layer::Layer() : TrainingMode(false), LayerError(), Output()
 {
 	LayerInput = nullptr;
 	Id = LayerCount;
@@ -38,10 +38,6 @@ Layer* Layer::Create(unsigned int type, unsigned int size, Layer* input)
 
 Layer::~Layer()
 {
-	if (Output)
-		delete Output;
-	if (LayerError)
-		delete LayerError;
 }
 
 void Layer::SetInput(Layer* input)
@@ -49,20 +45,18 @@ void Layer::SetInput(Layer* input)
 	LayerInput = input;
 }
 
-Matrix* Layer::GetOutput()
+Matrix& Layer::GetOutput()
 {
-	if (!Output)
-		throw LayerInputException();
 	return Output;
 }
 
 unsigned int Layer::OutputSize()
 {
-	if (!Output || !MatrixMath::IsVector(Output))
+	if (!MatrixMath::IsVector(Output))
 		return -1;
-	if (Output->GetRowCount() == 1)
-		return Output->GetColumnCount();
-	return Output->GetRowCount();
+	if (Output.GetRowCount() == 1)
+		return Output.GetColumnCount();
+	return Output.GetRowCount();
 }
 
 Layer* Layer::GetInputLayer()
@@ -70,7 +64,7 @@ Layer* Layer::GetInputLayer()
 	return LayerInput;
 }
 
-Matrix* Layer::GetLayerError()
+Matrix& Layer::GetLayerError()
 {
 	return LayerError;
 }

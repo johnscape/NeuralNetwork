@@ -189,7 +189,7 @@ void Model::LoadModel(const char* fileName)
 	outputLayer = FindLayerWithId(document["model"]["outputLayerId"].GetUint());
 }
 
-Matrix* Model::Compute(Matrix* input)
+Matrix Model::Compute(const Matrix& input)
 {
 	inputLayer->SetInput(input);
 	outputLayer->Compute();

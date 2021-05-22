@@ -7,12 +7,12 @@
 
 namespace LossFunctions
 {
-	float MSE(Matrix* output, Matrix* expected)
+	float MSE(const Matrix& output, const Matrix& expected)
 	{
 		float sum = 0;
-		unsigned int elements = output->GetColumnCount() * output->GetRowCount();
+		unsigned int elements = output.GetColumnCount() * output.GetRowCount();
 		for (unsigned int i = 0; i < elements; i++)
-			sum += pow(expected->GetValue(i) - output->GetValue(i), 2);
+			sum += pow(expected.GetValue(i) - output.GetValue(i), 2);
 		return sum / (float)elements;
 	}
 

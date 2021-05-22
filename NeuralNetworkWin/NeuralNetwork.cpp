@@ -25,7 +25,7 @@ float Tester(Model* model)
 	Matrix input(1, 2);
 	Matrix expected(1, 1);
 
-	Matrix* output;
+	Matrix output;
 
 
 	for (unsigned int p = 0; p < 50; p++)
@@ -45,16 +45,16 @@ float Tester(Model* model)
 			expected.SetValue(0, 0);
 
 		input.CopyToGPU();
-		output = model->Compute(&input);
+		output = model->Compute(input);
 
-		float err = LossFunctions::MSE(output, &expected);
+		float err = LossFunctions::MSE(output, expected);
 
 
 		error += err;
 	}
 	
 	error /= 50;
-	std::cout << "Model output was " << output->GetValue(0) << " expected was " << expected.GetValue(0) << " average error is " << error << std::endl;
+	std::cout << "Model output was " << output.GetValue(0) << " expected was " << expected.GetValue(0) << " average error is " << error << std::endl;
 
 	//std::cout << "Fitness is " << error << std::endl;
 
@@ -73,7 +73,7 @@ int main()
 
 	//GeneticAlgorithm trainer(&m, 50, 500, &Tester);
 	GeneticAlgorithm trainer(&m, 500, 10, &Tester);
-	trainer.Train(nullptr, nullptr);
+	trainer.Train(Matrix(), Matrix());
 
 	return 0;
 }

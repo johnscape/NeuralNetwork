@@ -6,7 +6,7 @@
 InputLayer::InputLayer(unsigned int size) : Layer(), Size(size)
 {
 	LayerInput = nullptr;
-	Output = new Matrix(1, size);
+	Output.Reset(1, size);
 }
 
 Layer* InputLayer::Clone()
@@ -19,12 +19,12 @@ void InputLayer::Compute()
 	return;
 }
 
-Matrix* InputLayer::ComputeAndGetOutput()
+Matrix& InputLayer::ComputeAndGetOutput()
 {
 	return Output;
 }
 
-void InputLayer::SetInput(Matrix* input)
+void InputLayer::SetInput(const Matrix& input)
 {
 #if DEBUG
 	if (!MatrixMath::SizeCheck(input, Output))
@@ -33,7 +33,7 @@ void InputLayer::SetInput(Matrix* input)
 	MatrixMath::Copy(input, Output);
 }
 
-void InputLayer::GetBackwardPass(Matrix* error, bool recursive)
+void InputLayer::GetBackwardPass(const Matrix& error, bool recursive)
 {
 }
 

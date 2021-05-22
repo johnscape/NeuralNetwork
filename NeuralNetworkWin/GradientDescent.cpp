@@ -17,26 +17,25 @@ GradientDescent::~GradientDescent()
 {
 }
 
-Matrix* GradientDescent::CalculateOutputError(Matrix* output, Matrix* expected)
+Matrix GradientDescent::CalculateOutputError(const Matrix& output, const Matrix& expected)
 {
-	Matrix* outputError(new Matrix(1, output->GetColumnCount()));
-	for (unsigned int i = 0; i < output->GetColumnCount(); i++)
+	Matrix outputError(1, output.GetColumnCount());
+	for (unsigned int i = 0; i < output.GetColumnCount(); i++)
 	{
-		outputError->SetValue(i, derivate(output, expected, i));
+		outputError.SetValue(i, derivate(output, expected, i));
 	}
 	return outputError;
 }
 
-void GradientDescent::TrainStep(Matrix* input, Matrix* output)
+void GradientDescent::TrainStep(const Matrix& input, const Matrix& output)
 {
 	inputLayer->SetInput(input);
-	Matrix* outputValue = outputLayer->ComputeAndGetOutput();
-	Matrix* outputError = CalculateOutputError(outputValue, output);
+	Matrix outputValue = outputLayer->ComputeAndGetOutput();
+	Matrix outputError = CalculateOutputError(outputValue, output);
 	outputLayer->GetBackwardPass(outputError, true);
-	delete outputError;
 }
 
-void GradientDescent::Train(Matrix* input, Matrix* expected)
+void GradientDescent::Train(const Matrix& input, const Matrix& expected)
 {
 	//find input layer
 	Layer* currentLayer = outputLayer;
@@ -47,9 +46,9 @@ void GradientDescent::Train(Matrix* input, Matrix* expected)
 	}
 	//calculate
 	currentLayer->SetInput(input);
-	Matrix* outputValue = outputLayer->ComputeAndGetOutput(); 
+	Matrix outputValue = outputLayer->ComputeAndGetOutput(); 
 	//calculate errors
-	Matrix* outputError = CalculateOutputError(outputValue, expected);
+	Matrix outputError = CalculateOutputError(outputValue, expected);
 	outputLayer->GetBackwardPass(outputError, true);
 
 	currentLayer = outputLayer;
@@ -66,18 +65,16 @@ void GradientDescent::Train(Matrix* input, Matrix* expected)
 		currentLayer = currentLayer->GetInputLayer();
 	}
 
-	delete outputError;
-
 }
 
-void GradientDescent::ModifyWeights(Matrix* weights, Matrix* errors)
+void GradientDescent::ModifyWeights(Matrix& weights, const Matrix& errors)
 {
-	for (unsigned int row = 0; row < weights->GetRowCount(); row++)
+	for (unsigned int row = 0; row < weights.GetRowCount(); row++)
 	{
-		for (unsigned int col = 0; col < weights->GetColumnCount(); col++)
+		for (unsigned int col = 0; col < weights.GetColumnCount(); col++)
 		{
-			float edit = -LearningRate * errors->GetValue(row, col) / currentBatch;
-			weights->AdjustValue(row, col, edit);
+			float edit = -LearningRate * errors.GetValue(row, col) / currentBatch;
+			weights.AdjustValue(row, col, edit);
 		}
 	}
 }

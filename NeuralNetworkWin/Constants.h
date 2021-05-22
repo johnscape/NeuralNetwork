@@ -1,4 +1,4 @@
 #pragma once
 
 #define DEBUG true
-#define USE_GPU true
+#define USE_GPU false

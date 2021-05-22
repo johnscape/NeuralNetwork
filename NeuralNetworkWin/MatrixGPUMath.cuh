@@ -4,10 +4,11 @@
 
 namespace GPUMath
 {
-	Matrix* Multiplication(Matrix* a, Matrix* b, Matrix* c);
-	void ElementviseMultiply(Matrix* a, Matrix* b);
-	void SubstractIn(Matrix* a, Matrix* b);
-	void AddIn(Matrix* a, Matrix* b);
+	Matrix& Multiplication(const Matrix& a, const Matrix& b);
+	void Multiplication(const Matrix& a, const Matrix& b, Matrix& c);
+	void ElementviseMultiply(Matrix& a, const Matrix& b);
+	void SubstractIn(Matrix& a, const Matrix& b);
+	void AddIn(Matrix& a, const Matrix& b);
 
-	void FillWith(Matrix* a, float value);
+	void FillWith(Matrix& a, float value);
 }

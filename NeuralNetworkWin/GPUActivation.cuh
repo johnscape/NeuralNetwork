@@ -3,16 +3,16 @@
 namespace GPUActivation
 {
 	///Sigmoid
-	Matrix* SigmoidCalculate(Matrix* original);
-	void SigmoidCalculate(Matrix* from, Matrix* to);
+	Matrix& SigmoidCalculate(const Matrix& original);
+	void SigmoidCalculate(const Matrix& from, Matrix& to);
 
-	Matrix* SigmoidInvCalculate(Matrix* original);
-	void SigmoidInvCalculate(Matrix* from, Matrix* to);
+	Matrix& SigmoidInvCalculate(const Matrix& original);
+	void SigmoidInvCalculate(const Matrix& from, Matrix& to);
 
 	/// Tanh
-	Matrix* TanhCalculate(Matrix* original);
-	void TanhCalculate(Matrix* from, Matrix* to);
+	Matrix& TanhCalculate(const Matrix& original);
+	void TanhCalculate(const Matrix& from, Matrix& to);
 
-	Matrix* TanhInvCalculate(Matrix* original);
-	void TanhInvCalculate(Matrix* from, Matrix* to);
+	Matrix& TanhInvCalculate(const Matrix& original);
+	void TanhInvCalculate(const Matrix& from, Matrix& to);
 }

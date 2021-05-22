@@ -22,11 +22,11 @@ public:
 	ActivationFunction() {}
 	~ActivationFunction() {}
 
-	virtual Matrix* CalculateMatrix(Matrix* input) = 0;
-	virtual Matrix* CalculateDerivateMatrix(Matrix* output, float extra = 0) = 0;
+	virtual Matrix CalculateMatrix(const Matrix& input) = 0;
+	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra = 0) = 0;
 
-	virtual void CalculateInto(Matrix* input, Matrix* target) = 0;
-	virtual void CalculateDerivateInto(Matrix* output, Matrix* target, float extra = 0) = 0;
+	virtual void CalculateInto(const Matrix& input, Matrix& target) = 0;
+	virtual void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra = 0) = 0;
 };
 
 /**
@@ -45,11 +45,29 @@ public:
 	void operator=(const IdentityFunction& f) = delete;
 
 	~IdentityFunction() {}
-	virtual Matrix* CalculateMatrix(Matrix* input) { Matrix* c = new Matrix(*input); return c; }
-	virtual Matrix* CalculateDerivateMatrix(Matrix* output, float extra = 0) { Matrix* c = new Matrix(*output); MatrixMath::FillWith(c, 1); return c; }
+	virtual Matrix CalculateMatrix(const Matrix& input)
+	{ 
+		Matrix c(input);
+		return c;
+	}
 
-	virtual void CalculateInto(Matrix* input, Matrix* target) { MatrixMath::Copy(input, target); }
-	virtual void CalculateDerivateInto(Matrix* output, Matrix* target, float extra = 0) { MatrixMath::FillWith(target, 1); }
+	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra = 0)
+	{
+		Matrix c(output); 
+		MatrixMath::FillWith(c, 1); 
+		return c;
+	}
+
+	virtual void CalculateInto(const Matrix& input, Matrix& target) 
+	{ 
+		MatrixMath::Copy(input, target);
+	}
+
+	virtual void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra = 0)
+	{ 
+		MatrixMath::FillWith(target, 1);
+	}
+
 private:
 	IdentityFunction() {}
 
@@ -73,48 +91,48 @@ public:
 	void operator=(const Sigmoid& f) = delete;
 
 	~Sigmoid() {}
-	virtual Matrix* CalculateMatrix(Matrix* input)
+	virtual Matrix CalculateMatrix(const Matrix& input)
 	{
 #if USE_GPU
 		return GPUActivation::SigmoidCalculate(input);
 #else
-		Matrix* c = new Matrix(*input);
-		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
-			c->SetValue(i, Calculate(c->GetValue(i)));
+		Matrix c(input);
+		for (size_t i = 0; i < c.GetRowCount() * c.GetColumnCount(); i++)
+			c.SetValue(i, Calculate(c.GetValue(i)));
 		return c;
 #endif // USE_GPU
 	}
-	virtual Matrix* CalculateDerivateMatrix(Matrix* output, float extra = 0)
+	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra = 0)
 	{
 #if USE_GPU
 		return GPUActivation::SigmoidInvCalculate(output);
 #else
-		Matrix* c = new Matrix(*output);
-		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
-			c->SetValue(i, CalculateDerivate(c->GetValue(i)));
+		Matrix c(output);
+		for (size_t i = 0; i < c.GetRowCount() * c.GetColumnCount(); i++)
+			c.SetValue(i, CalculateDerivate(c.GetValue(i)));
 		return c;
 #endif // USE_GPU
 
 	}
 
-	virtual void CalculateInto(Matrix* input, Matrix* target)
+	virtual void CalculateInto(const Matrix& input, Matrix& target)
 	{
 #if USE_GPU
 		GPUActivation::SigmoidCalculate(input, target);
 #else
-		for (size_t i = 0; i < input->GetRowCount() * input->GetColumnCount(); i++)
-			target->SetValue(i, Calculate(input->GetValue(i)));
+		for (size_t i = 0; i < input.GetRowCount() * input.GetColumnCount(); i++)
+			target.SetValue(i, Calculate(input.GetValue(i)));
 #endif // USE_GPU
 
 	}
 
-	virtual void CalculateDerivateInto(Matrix* output, Matrix* target, float extra = 0)
+	virtual void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra = 0)
 	{
 #if USE_GPU
 		GPUActivation::SigmoidInvCalculate(output, target);
 #else
-		for (size_t i = 0; i < output->GetRowCount() * output->GetColumnCount(); i++)
-			target->SetValue(i, CalculateDerivate(output->GetValue(i)));
+		for (size_t i = 0; i < output.GetRowCount() * output.GetColumnCount(); i++)
+			target.SetValue(i, CalculateDerivate(output.GetValue(i)));
 #endif // USE_GPU
 
 	}
@@ -141,49 +159,49 @@ public:
 	void operator=(const TanhFunction& f)	 = delete;
 
 	~TanhFunction() {}
-	virtual Matrix* CalculateMatrix(Matrix* input)
+	virtual Matrix CalculateMatrix(const Matrix& input)
 	{
 #if USE_GPU
 		return GPUActivation::TanhCalculate(input);
 #else
-		Matrix* c = new Matrix(*input);
-		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
-			c->SetValue(i, Calculate(c->GetValue(i)));
+		Matrix c(input);
+		for (size_t i = 0; i < c.GetRowCount() * c.GetColumnCount(); i++)
+			c.SetValue(i, Calculate(c.GetValue(i)));
 		return c;
 #endif // USE_GPU
 
 	}
-	virtual Matrix* CalculateDerivateMatrix(Matrix* output, float extra = 0)
+	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra = 0)
 	{
 #if USE_GPU
 		return GPUActivation::TanhInvCalculate(output);
 #else
-		Matrix* c = new Matrix(*output);
-		for (size_t i = 0; i < c->GetRowCount() * c->GetColumnCount(); i++)
-			c->SetValue(i, CalculateDerivate(c->GetValue(i)));
+		Matrix c(output);
+		for (size_t i = 0; i < c.GetRowCount() * c.GetColumnCount(); i++)
+			c.SetValue(i, CalculateDerivate(c.GetValue(i)));
 		return c;
 #endif // USE_GPU
 
 	}
 
-	virtual void CalculateInto(Matrix* input, Matrix* target)
+	virtual void CalculateInto(const Matrix& input, Matrix& target)
 	{
 #if USE_GPU
 		GPUActivation::TanhCalculate(input, target);
 #else
-		for (size_t i = 0; i < input->GetRowCount() * input->GetColumnCount(); i++)
-			target->SetValue(i, Calculate(input->GetValue(i)));
+		for (size_t i = 0; i < input.GetRowCount() * input.GetColumnCount(); i++)
+			target.SetValue(i, Calculate(input.GetValue(i)));
 #endif // USE_GPU
 
 	}
 
-	virtual void CalculateDerivateInto(Matrix* output, Matrix* target, float extra = 0)
+	virtual void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra = 0)
 	{
 #if USE_GPU
 		GPUActivation::TanhInvCalculate(output, target);
 #else
-		for (size_t i = 0; i < output->GetRowCount() * output->GetColumnCount(); i++)
-			target->SetValue(i, CalculateDerivate(output->GetValue(i)));
+		for (size_t i = 0; i < output.GetRowCount() * output.GetColumnCount(); i++)
+			target.SetValue(i, CalculateDerivate(output.GetValue(i)));
 #endif // USE_GPU
 
 	}

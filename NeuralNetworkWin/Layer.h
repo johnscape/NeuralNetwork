@@ -54,7 +54,7 @@ public:
 	 * @brief Sets a matrix as a constant input for the layer.
 	 * @param input The input matrix.
 	*/
-	virtual void SetInput(Matrix* input) {}
+	virtual void SetInput(const Matrix& input) {}
 
 	/**
 	 * @brief Calculates the output of the layer.
@@ -65,7 +65,7 @@ public:
 	 * @brief Returns the output matrix
 	 * @return Pointer to the output matrix
 	*/
-	virtual Matrix* GetOutput();
+	virtual Matrix& GetOutput();
 
 	/**
 	 * @brief If the output matrix is a vector, the function returns its length
@@ -77,7 +77,7 @@ public:
 	 * @brief Runs the Compute method then returns with the output matrix
 	 * @return The pointer of the updated output matrix
 	*/
-	virtual Matrix* ComputeAndGetOutput() = 0;
+	virtual Matrix& ComputeAndGetOutput() = 0;
 
 	/**
 	 * @brief Returns the layer where the input values are coming from.
@@ -90,7 +90,7 @@ public:
 	 * @param error The error of the next layer, used to calculate this layer's error.
 	 * @param recursive If set to true, it will call its input layer with its own error.
 	*/
-	virtual void GetBackwardPass(Matrix* error, bool recursive = false) = 0;
+	virtual void GetBackwardPass(const Matrix& error, bool recursive = false) = 0;
 
 	/**
 	 * @brief Modifies the weights inside of the layer based on an optimizer algorithm.
@@ -102,7 +102,7 @@ public:
 	 * @brief Returns with the error of the layer.
 	 * @return A pointer to the matrix where the layer's error is stored.
 	*/
-	virtual Matrix* GetLayerError();
+	virtual Matrix& GetLayerError();
 
 	/**
 	 * @brief Used to tell the layer to store values for later training. Set to true if you want to train your layer.
@@ -147,8 +147,8 @@ public:
 
 protected:
 	Layer* LayerInput;
-	Matrix* Output;
-	Matrix* LayerError;
+	Matrix Output;
+	Matrix LayerError;
 
 	unsigned int Id;
 	bool TrainingMode;
