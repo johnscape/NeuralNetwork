@@ -23,7 +23,6 @@ Matrix::Matrix() : GPUValues(nullptr)
 {
 	Columns = 1;
 	Rows = 1;
-	MaxValue = 1;
 	Values = new float[1];
 	Values[0] = 0;
 
@@ -38,18 +37,20 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 {
 	Columns = columns;
 	Rows = rows;
-	MaxValue = Rows * Columns;
-	Values = new float[MaxValue];
+	size_t count = GetElementCount();
+	Values = new float[count];
 
 	if (elements)
 	{
-		for (size_t i = 0; i < MaxValue; i++)
-			Values[i] = elements[i];
+		/*for (size_t i = 0; i < MaxValue; i++)
+			Values[i] = elements[i];*/
+		std::copy(elements, elements + count, Values);
 	}
 	else
 	{
-		for (size_t i = 0; i < MaxValue; i++)
-			Values[i] = 0;
+		/*for (size_t i = 0; i < MaxValue; i++)
+			Values[i] = 0;*/
+		std::fill(Values, Values + count, 0);
 	}
 
 #if USE_GPU
@@ -62,11 +63,12 @@ Matrix::Matrix(const Matrix& c) : GPUValues(nullptr)
 {
 	Columns = c.GetColumnCount();
 	Rows = c.GetRowCount();
-	MaxValue = Rows * Columns;
-	Values = new float[MaxValue];
+	size_t count = GetElementCount();
+	Values = new float[count];
 
-	for (size_t i = 0; i < MaxValue; i++)
-		Values[i] = c.GetValue(i);
+	/*for (size_t i = 0; i < MaxValue; i++)
+		Values[i] = c.GetValue(i);*/
+	std::copy(c.Values, c.Values + count, Values);
 
 #if USE_GPU
 	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
@@ -97,7 +99,7 @@ float Matrix::GetValue(size_t row, size_t col) const
 {
 	size_t pos = RowColToPosition(row, col);
 #if DEBUG
-	if (pos < 0 || pos >= MaxValue)
+	if (pos < 0 || pos >= GetElementCount())
 		return 0;
 #endif // DEBUG
 	return Values[pos];
@@ -106,7 +108,7 @@ float Matrix::GetValue(size_t row, size_t col) const
 float Matrix::GetValue(size_t pos) const
 {
 #if DEBUG
-	if (pos < 0 || pos >= MaxValue)
+	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
 #endif // DEBUG
 	return Values[pos];
@@ -116,7 +118,7 @@ void Matrix::SetValue(size_t row, size_t col, float val)
 {
 	size_t pos = RowColToPosition(row, col);
 #if DEBUG
-	if (pos < 0 || pos >= MaxValue)
+	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
 #endif // DEBUG
 	Values[pos] = val;
@@ -125,7 +127,7 @@ void Matrix::SetValue(size_t row, size_t col, float val)
 void Matrix::SetValue(size_t pos, float val)
 {
 #if DEBUG
-	if (pos < 0 || pos >= MaxValue)
+	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
 #endif // DEBUG
 	Values[pos] = val;
@@ -135,7 +137,7 @@ void Matrix::AdjustValue(size_t row, size_t col, float val)
 {
 	size_t pos = RowColToPosition(row, col);
 #if DEBUG
-	if (pos < 0 || pos >= MaxValue)
+	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
 #endif // DEBUG == true
 	Values[pos] += val;
@@ -144,7 +146,7 @@ void Matrix::AdjustValue(size_t row, size_t col, float val)
 void Matrix::AdjustValue(size_t pos, float val)
 {
 #if DEBUG
-	if (pos < 0 || pos >= MaxValue)
+	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
 #endif // DEBUG
 	Values[pos] += val;
@@ -153,7 +155,7 @@ void Matrix::AdjustValue(size_t pos, float val)
 float Matrix::operator[](size_t id) const
 {
 #if DEBUG
-	if (id < 0 || MaxValue <= id)
+	if (id < 0 || GetElementCount() <= id)
 		throw MatrixIndexException();
 #endif // DEBUG
 	return Values[id];
@@ -200,19 +202,19 @@ Matrix& Matrix::operator*=(const Matrix& other)
 	return *this;
 }
 
-Matrix& Matrix::operator+(const Matrix& other) const
+Matrix Matrix::operator+(const Matrix& other) const
 {
 	Matrix res = MatrixMath::Add(*this, other);
 	return res;
 }
 
-Matrix& Matrix::operator-(const Matrix& other) const
+Matrix Matrix::operator-(const Matrix& other) const
 {
 	Matrix res = MatrixMath::Substract(*this, other);
 	return res;
 }
 
-Matrix& Matrix::operator*(const Matrix& other) const
+Matrix Matrix::operator*(const Matrix& other) const
 {
 	Matrix res = MatrixMath::Multiply(*this, other);
 	return res;
@@ -240,6 +242,11 @@ Matrix& Matrix::operator*(float other)
 	return res;
 }
 
+size_t Matrix::GetElementCount() const
+{
+	return Rows * Columns;
+}
+
 //std::ostream& Matrix::operator<<(std::ostream& os, const Matrix& m)
 //{
 //	// TODO: insert return statement here
@@ -263,12 +270,10 @@ void Matrix::ReloadFromOther(const Matrix& m)
 	delete[] Values;
 	Columns = m.GetColumnCount();
 	Rows = m.GetRowCount();
-	MaxValue = Rows * Columns;
-	Values = new float[MaxValue];
+	size_t count = GetElementCount();
+	Values = new float[count];
 
-	/*for (size_t i = 0; i < MaxValue; i++)
-		Values[i] = m[i];*/
-	std::copy(m.Values, m.Values + MaxValue, Values);
+	std::copy(m.Values, m.Values + count, Values);
 
 #if USE_GPU
 	cudaFree(GPUValues);
@@ -296,7 +301,7 @@ void Matrix::LoadFromJSON(const char* data, bool isFile)
 	Rows = val.GetUint64();
 	val = document["matrix"]["cols"];
 	Columns = val.GetUint64();
-	MaxValue = Rows * Columns;
+	size_t MaxValue = GetElementCount();
 	Values = new float[MaxValue];
 	val = document["matrix"]["values"];
 	size_t count = 0;
@@ -378,8 +383,7 @@ void Matrix::Reset(size_t rows, size_t columns)
 	Rows = rows;
 	Columns = columns;
 	Values = new float[Rows * Columns];
-	for (size_t i = 0; i < rows * columns; i++) //TODO: use std fill
-		Values[i] = 0;
+	std::fill(Values, Values + (rows * columns), 0);
 }
 
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const

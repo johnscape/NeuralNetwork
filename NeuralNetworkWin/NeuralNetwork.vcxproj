@@ -153,13 +153,16 @@
     <ClCompile Include="LSTM.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MatrixMath.cpp" />
+    <ClCompile Include="MatrixMathTests.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="NeuralNetwork.cpp" />
     <ClCompile Include="Optimizer.cpp" />
     <ClCompile Include="RecurrentLayer.cpp" />
+    <ClCompile Include="MatrixTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunctions.hpp" />
+    <ClInclude Include="catch.hpp" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FeedForwardLayer.h" />
     <ClInclude Include="GeneticAlgorithm.h" />

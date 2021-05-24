@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h> 
+#include "Constants.h"
 #include "Model.h"
 #include "InputLayer.h"
 #include "FeedForwardLayer.h"
@@ -61,6 +62,7 @@ float Tester(Model* model)
 	return error;
 }
 
+#if !TESTING
 int main()
 {
 	srand(time(0));
@@ -73,7 +75,8 @@ int main()
 
 	//GeneticAlgorithm trainer(&m, 50, 500, &Tester);
 	GeneticAlgorithm trainer(&m, 500, 10, &Tester);
-	trainer.Train(Matrix(), Matrix());
+	//trainer.Train(Matrix(), Matrix());
 
 	return 0;
 }
+#endif

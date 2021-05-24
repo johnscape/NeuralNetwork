@@ -50,11 +50,13 @@ __global__ void FillKernel(float* a, float val, unsigned int maxNum)
 Matrix& GPUMath::Multiplication(const Matrix& a, const Matrix& b)
 {
 	Matrix c(a.GetRowCount(), b.GetColumnCount());
+#if USE_GPU
 	unsigned int rows = ceil((double)(a.GetRowCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
 	unsigned int cols = ceil((double)(b.GetColumnCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 blocks(cols, rows);
 	MatMulKernel<<<blocks, threads>>> (a.GetGPUValues(), b.GetGPUValues(), c.GetGPUValues(), a.GetRowCount(), a.GetColumnCount(), b.GetColumnCount());
+#endif
 	return c;
 }
 
@@ -62,41 +64,51 @@ void GPUMath::Multiplication(const Matrix& a, const Matrix& b, Matrix& c)
 {
 	unsigned int rows = ceil((double)(a.GetRowCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
 	unsigned int cols = ceil((double)(b.GetColumnCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
+#if USE_GPU
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 blocks(cols, rows);
 	MatMulKernel << <blocks, threads >> > (a.GetGPUValues(), b.GetGPUValues(), c.GetGPUValues(), a.GetRowCount(), a.GetColumnCount(), b.GetColumnCount());
+#endif
 }
 
 void GPUMath::ElementviseMultiply(Matrix& a, const Matrix& b)
 {
+#if USE_GPU
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
 	InnerProductKernel << <grid, threads >> > (a.GetGPUValues(), b.GetGPUValues(), max);
+#endif
 }
 
 void GPUMath::SubstractIn(Matrix& a, const Matrix& b)
 {
+#if USE_GPU
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
 	MatSubInKernel << <grid, threads >> > (a.GetGPUValues(), b.GetGPUValues(), max);
+#endif
 }
 
 void GPUMath::AddIn(Matrix& a, const Matrix& b)
 {
+#if USE_GPU
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
 	MatAddInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetGPUValues(), max);
+#endif
 }
 
 void GPUMath::FillWith(Matrix& a, float value)
 {
+#if USE_GPU
 	//cudaMemset(a.GetGPUValues(), value, a.GetRowCount() * a.GetColumnCount() * sizeof(float));
 	unsigned int blockSize = 1;//CalculateMaxBlockSize(a, nullptr, 16);
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
 	FillKernel <<<grid, threads >>> (a.GetGPUValues(),value, max);
+#endif
 }

@@ -25,14 +25,17 @@
     <Filter Include="Header Files\Optimizers">
       <UniqueIdentifier>{9240e885-a49d-4e2d-8904-a3a6a9a19b01}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Matrix">
+      <UniqueIdentifier>{ac59c576-d18b-40de-aec2-ed038650fdf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Matrix">
+      <UniqueIdentifier>{9dd28d71-eb96-4e61-9313-e4b60394d3fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tests">
+      <UniqueIdentifier>{48181332-0d37-4f3d-87e0-b20b1fb6ef27}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Matrix.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MatrixMath.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FeedForwardLayer.cpp">
       <Filter>Source Files\Layers</Filter>
     </ClCompile>
@@ -63,17 +66,20 @@
     <ClCompile Include="NeuralNetwork.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Matrix.cpp">
+      <Filter>Source Files\Matrix</Filter>
+    </ClCompile>
+    <ClCompile Include="MatrixMath.cpp">
+      <Filter>Source Files\Matrix</Filter>
+    </ClCompile>
+    <ClCompile Include="MatrixMathTests.cpp">
+      <Filter>Source Files\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="MatrixTests.cpp">
+      <Filter>Source Files\Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Matrix.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MatrixMath.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MatrixException.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ActivationFunctions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -115,6 +121,18 @@
     </ClInclude>
     <ClInclude Include="MatrixGPUMath.cuh" />
     <ClInclude Include="GPUActivation.cuh" />
+    <ClInclude Include="MatrixMath.h">
+      <Filter>Header Files\Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="MatrixException.hpp">
+      <Filter>Header Files\Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
+      <Filter>Header Files\Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="catch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="MatrixGPUMath.cu" />

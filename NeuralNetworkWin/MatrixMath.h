@@ -62,7 +62,7 @@ namespace MatrixMath
 	 * @param from The matrix to copy from.
 	 * @param to The matrix to copy to.
 	*/
-	void Copy(Matrix& from, Matrix& to);
+	void Copy(const Matrix& from, Matrix& to);
 
 	/**
 	 * @brief Adds one matrix to the other: A += B

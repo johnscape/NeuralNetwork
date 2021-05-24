@@ -60,7 +60,7 @@ void MatrixMath::FillWithRandom(Matrix& m, float min, float max)
 
 }
 
-void MatrixMath::Copy(Matrix& from, Matrix& to)
+void MatrixMath::Copy(const Matrix& from, Matrix& to)
 {
 #if USE_GPU
 	from.CopyFromGPU();
@@ -318,7 +318,7 @@ Matrix MatrixMath::Power(const Matrix& original, unsigned int power)
 	return pow;
 }
 
-Matrix MatrixMath::Concat(const Matrix& a, const Matrix& b, unsigned int dimension)
+Matrix MatrixMath::Concat(const Matrix& a, const Matrix& b, unsigned int dimension) //TODO: move to matrix
 {
 	if (dimension == 0) //concat on rows
 	{
@@ -345,26 +345,23 @@ Matrix MatrixMath::Concat(const Matrix& a, const Matrix& b, unsigned int dimensi
 
 		return c;
 	}
-	if (dimension == 1) //concat on rows
+	if (dimension == 1) //concat on cols
 	{
 #ifdef DEBUG
 		if (a.GetRowCount() != b.GetRowCount())
 			throw MatrixException();
 #endif // DEBUG
 		Matrix c(a.GetRowCount(), a.GetColumnCount() + b.GetColumnCount());
-		for (unsigned int row = 0; row < a.GetRowCount(); row++)
+		for (size_t row = 0; row < c.GetRowCount(); row++)
 		{
-			for (unsigned int col = 0; col < a.GetColumnCount(); col++)
+			for (size_t col = 0; col < c.GetColumnCount(); col++)
 			{
-				c.SetValue(row, col, a.GetValue(row, col));
-			}
-		}
-
-		for (unsigned int row = 0; row < a.GetRowCount(); row++)
-		{
-			for (unsigned int col = 0; col < b.GetColumnCount(); col++)
-			{
-				c.SetValue(row, col + a.GetColumnCount(), a.GetValue(row, col));
+				float val = 0;
+				if (col < a.GetColumnCount())
+					val = a.GetValue(row, col);
+				else
+					val = b.GetValue(row, col - a.GetColumnCount());
+				c.SetValue(row, col, val);
 			}
 		}
 

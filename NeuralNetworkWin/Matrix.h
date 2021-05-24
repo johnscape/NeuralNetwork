@@ -143,15 +143,16 @@ public:
 	Matrix& operator+=(const Matrix& other);
 	Matrix& operator-=(const Matrix& other);
 	Matrix& operator*=(const Matrix& other);
-	Matrix& operator+(const Matrix& other) const;
-	Matrix& operator-(const Matrix& other)const;
-	Matrix& operator*(const Matrix& other) const;
+	Matrix operator+(const Matrix& other) const;
+	Matrix operator-(const Matrix& other)const;
+	Matrix operator*(const Matrix& other) const;
 	bool operator==(const Matrix& other) const;
 	bool operator!=(const Matrix& other) const;
 
 	Matrix& operator*=(float other);
 	Matrix& operator*(float other);
 
+	inline size_t GetElementCount() const;
 
 	//std::ostream& operator<<(std::ostream& os, const Matrix& m);
 
@@ -160,8 +161,6 @@ private:
 	float* Values;
 	size_t Rows;
 	size_t Columns;
-
-	size_t MaxValue;
 
 	inline size_t RowColToPosition(size_t row, size_t col) const;
 
