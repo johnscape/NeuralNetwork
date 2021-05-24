@@ -161,7 +161,7 @@ SCENARIO("Using matrix substraction", "[matrix][math]")
 		{
 			Matrix tmp(a);
 			a -= b;
-			THEN("the result is the same as using AddIn function")
+			THEN("the result is the same as using SubstractIn function")
 			{
 				MatrixMath::SubstractIn(tmp, b);
 				REQUIRE(a == tmp);
@@ -250,6 +250,100 @@ SCENARIO("Using matrix addition", "[matrix][math]")
 			THEN("an error appears")
 			{
 				REQUIRE_THROWS_AS(MatrixMath::Substract(a, b), MatrixException);
+			}
+		}
+	}
+	GIVEN("a 2x2 zero matrix and a float value of 3")
+	{
+		float f = 3;
+		Matrix mat(2, 2);
+		WHEN("adding a float to a matrix")
+		{
+			MatrixMath::Add(mat, f);
+			THEN("all the values are 3")
+			{
+				REQUIRE(mat[0] == 3);
+				REQUIRE(mat[1] == 3);
+				REQUIRE(mat[2] == 3);
+				REQUIRE(mat[3] == 3);
+			}
+		}
+	}
+}
+
+SCENARIO("Using matrix multiplications", "[matrix][math]")
+{
+	GIVEN("two matrices: 2x3 and 3x1")
+	{
+		float set1[6] = { 0, 1, 2, 3, 4, 5 };
+		float set2[3] = { 1, 1, 1 };
+
+		Matrix a(2, 3, set1);
+		Matrix b(3, 1, set2);
+
+		WHEN("multiplying the matrices with Multiply(a, b)")
+		{
+			Matrix c1 = MatrixMath::Multiply(a, b);
+			THEN("the result is a 2x1 vector")
+			{
+				REQUIRE(c1.GetRowCount() == 2);
+				REQUIRE(c1.GetColumnCount() == 1);
+			}
+			THEN("the result is 3 and 12")
+			{
+				REQUIRE(c1[0] == 3);
+				REQUIRE(c1[1] == 12);
+			}
+		}
+		WHEN("multiplying the matrices with Multiply(a, b, result)")
+		{
+			Matrix c2(2, 1);
+			MatrixMath::Multiply(a, b, c2);
+			THEN("the result is 3 and 12")
+			{
+				REQUIRE(c2[0] == 3);
+				REQUIRE(c2[1] == 12);
+			}
+		}
+		WHEN("multiplying the matrix with a constant float of 1")
+		{
+			Matrix res = MatrixMath::Multiply(a, 1);
+			THEN("the result is the same as a")
+			{
+				REQUIRE(res == a);
+			}
+		}
+		WHEN("multiplying the matrix with a float of 1 using operators")
+		{
+			Matrix res = a * 1;
+			THEN("the result is the same as a")
+			{
+				REQUIRE(res == a);
+			}
+		}
+		WHEN("using operator overloading")
+		{
+			Matrix c = a * b;
+			THEN("the result is the same as using the function")
+			{
+				Matrix c2 = MatrixMath::Multiply(a, b);
+				REQUIRE(c == c2);
+			}
+		}
+		WHEN("using a float of 0 with MultiplyIn")
+		{
+			MatrixMath::MultiplyIn(a, 0);
+			THEN("matrix a is zero")
+			{
+				REQUIRE(MatrixMath::Sum(a) == 0);
+			}
+		}
+		WHEN("using a float of 0 with operator overloading and assignment")
+		{
+			a *= 0;
+			THEN("matrix a is zero")
+			{
+				REQUIRE(MatrixMath::Sum(a) == 0);
 			}
 		}
 	}

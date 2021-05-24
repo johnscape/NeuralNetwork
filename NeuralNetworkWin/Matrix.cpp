@@ -236,7 +236,7 @@ Matrix& Matrix::operator*=(float other)
 	return *this;
 }
 
-Matrix& Matrix::operator*(float other)
+Matrix Matrix::operator*(float other)
 {
 	Matrix res = MatrixMath::Multiply(*this, other);
 	return res;

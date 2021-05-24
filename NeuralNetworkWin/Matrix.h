@@ -150,7 +150,7 @@ public:
 	bool operator!=(const Matrix& other) const;
 
 	Matrix& operator*=(float other);
-	Matrix& operator*(float other);
+	Matrix operator*(float other);
 
 	inline size_t GetElementCount() const;
 
