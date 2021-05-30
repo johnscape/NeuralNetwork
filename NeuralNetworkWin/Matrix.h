@@ -130,7 +130,7 @@ public:
 	float* GetGPUValues();
 
 	void Reset(size_t rows, size_t columns);
-
+	
 	/**
 	 * @brief Gets a single value from the matrix, similar to GetValue
 	 * @param id The index of the value
