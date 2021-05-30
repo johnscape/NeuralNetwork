@@ -146,11 +146,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FeedForwardLayer.cpp" />
+    <ClCompile Include="FeedForwardLayerTests.cpp" />
     <ClCompile Include="GeneticAlgorithm.cpp" />
     <ClCompile Include="GradientDescent.cpp" />
     <ClCompile Include="InputLayer.cpp" />
+    <ClCompile Include="InputLayerTests.cpp" />
     <ClCompile Include="Layer.cpp" />
     <ClCompile Include="LSTM.cpp" />
+    <ClCompile Include="LSTMTests.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MatrixMath.cpp" />
     <ClCompile Include="MatrixMathTests.cpp" />
@@ -159,6 +162,8 @@
     <ClCompile Include="Optimizer.cpp" />
     <ClCompile Include="RecurrentLayer.cpp" />
     <ClCompile Include="MatrixTests.cpp" />
+    <ClCompile Include="RecurrentLayerTest.cpp" />
+    <ClCompile Include="Tensor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunctions.hpp" />
@@ -180,6 +185,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Optimizer.h" />
     <ClInclude Include="RecurrentLayer.h" />
+    <ClInclude Include="Tensor.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="GPUActivation.cu" />
