@@ -247,6 +247,21 @@ size_t Matrix::GetElementCount() const
 	return Rows * Columns;
 }
 
+Matrix Matrix::GetSubMatrix(unsigned int startRow, unsigned int startColumn, unsigned int rowNum, unsigned int colNum) const
+{
+	float* vals = new float[rowNum * colNum];
+	for (unsigned int r = 0; r < rowNum; r++)
+	{
+		unsigned int startValue = (startRow + r) * Columns + startColumn;
+		unsigned int endValue = (startRow + r) * Columns + startColumn + colNum;
+		std::copy(Values + startValue, Values + endValue, vals + r * colNum);
+	}
+
+	Matrix sub(rowNum, colNum, vals);
+	delete[] vals;
+	return sub;
+}
+
 //std::ostream& Matrix::operator<<(std::ostream& os, const Matrix& m)
 //{
 //	// TODO: insert return statement here

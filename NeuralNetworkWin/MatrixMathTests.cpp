@@ -2,7 +2,7 @@
 #include "Matrix.h"
 #include "MatrixMath.h"
 
-SCENARIO("Using matrix operations", "[matrix]")
+SCENARIO("Using matrix operations", "[matrix][math]")
 {
 	GIVEN("two 3x3 matrices, a and b, and a 2x2 matrix, c")
 	{
@@ -111,6 +111,27 @@ SCENARIO("Using matrix operations", "[matrix]")
 			THEN("the third item is 4")
 			{
 				REQUIRE(result[2] == 4);
+			}
+		}
+	}
+	GIVEN("a single 3x6 initialized matrix and a copy of it")
+	{
+		Matrix a(3, 6);
+		MatrixMath::FillWithRandom(a);
+
+		Matrix b(a);
+
+		WHEN("transposing a")
+		{
+			MatrixMath::Transpose(a);
+			THEN("a is 6x3")
+			{
+				REQUIRE(a.GetRowCount() == 6);
+				REQUIRE(a.GetColumnCount() == 3);
+			}
+			THEN("the transposed matrix's second item is the same as the original's 6th")
+			{
+				REQUIRE(a[1] == b[6]);
 			}
 		}
 	}
@@ -344,6 +365,61 @@ SCENARIO("Using matrix multiplications", "[matrix][math]")
 			THEN("matrix a is zero")
 			{
 				REQUIRE(MatrixMath::Sum(a) == 0);
+			}
+		}
+		WHEN("multiplying and assigning a and b")
+		{
+			Matrix c = a * b;
+			a *= b;
+			THEN("a will be equal to a * b")
+			{
+				REQUIRE(a == c);
+			}
+		}
+	}
+	GIVEN("Two 3x4 matrices with 2 as every value")
+	{
+		Matrix a(3, 4);
+		Matrix b(3, 4);
+
+		MatrixMath::FillWith(a, 2);
+		MatrixMath::FillWith(b, 2);
+
+		WHEN("Multiplying element-vise")
+		{
+			MatrixMath::ElementviseMultiply(a, b);
+			THEN("The first matrix will have 4 as every value")
+			{
+				REQUIRE(a[5] == 4);
+			}
+		}
+		//TODO: Test case where a is not the same size as b
+	}
+}
+
+SCENARIO("Using vector operations", "[matrix][math]")
+{
+	GIVEN("A 3x1 zero matrix")
+	{
+		Matrix a(3, 1);
+		WHEN("Checking vector status")
+		{
+			bool isVector = MatrixMath::IsVector(a);
+			THEN("The result is true")
+			{
+				REQUIRE(isVector);
+			}
+		}
+	}
+	GIVEN("A 3x2 zero matrix")
+	{
+		Matrix a(3, 2);
+		WHEN("Checking vector status")
+		{
+			bool isVector = MatrixMath::IsVector(a);
+			THEN("The result is false")
+			{
+				REQUIRE_FALSE(isVector);
 			}
 		}
 	}

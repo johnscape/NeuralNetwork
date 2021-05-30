@@ -154,6 +154,8 @@ public:
 
 	inline size_t GetElementCount() const;
 
+	Matrix GetSubMatrix(unsigned int startRow, unsigned int startColumn, unsigned int rowNum, unsigned int colNum) const;
+
 	//std::ostream& operator<<(std::ostream& os, const Matrix& m);
 
 

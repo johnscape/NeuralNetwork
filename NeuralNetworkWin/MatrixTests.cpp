@@ -96,12 +96,14 @@ SCENARIO("Using a 3x3 matrix", "[matrix]")
 				REQUIRE(mat.GetValue(3) == mat.GetValue(1, 0));
 			}
 		}
-		WHEN("adjusting a value")
+		WHEN("adjusting two value")
 		{
 			mat.AdjustValue(0, 2);
-			THEN("the first value is 3")
+			mat.AdjustValue(1, 1, 5);
+			THEN("the first value is 3 and the (1, 1) is 5+5")
 			{
 				REQUIRE(mat[0] == 3);
+				REQUIRE(mat.GetValue(1, 1) == 10);
 			}
 		}
 		WHEN("getting the vector size")
@@ -208,6 +210,49 @@ SCENARIO("Loading a matrix from the other", "[matrix]")
 				REQUIRE(mat[1] == mat2[1]);
 				REQUIRE(mat[2] == mat2[2]);
 				REQUIRE(mat[3] == mat2[3]);
+			}
+		}
+	}
+}
+
+SCENARIO("using matrix operators", "[matrix]")
+{
+	GIVEN("two different matrix, a and b")
+	{
+		Matrix a(5, 3);
+		Matrix b(8, 1);
+		
+		WHEN("assigning b to a")
+		{
+			a = b;
+			THEN("a is equals to b")
+			{
+				REQUIRE(a == b);
+			}
+		}
+	}
+}
+
+SCENARIO("creating a submatrix", "[matrix]")
+{
+	GIVEN("A 3x3 initialized matrix")
+	{
+		float vals[9] = { 0,1,2,3,4,5,6,7,8 };
+		Matrix m(3, 3, vals);
+		WHEN("Creating a 2x2 submatrix")
+		{
+			Matrix sub = m.GetSubMatrix(0, 0, 2, 2);
+			THEN("The new matrix is 2x2")
+			{
+				REQUIRE(sub.GetColumnCount() == 2);
+				REQUIRE(sub.GetRowCount() == 2);
+			}
+			THEN("The matrix has 0, 1, 3, 4 as values")
+			{
+				REQUIRE(sub[0] == 0);
+				REQUIRE(sub[1] == 1);
+				REQUIRE(sub[2] == 3);
+				REQUIRE(sub[3] == 4);
 			}
 		}
 	}
