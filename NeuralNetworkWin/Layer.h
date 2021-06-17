@@ -145,6 +145,14 @@ public:
 	*/
 	void SetId(unsigned int id);
 
+	static enum LayerType
+	{
+		INPUT,
+		FEEDFORWARD,
+		RECURRENT,
+		LSTMLAYER
+	};
+
 protected:
 	Layer* LayerInput;
 	Matrix Output;

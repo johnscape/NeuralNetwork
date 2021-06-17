@@ -11,6 +11,10 @@
 #include "LossFunctions.hpp"
 #include "ActivationFunctions.hpp"
 
+#include "nmmintrin.h"
+#include "immintrin.h"
+
+
 float Tester(Model* model)
 {
 	float error = 0;
@@ -65,17 +69,37 @@ float Tester(Model* model)
 #if !TESTING
 int main()
 {
-	srand(time(0));
-	Model m;
-	m.AddLayer(new InputLayer(2));
-	m.AddLayer(new FeedForwardLayer(m.GetLastLayer(), 2));
-	m.AddLayer(new FeedForwardLayer(m.GetLastLayer(), 1));
+	float* tmp = new float[10];
+	for (unsigned int i = 0; i < 10; i++)
+		tmp[i] = i + 1;
 
-	dynamic_cast<FeedForwardLayer*>(m.GetLastLayer())->SetActivationFunction(&(Sigmoid::GetInstance()));
+	union Tester
+	{
+		__m128 simd;
+		float vals[4];
 
-	//GeneticAlgorithm trainer(&m, 50, 500, &Tester);
-	GeneticAlgorithm trainer(&m, 500, 10, &Tester);
-	//trainer.Train(Matrix(), Matrix());
+	};
+
+	for (unsigned int i = 0; i < 10; i+=4)
+	{
+		__m128 loader = _mm_load_ps(tmp + i);
+		Tester t;
+		t.simd = loader;
+		for (unsigned int ii = 0; ii < 4; ii++)
+			std::cout << t.vals[ii] << '\t';
+		std::cout << std::endl;
+	}
+	//srand(time(0));
+	//Model m;
+	//m.AddLayer(new InputLayer(2));
+	//m.AddLayer(new FeedForwardLayer(m.GetLastLayer(), 2));
+	//m.AddLayer(new FeedForwardLayer(m.GetLastLayer(), 1));
+
+	//dynamic_cast<FeedForwardLayer*>(m.GetLastLayer())->SetActivationFunction(&(Sigmoid::GetInstance()));
+
+	////GeneticAlgorithm trainer(&m, 50, 500, &Tester);
+	//GeneticAlgorithm trainer(&m, 500, 10, &Tester);
+	////trainer.Train(Matrix(), Matrix());
 
 	return 0;
 }

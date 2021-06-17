@@ -93,6 +93,12 @@
     <ClCompile Include="Tensor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TensorTests.cpp">
+      <Filter>Source Files\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonIO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunctions.hpp">
@@ -149,6 +155,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tensor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

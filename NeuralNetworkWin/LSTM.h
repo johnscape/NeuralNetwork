@@ -1,7 +1,7 @@
 #pragma once
-#include "Layer.h"
 #include "Matrix.h"
 #include "ActivationFunctions.hpp"
+#include "Layer.h"
 #include <vector>
 #include <deque>
 

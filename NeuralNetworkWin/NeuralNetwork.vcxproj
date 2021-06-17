@@ -152,6 +152,7 @@
     <ClCompile Include="InputLayer.cpp" />
     <ClCompile Include="InputLayerTests.cpp" />
     <ClCompile Include="Layer.cpp" />
+    <ClCompile Include="JsonIO.cpp" />
     <ClCompile Include="LSTM.cpp" />
     <ClCompile Include="LSTMTests.cpp" />
     <ClCompile Include="Matrix.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="MatrixTests.cpp" />
     <ClCompile Include="RecurrentLayerTest.cpp" />
     <ClCompile Include="Tensor.cpp" />
+    <ClCompile Include="TensorTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunctions.hpp" />
@@ -176,6 +178,7 @@
     <ClInclude Include="InputLayer.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LayerException.hpp" />
+    <ClInclude Include="JsonIO.h" />
     <ClInclude Include="LossFunctions.hpp" />
     <ClInclude Include="LSTM.h" />
     <ClInclude Include="Matrix.h" />
