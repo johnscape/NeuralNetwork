@@ -1,5 +1,4 @@
 #include "InputLayer.h"
-#include "MatrixMath.h"
 #include "LayerException.hpp"
 #include "Constants.h"
 
@@ -27,10 +26,10 @@ Matrix& InputLayer::ComputeAndGetOutput()
 void InputLayer::SetInput(const Matrix& input)
 {
 #if DEBUG
-	if (!MatrixMath::SizeCheck(input, Output))
+	if (!input.IsSameSize(Output))
 		return; //TODO: Throw error
 #endif // DEBUG
-	MatrixMath::Copy(input, Output);
+	Output.Copy(input);
 }
 
 void InputLayer::GetBackwardPass(const Matrix& error, bool recursive)
@@ -39,7 +38,7 @@ void InputLayer::GetBackwardPass(const Matrix& error, bool recursive)
 
 void InputLayer::LoadFromJSON(const char* data, bool isFile)
 {
-	rapidjson::Document document;
+	/*rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
 	else
@@ -51,12 +50,12 @@ void InputLayer::LoadFromJSON(const char* data, bool isFile)
 
 	rapidjson::Value val;
 	val = document["layer"]["size"];
-	Size = val.GetUint();
+	Size = val.GetUint();*/
 }
 
 std::string InputLayer::SaveToJSON(const char* fileName)
 {
-	rapidjson::Document doc;
+	/*rapidjson::Document doc;
 	doc.SetObject();
 
 	rapidjson::Value input, id, type;
@@ -84,6 +83,8 @@ std::string InputLayer::SaveToJSON(const char* fileName)
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	return std::string(buffer.GetString());
+	return std::string(buffer.GetString());*/
+
+	return "";
 }
 

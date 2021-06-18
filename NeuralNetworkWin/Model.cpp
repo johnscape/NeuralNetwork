@@ -97,7 +97,7 @@ Layer* Model::GetLayer(unsigned int id)
 
 void Model::SaveModel(const char* fileName)
 {
-	rapidjson::Document document;
+	/*rapidjson::Document document;
 	document.SetObject();
 
 	rapidjson::Value modelData(rapidjson::kObjectType);
@@ -131,12 +131,12 @@ void Model::SaveModel(const char* fileName)
 	rapidjson::OStreamWrapper osw(w);
 	rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
 	document.Accept(writer);
-	w.close();
+	w.close();*/
 }
 
 void Model::LoadModel(const char* fileName)
 {
-	rapidjson::Document document;
+	/*rapidjson::Document document;
 	std::ifstream r(fileName);
 	rapidjson::IStreamWrapper isw(r);
 	document.ParseStream(isw);
@@ -186,7 +186,7 @@ void Model::LoadModel(const char* fileName)
 	}
 
 	inputLayer = FindLayerWithId(document["model"]["inputLayerId"].GetUint());
-	outputLayer = FindLayerWithId(document["model"]["outputLayerId"].GetUint());
+	outputLayer = FindLayerWithId(document["model"]["outputLayerId"].GetUint());*/
 }
 
 Matrix Model::Compute(const Matrix& input)

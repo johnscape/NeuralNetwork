@@ -1,5 +1,4 @@
 #include "Layer.h"
-#include "MatrixMath.h"
 #include "LayerException.hpp"
 
 #include "InputLayer.h"
@@ -52,11 +51,9 @@ Matrix& Layer::GetOutput()
 
 unsigned int Layer::OutputSize()
 {
-	if (!MatrixMath::IsVector(Output))
+	if (!Output.IsVector())
 		return -1;
-	if (Output.GetRowCount() == 1)
-		return Output.GetColumnCount();
-	return Output.GetRowCount();
+	return Output.GetVectorSize();
 }
 
 Layer* Layer::GetInputLayer()
@@ -78,28 +75,29 @@ void Layer::SetTrainingMode(bool mode, bool recursive)
 
 Layer* Layer::CreateFromJSON(const char* data, bool isFile)
 {
-	rapidjson::Document doc;
-	if (!isFile)
-		doc.Parse(data);
-	else
-	{
-		std::ifstream r(data);
-		rapidjson::IStreamWrapper isw(r);
-		doc.ParseStream(isw);
-	}
+	//rapidjson::Document doc;
+	//if (!isFile)
+	//	doc.Parse(data);
+	//else
+	//{
+	//	std::ifstream r(data);
+	//	rapidjson::IStreamWrapper isw(r);
+	//	doc.ParseStream(isw);
+	//}
 
-	//unsigned int layerType;
-	rapidjson::Value val;
-	val = doc["layer"]["type"];
-	Layer* ret = nullptr;
-	if (val == 0)
-		ret = new InputLayer(1);
-	else if (val == 1)
-		ret = new FeedForwardLayer(nullptr, 1);
-	
-	if (ret)
-		ret->LoadFromJSON(data, isFile);
-	return ret;
+	////unsigned int layerType;
+	//rapidjson::Value val;
+	//val = doc["layer"]["type"];
+	//Layer* ret = nullptr;
+	//if (val == 0)
+	//	ret = new InputLayer(1);
+	//else if (val == 1)
+	//	ret = new FeedForwardLayer(nullptr, 1);
+	//
+	//if (ret)
+	//	ret->LoadFromJSON(data, isFile);
+	//return ret;
+	return nullptr;
 }
 
 unsigned int Layer::GetId()

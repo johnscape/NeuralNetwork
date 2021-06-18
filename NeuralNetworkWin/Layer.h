@@ -3,13 +3,6 @@
 #include "Matrix.h"
 #include <memory>
 
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/ostreamwrapper.h"
-#include "rapidjson/istreamwrapper.h"
-#include <fstream>
-
 class Optimizer;
 
 /**

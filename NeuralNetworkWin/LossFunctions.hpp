@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Matrix.h"
-#include "MatrixMath.h"
 #include "Constants.h"
 #include "MatrixException.hpp"
 

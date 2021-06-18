@@ -555,6 +555,15 @@ float Matrix::Sum() const
 	return std::accumulate(Values, Values + GetElementCount(), 0);
 }
 
+Matrix Matrix::Power(unsigned int p) const
+{
+	return Matrix();
+}
+
+void Matrix::PowerSelf(unsigned int p)
+{
+}
+
 void Matrix::Transpose()
 {
 	TransposeArray(Values, Columns, Rows);

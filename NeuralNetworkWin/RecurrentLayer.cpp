@@ -15,8 +15,8 @@ RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned in
 	LayerError.Reset(1, inputLayer->GetOutput().GetVectorSize());
 	function = &TanhFunction::GetInstance();
 
-	MatrixMath::FillWith(Bias, 1);
-	MatrixMath::FillWith(Weights, 1);
+	Bias.FillWith(1);
+	Weights.FillWithRandom();
 }
 
 RecurrentLayer::~RecurrentLayer()
@@ -26,19 +26,18 @@ RecurrentLayer::~RecurrentLayer()
 Layer* RecurrentLayer::Clone()
 {
 	RecurrentLayer* r = new RecurrentLayer(LayerInput, Size, TimeSteps);
-	MatrixMath::Copy(Weights, r->GetWeights());
-	MatrixMath::Copy(RecursiveWeight, r->GetRecurrentWeights());
-	MatrixMath::Copy(Bias, r->GetBias());
+	r->GetWeights().Copy(Weights);
+	r->GetRecurrentWeights().Copy(RecursiveWeight);
+	r->GetBias().Copy(Bias);
 	return r;
 }
 
 void RecurrentLayer::Compute()
 {
-	MatrixMath::FillWith(InnerState, 0);
 	LayerInput->Compute();
-	MatrixMath::Multiply(LayerInput->GetOutput(), Weights, InnerState);
-	MatrixMath::Multiply(Output, RecursiveWeight, InnerState);
-	MatrixMath::AddIn(InnerState, Bias);
+	InnerState = LayerInput->GetOutput() * Weights;
+	InnerState += Output * RecursiveWeight;
+	InnerState += Bias;
 	function->CalculateInto(InnerState, Output);
 	if (TrainingMode)
 	{
@@ -73,7 +72,7 @@ void RecurrentLayer::SetActivationFunction(ActivationFunction* func)
 void RecurrentLayer::GetBackwardPass(const Matrix& error, bool recursive)
 {
 	Matrix derivate = function->CalculateDerivateMatrix(Output);
-	MatrixMath::FillWith(LayerError, 0);
+	LayerError.FillWith(0);
 #if USE_GPU
 	derivate->CopyFromGPU();
 #endif // USE_GPU
@@ -84,7 +83,7 @@ void RecurrentLayer::GetBackwardPass(const Matrix& error, bool recursive)
 	{
 		if (!i)
 			continue;
-		powers.push_back(MatrixMath::Power(RecursiveWeight, i));
+		powers.push_back(RecursiveWeight.Power(i));
 	}
 
 	for (unsigned int neuron = 0; neuron < Size; neuron++)
@@ -139,9 +138,9 @@ void RecurrentLayer::Train(Optimizer* optimizer)
 	optimizer->ModifyWeights(RecursiveWeight, RecursiveWeightError);
 	optimizer->ModifyWeights(Bias, BiasError);
 
-	MatrixMath::FillWith(WeightError, 0);
-	MatrixMath::FillWith(RecursiveWeightError, 0);
-	MatrixMath::FillWith(BiasError, 0);
+	WeightError.FillWith(0);
+	RecursiveWeightError.FillWith(0);
+	BiasError.FillWith(0);
 
 #if USE_GPU
 	Weights->CopyToGPU();
@@ -178,7 +177,7 @@ Matrix& RecurrentLayer::GetRecurrentWeights()
 
 void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 {
-	rapidjson::Document document;
+	/*rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
 	else
@@ -224,13 +223,13 @@ void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 	writer.Reset(buffer);
 
 	document["layer"]["recurrent"].Accept(writer);
-	RecursiveWeight.LoadFromJSON(buffer.GetString());
+	RecursiveWeight.LoadFromJSON(buffer.GetString());*/
 
 }
 
 std::string RecurrentLayer::SaveToJSON(const char* fileName)
 {
-	rapidjson::Document doc;
+	/*rapidjson::Document doc;
 	doc.SetObject();
 
 	rapidjson::Value layerSize, id, type, inputSize;
@@ -272,6 +271,8 @@ std::string RecurrentLayer::SaveToJSON(const char* fileName)
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	return std::string(buffer.GetString());
+	return std::string(buffer.GetString());*/
+
+	return "";
 }
 

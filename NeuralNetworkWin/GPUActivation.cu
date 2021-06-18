@@ -3,7 +3,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "MatrixMath.h"
 #include "Constants.h"
 
 __global__ void CUDASigmoid(float* from, float* to, unsigned int num)

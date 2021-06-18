@@ -18,17 +18,17 @@ FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) :
 	LayerError.Reset(1, inputSize);
 	function = &TanhFunction::GetInstance();
 
-	MatrixMath::FillWith(Bias, 1);
-	MatrixMath::FillWithRandom(Weights);
+	Bias.FillWith(1);
+	Weights.FillWithRandom();
 }
 
 Layer* FeedForwardLayer::Clone()
 {
 	FeedForwardLayer* l = new FeedForwardLayer(LayerInput, Size);
 
-	MatrixMath::Copy(Weights, l->GetWeights());
-	MatrixMath::Copy(Output, l->GetOutput());
-	MatrixMath::Copy(Bias, l->GetBias());
+	l->GetWeights().Copy(Weights);
+	l->GetOutput().Copy(Output);
+	l->GetBias().Copy(Bias);
 
 	l->SetActivationFunction(function);
 	return l;
@@ -50,11 +50,11 @@ void FeedForwardLayer::SetInput(Layer* input)
 
 void FeedForwardLayer::Compute()
 {
-	MatrixMath::FillWith(InnerState, 0);
+	InnerState.FillWith(0);
 	LayerInput->Compute();
 	Matrix prev_out = LayerInput->GetOutput();
-	MatrixMath::Multiply(prev_out, Weights, InnerState);
-	MatrixMath::AddIn(InnerState, Bias);
+	InnerState = prev_out * Weights;
+	InnerState += Bias;
 	function->CalculateInto(InnerState, Output);
 }
 
@@ -72,7 +72,7 @@ void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 void FeedForwardLayer::GetBackwardPass(const Matrix& error, bool recursive)
 {
 	Matrix derivate = function->CalculateDerivateMatrix(Output);
-	MatrixMath::FillWith(LayerError, 0);
+	LayerError.FillWith(0);
 #if USE_GPU
 	//GPUMath::FillWith(LayerError, 0); //do i even need this?
 	derivate.CopyFromGPU();
@@ -105,8 +105,8 @@ void FeedForwardLayer::Train(Optimizer* optimizer)
 	optimizer->ModifyWeights(Weights, WeightError);
 	optimizer->ModifyWeights(Bias, BiasError);
 
-	MatrixMath::FillWith(WeightError, 0);
-	MatrixMath::FillWith(BiasError, 0);
+	WeightError.FillWith(0);
+	BiasError.FillWith(0);
 
 #if USE_GPU
 	Weights.CopyToGPU();
@@ -127,7 +127,7 @@ Matrix& FeedForwardLayer::GetWeights()
 
 void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
 {
-	rapidjson::Document document;
+	/*rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
 	else
@@ -164,14 +164,12 @@ void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
 	writer.Reset(buffer);
 
 	document["layer"]["bias"].Accept(writer);
-	Bias.LoadFromJSON(buffer.GetString());
-
-	
+	Bias.LoadFromJSON(buffer.GetString());*/
 }
 
 std::string FeedForwardLayer::SaveToJSON(const char* fileName)
 {
-	rapidjson::Document doc;
+	/*rapidjson::Document doc;
 	doc.SetObject();
 
 	rapidjson::Value layerSize, id, type, inputSize;
@@ -211,6 +209,6 @@ std::string FeedForwardLayer::SaveToJSON(const char* fileName)
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	return std::string(buffer.GetString());
-
+	return std::string(buffer.GetString());*/
+	return "";
 }

@@ -1,5 +1,4 @@
 #include "Optimizer.h"
-#include "MatrixMath.h"
 
 Optimizer::Optimizer(Layer* output) : currentBatch(0), lastError(0)
 {
@@ -21,8 +20,8 @@ void Optimizer::TrainFor(const Matrix& input, const Matrix& expected, unsigned i
 		currentBatch = 0;
 		for (unsigned int pos = 0; pos < input.GetRowCount(); pos++)
 		{
-			Matrix inp = MatrixMath::GetRowMatrix(input, pos);
-			Matrix exp = MatrixMath::GetRowMatrix(expected, pos);
+			Matrix inp = input.GetRowMatrix(pos);
+			Matrix exp = expected.GetRowMatrix(pos);
 			currentBatch++;
 			TrainStep(inp, exp);
 			if (currentBatch >= batch)

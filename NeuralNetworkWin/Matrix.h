@@ -236,6 +236,9 @@ public:
 
 	float Sum() const;
 
+	Matrix Power(unsigned int p) const; //TODO: Write test for these
+	void PowerSelf(unsigned int p);
+
 	/**
 	 * @brief Transposes the matrix
 	*/

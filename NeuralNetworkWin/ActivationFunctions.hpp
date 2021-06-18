@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Matrix.h"
-#include "MatrixMath.h"
 #include <math.h>
 #include <memory>
 #include "Constants.h"
@@ -54,18 +53,18 @@ public:
 	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra = 0)
 	{
 		Matrix c(output); 
-		MatrixMath::FillWith(c, 1); 
+		c.FillWith(1);
 		return c;
 	}
 
 	virtual void CalculateInto(const Matrix& input, Matrix& target) 
 	{ 
-		MatrixMath::Copy(input, target);
+		target.Copy(input);
 	}
 
 	virtual void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra = 0)
 	{ 
-		MatrixMath::FillWith(target, 1);
+		target.FillWith(1);
 	}
 
 private:
