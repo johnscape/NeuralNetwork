@@ -6,6 +6,11 @@
 class Matrix
 {
 public:
+	static enum PadType
+	{
+		CONSTANT
+	};
+
 	/**
 	 * @brief Creates a 1x1 matrix, with a 0 element.
 	*/
@@ -201,6 +206,12 @@ public:
 	inline bool IsSameSize(const Matrix& other) const;
 
 	/**
+	 * @brief Checks if the matrix is a square matrix (i.e.: has the same number of rows and columns)
+	 * @return True if the matrix is a square
+	*/
+	inline bool IsSquare() const;
+
+	/**
 	 * @brief Gets a sub-matrix based on the inputs
 	 * @param startRow The first row to select
 	 * @param startColumn The first column to select
@@ -230,13 +241,69 @@ public:
 	*/
 	void ElementwiseMultiply(const Matrix& other);
 
+	/**
+	 * @brief Calculates the outer product with another matrix. Note: both of the matrices must be vectors!
+	 * @param vector The other vector to calculate with.
+	 * @return The result of the outer product.
+	*/
 	Matrix OuterProduct(const Matrix& vector) const;
 
+	/**
+	 * @brief Calculates the dot product with another vector. The size of the vectors must be the same!
+	 * @param vector The other vector
+	 * @return The result of the dot product
+	*/
 	float DotProcudt(const Matrix& vector) const;
 
+	/**
+	 * @brief Sums up all the values in the matrix
+	 * @return The sum of all value in the matrix
+	*/
 	float Sum() const;
 
-	Matrix Power(unsigned int p) const; //TODO: Write test for these
+	/**
+	 * @brief Finds the smallest value in the matrix
+	 * @return The smallest value in the matrix
+	*/
+	float Min() const;
+
+	/**
+	 * @brief Finds the largest value in the matrix
+	 * @return The largest value in the matrix
+	*/
+	float Max() const;
+
+	/**
+	 * @brief Moves every value between the parameters (i.e.: every value that is smaller or larger than the parameters will be set to them)
+	 * @param min The smallest value
+	 * @param max The largest value
+	*/
+	void Clamp(float min = -1, float max = 1);
+
+	void RoundToInt();
+
+	bool IsOutOfBounds(size_t row, size_t col) const;
+	
+	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type = PadType::CONSTANT, float value = 0);
+
+	void ToSquare();
+
+	void Rotate(unsigned int times = 1);
+
+	void Normalize(float maxValue = 0);
+
+
+	/**
+	 * @brief Raises the matrix to the power of the parameter, then returns the value. Only works with square matrices.
+	 * @param p The value to raise the matrix to.
+	 * @return The matrix at the power of p.
+	*/
+	Matrix Power(unsigned int p) const;
+
+	/**
+	 * @brief Raises the matrix to the power of the parameter. Only works with square matrices.
+	 * @param p The value to raise the matrix to.
+	*/
 	void PowerSelf(unsigned int p);
 
 	/**
@@ -254,9 +321,21 @@ public:
 	*/
 	static Matrix ElementwiseMultiply(const Matrix& a, const Matrix& b);
 
+	/**
+	 * @brief Creates an identity matrix at the size of the paramter
+	 * @param i The size of the identity matrix (i rows and columns)
+	 * @return The created identity matrix
+	*/
 	static Matrix Eye(unsigned int i);
 
-	static Matrix Concat(const Matrix& a, const Matrix& b, unsigned int dim);
+	/**
+	 * @brief Concatenates two marices and returns the result
+	 * @param a The matrix to concatenate to
+	 * @param b The matrix to concatenate
+	 * @param dim The dimension of the concatenation (0 - rows, 1 - cols)
+	 * @return The concatenated matrix
+	*/
+	static Matrix Concat(const Matrix& a, const Matrix& b, unsigned int dim); //TODO: create an enum for the dimension
 
 private:
 	float* Values;

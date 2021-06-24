@@ -206,6 +206,24 @@ SCENARIO("setting and getting matrix values", "[matrix]")
 				}
 			}
 		}
+		WHEN("checking if the matrix is square")
+		{
+			THEN("the result is true")
+			{
+				REQUIRE(mat.IsSquare());
+			}
+		}
+		WHEN("checking indexes if they are out of bound")
+		{
+			THEN("0, 0 is not out of bound")
+			{
+				REQUIRE_FALSE(mat.IsOutOfBounds(0, 0));
+			}
+			THEN("3, 1 is out of bound")
+			{
+				REQUIRE(mat.IsOutOfBounds(3, 1));
+			}
+		}
 	}
 	GIVEN("a 3x4 matrix with values of 0..11")
 	{
@@ -220,6 +238,48 @@ SCENARIO("setting and getting matrix values", "[matrix]")
 			THEN("the second value is 4")
 			{
 				REQUIRE(mat[1] == 4);
+			}
+		}
+		WHEN("checking if the matrix is square")
+		{
+			THEN("the answer is false")
+			{
+				REQUIRE_FALSE(mat.IsSquare());
+			}
+		}
+	}
+	GIVEN("a 8x8 matrix with increasing values (-32...32)")
+	{
+		float vals[64];
+		for (unsigned int i = 0; i < 64; i++)
+			vals[i] = (float)i - 32;
+
+		Matrix mat(8, 8, vals);
+
+		WHEN("getting the minimum value of the matrix")
+		{
+			THEN("the result is -32")
+			{
+				REQUIRE(mat.Min() == -32);
+			}
+		}
+		WHEN("getting the maximum value of the matrix")
+		{
+			THEN("the result is 31")
+			{
+				REQUIRE(mat.Max() == 31);
+			}
+		}
+		WHEN("clamping the matrix between -1 and 1")
+		{
+			mat.Clamp();
+			THEN("the maximum value is 1")
+			{
+				REQUIRE(mat.Max() == 1);
+			}
+			THEN("the minimum value is -1")
+			{
+				REQUIRE(mat.Min() == -1);
 			}
 		}
 	}
@@ -378,6 +438,34 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 			{
 				for (unsigned int i = 0; i < 2; i++)
 					REQUIRE(a[i] == 0);
+			}
+		}
+		WHEN("raising one of the matrices to the power of 3")
+		{
+			Matrix res = a.Power(3);
+			THEN("the matrix is still 2x2")
+			{
+				REQUIRE(res.GetRowCount() == 2);
+				REQUIRE(res.GetColumnCount() == 2);
+			}
+			THEN("the matrix is filled with 4")
+			{
+				for (unsigned int i = 0; i < 4; i++)
+					REQUIRE(res[i] == 4);
+			}
+		}
+		WHEN("raising one of the matrices to the power of 3 in itself (PowerSelf)")
+		{
+			a.PowerSelf(3);
+			THEN("the matrix is still 2x2")
+			{
+				REQUIRE(a.GetRowCount() == 2);
+				REQUIRE(a.GetColumnCount() == 2);
+			}
+			THEN("the matrix is filled with 4")
+			{
+				for (unsigned int i = 0; i < 4; i++)
+					REQUIRE(a[i] == 4);
 			}
 		}
 	}
@@ -570,3 +658,93 @@ SCENARIO("using matrix comparation", "[matrix]")
 		}
 	}
 }
+
+SCENARIO("matrix reformating and padding")
+{
+	GIVEN("a 3x2 matrix filled with 2")
+	{
+		Matrix mat(3, 2);
+		mat.FillWith(2);
+
+		WHEN("adding a pad of ones to top")
+		{
+			mat.Pad(1, 0, 0, 0, Matrix::PadType::CONSTANT, 1);
+
+			THEN("the matrix size is 4x2")
+			{
+				REQUIRE(mat.GetRowCount() == 4);
+				REQUIRE(mat.GetColumnCount() == 2);
+			}
+			THEN("the top row is filled with 1")
+			{
+				REQUIRE(mat.GetValue(0, 0) == 1);
+				REQUIRE(mat.GetValue(0, 1) == 1);
+			}
+		}
+		WHEN("adding a pad of threes to the right")
+		{
+			mat.Pad(0, 0, 0, 1, Matrix::PadType::CONSTANT, 3);
+			THEN("the matrix size is 3x3")
+			{
+				REQUIRE(mat.GetRowCount() == 3);
+				REQUIRE(mat.GetColumnCount() == 3);
+			}
+			THEN("the right column is filled with 3")
+			{
+				REQUIRE(mat.GetValue(0, 2) == 3);
+				REQUIRE(mat.GetValue(1, 2) == 3);
+				REQUIRE(mat.GetValue(2, 2) == 3);
+			}
+		}
+		WHEN("squaring matrix")
+		{
+			mat.ToSquare();
+			THEN("the new size is 3x3")
+			{
+				REQUIRE(mat.GetRowCount() == 3);
+				REQUIRE(mat.GetColumnCount() == 3);
+			}
+		}
+	}
+	GIVEN("a 3x3 matrix with increasing values")
+	{
+		float vals[9] = {	0, 1, 2,
+							3, 4, 5,
+							6, 7, 8 };
+		Matrix mat(3, 3, vals);
+
+		WHEN("rotating the matrix")
+		{
+			mat.Rotate();
+			THEN("the order of the first row is 6, 3, 0")
+			{
+				REQUIRE(mat[0] == 6);
+				REQUIRE(mat[1] == 3);
+				REQUIRE(mat[2] == 0);
+			}
+		}
+	}
+	GIVEN("a 9x9 random matrix")
+	{
+		Matrix mat(9, 9);
+		mat.FillWithRandom(-100, 100);
+
+		WHEN("normalizing matrix")
+		{
+			mat.Normalize();
+			THEN("every value is between 1 and -1")
+			{
+				for (size_t i = 0; i < mat.GetElementCount(); i++)
+				{
+					REQUIRE(mat[i] <= 1);
+					REQUIRE(mat[i] >= -1);
+				}
+			}
+		}
+	}
+}
+
+/**
+Functions to test:
+-Normalize
+*/

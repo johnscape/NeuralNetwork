@@ -423,6 +423,11 @@ inline bool Matrix::IsSameSize(const Matrix& other) const
 	return other.Columns == Columns && other.Rows == Rows;
 }
 
+inline bool Matrix::IsSquare() const
+{
+	return Rows == Columns;
+}
+
 Matrix Matrix::GetSubMatrix(size_t startRow, size_t startColumn, size_t rowNum, size_t colNum) const
 {
 	if (startColumn + colNum >= Columns || startRow + rowNum >= Rows)
@@ -555,13 +560,134 @@ float Matrix::Sum() const
 	return std::accumulate(Values, Values + GetElementCount(), 0);
 }
 
+float Matrix::Min() const
+{
+	return *std::min_element(Values, Values + GetElementCount());
+}
+
+float Matrix::Max() const
+{
+	return *std::max_element(Values, Values + GetElementCount());
+}
+
+void Matrix::Clamp(float min, float max)
+{
+	std::replace_if(Values, Values + GetElementCount(), [min](float val) {return val < min; }, min);
+	std::replace_if(Values, Values + GetElementCount(), [max](float val) {return val > max; }, max);
+}
+
+void Matrix::RoundToInt()
+{
+}
+
+bool Matrix::IsOutOfBounds(size_t row, size_t col) const
+{
+	return (row >= Rows || col >= Columns);
+}
+
+void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type, float value)
+{
+	Matrix padded(Rows + top + bottom, Columns + left + right);
+	switch (type)
+	{
+	case Matrix::CONSTANT:
+		padded.FillWith(value);
+		break;
+	default:
+		break;
+	}
+
+	for (size_t i = 0; i < Rows; i++)
+		std::copy(Values + i * Columns, Values + (i + 1) * Columns, padded.Values + left + (top + i) * padded.GetColumnCount());
+
+	ReloadFromOther(padded);
+}
+
+void Matrix::ToSquare()
+{
+	if (Rows == Columns)
+		return;
+	if (Rows > Columns)
+	{
+		unsigned int diff = Rows - Columns;
+		if (diff & 0x01 == 0)
+			Pad(diff / 2, 0, diff / 2, 0);
+		else
+			Pad((diff - 1) / 2 + 1, 0, (diff - 1) / 2, 0);
+	}
+	else
+	{
+		unsigned int diff = Columns - Rows;
+		if (diff & 0x01 == 0)
+			Pad(0, diff / 2, 0, diff / 2);
+		else
+			Pad(0, (diff - 1) / 2 + 1, 0, (diff - 1) / 2);
+	}
+}
+
+void Matrix::Rotate(unsigned int times)
+{
+	if (!IsSquare())
+		throw MatrixException();
+	if (times == 0)
+		return;
+	for (unsigned int t = 0; t < times; t++)
+	{
+		for (int i = 0; i < Rows / 2; i++)
+		{
+			for (int j = i; j < Rows - i - 1; j++)
+			{
+				float temp = GetValue(i, j);
+				SetValue(i, j, GetValue(Rows - 1 - j, i));
+				SetValue(Rows - 1 - j, i, GetValue(Rows - 1 - i, Rows - 1 - j));
+				SetValue(Rows - 1 - i, Rows - 1 - j, GetValue(j, Rows - 1 - i));
+				SetValue(j, Rows - 1 - i, temp);
+			}
+		}
+	}
+}
+
+void Matrix::Normalize(float maxValue)
+{
+	float max = maxValue;
+	if (max == 0)
+		max = Max();
+	if (max < 0)
+		max *= -1;
+
+	for (size_t i = 0; i < GetElementCount(); i++) //TODO: find std equivalent
+		Values[i] /= max;
+}
+
 Matrix Matrix::Power(unsigned int p) const
 {
-	return Matrix();
+	if (!IsSquare())
+		throw MatrixException();
+	if (p == 0)
+		return Eye(Rows);
+
+	Matrix res(*this);
+
+	for (unsigned int v = 0; v < p - 1; v++)
+		res *= (*this);
+
+	return res;
 }
 
 void Matrix::PowerSelf(unsigned int p)
 {
+	if (!IsSquare())
+		throw MatrixException();
+	if (p == 0)
+		ReloadFromOther(Eye(Rows));
+
+	Matrix orig(*this);
+
+	for (unsigned int v = 0; v < p - 1; v++)
+		orig *= (*this);
+
+	ReloadFromOther(orig);
+
 }
 
 void Matrix::Transpose()
@@ -626,6 +752,12 @@ void Matrix::FillWith(float value)
 
 void Matrix::FillWithRandom(float min, float max)
 {
+	if (min > max)
+	{
+		max += min;
+		min = max - min;
+		max -= min;
+	}
 	static std::random_device device;
 	static std::mt19937 engine;
 	engine.seed(device());
