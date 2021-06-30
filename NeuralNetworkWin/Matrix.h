@@ -280,16 +280,45 @@ public:
 	*/
 	void Clamp(float min = -1, float max = 1);
 
+	/**
+	 * @brief Rounds every value in the matrix to the nearest integer
+	*/
 	void RoundToInt();
 
+	/**
+	 * @brief Checks is a matrix coordinate is valid
+	 * @param row The row coordinate
+	 * @param col The column coordinate
+	 * @return Returns true is the cordinate is invalid
+	*/
 	bool IsOutOfBounds(size_t row, size_t col) const;
 	
+	/**
+	 * @brief Padds the matrix
+	 * @param top The number of rows to be added to the top of the matrix
+	 * @param left The number of columns to be added to the left side of the matrix
+	 * @param bottom The number of rows to be added to the bottom of the matrix
+	 * @param right The number of columns to be added to the left side of the matrix
+	 * @param type The mode of the padding. See PadType for more info
+	 * @param value The value of the constant padding
+	*/
 	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type = PadType::CONSTANT, float value = 0);
 
+	/**
+	 * @brief Padds the matrix with zeroes to be a square matrix
+	*/
 	void ToSquare();
 
+	/**
+	 * @brief Rotates a square matrix clocl-wise
+	 * @param times The number of rotations
+	*/
 	void Rotate(unsigned int times = 1);
 
+	/**
+	 * @brief Normalizes the matrix (i.e.: every value is divided by the maximum value)
+	 * @param maxValue The maximum possible value. If unknow, set to zero or leave empty
+	*/
 	void Normalize(float maxValue = 0);
 
 
@@ -345,8 +374,5 @@ private:
 	inline size_t RowColToPosition(size_t row, size_t col) const;
 
 	float* GPUValues;
-
-	void TransposeArray(float* arr, unsigned int w, unsigned int h) const;
-	void TransposeBlock(float* A, float* B, unsigned int lda, unsigned int ldb) const;
 
 };

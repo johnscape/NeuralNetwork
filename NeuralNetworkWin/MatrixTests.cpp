@@ -387,8 +387,6 @@ SCENARIO("reseting matrix", "[matrix]")
 			}
 		}
 	}
-
-	//TODO: Test Transpose
 }
 
 SCENARIO("using matrix arithmetics", "[matrix][math]")
@@ -742,9 +740,18 @@ SCENARIO("matrix reformating and padding")
 			}
 		}
 	}
+	GIVEN("a 5x5 random float matrix")
+	{
+		Matrix mat(5, 5);
+		mat.FillWithRandom(-100, 100);
+		WHEN("rounding to int")
+		{
+			mat.RoundToInt();
+			THEN("every value is an int")
+			{
+				for (unsigned int i = 0; i < 25; i++)
+					REQUIRE(mat[i] == (int)mat[i]);
+			}
+		}
+	}
 }
-
-/**
-Functions to test:
--Normalize
-*/

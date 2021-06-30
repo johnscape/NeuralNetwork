@@ -578,6 +578,8 @@ void Matrix::Clamp(float min, float max)
 
 void Matrix::RoundToInt()
 {
+	for (size_t i = 0; i < GetElementCount(); i++)
+		Values[i] = roundf(Values[i]);
 }
 
 bool Matrix::IsOutOfBounds(size_t row, size_t col) const
@@ -610,18 +612,18 @@ void Matrix::ToSquare()
 	if (Rows > Columns)
 	{
 		unsigned int diff = Rows - Columns;
-		if (diff & 0x01 == 0)
-			Pad(diff / 2, 0, diff / 2, 0);
+		if ((diff & 0x01) == 0)
+			Pad(0, diff / 2, 0, diff / 2);
 		else
-			Pad((diff - 1) / 2 + 1, 0, (diff - 1) / 2, 0);
+			Pad(0, (diff - 1) / 2 + 1, 0, (diff - 1) / 2);
 	}
 	else
 	{
 		unsigned int diff = Columns - Rows;
-		if (diff & 0x01 == 0)
-			Pad(0, diff / 2, 0, diff / 2);
+		if ((diff & 0x01) == 0)
+			Pad(diff / 2, 0, diff / 2, 0);
 		else
-			Pad(0, (diff - 1) / 2 + 1, 0, (diff - 1) / 2);
+			Pad((diff - 1) / 2 + 1, 0, (diff - 1) / 2, 0);
 	}
 }
 
@@ -651,7 +653,17 @@ void Matrix::Normalize(float maxValue)
 {
 	float max = maxValue;
 	if (max == 0)
-		max = Max();
+	{
+		float foundMax = Max();
+		float foundMin = Min();
+		if (foundMin < 0)
+		{
+			foundMin *= -1;
+			max = foundMax > foundMin ? foundMax : foundMin;
+		}
+		else
+			max = foundMax;
+	}
 	if (max < 0)
 		max *= -1;
 
@@ -692,10 +704,16 @@ void Matrix::PowerSelf(unsigned int p)
 
 void Matrix::Transpose()
 {
-	TransposeArray(Values, Columns, Rows);
-	size_t tmp = Rows;
-	Rows = Columns;
-	Columns = tmp;
+	Matrix trans(Columns, Rows);
+	for (size_t r = 0; r < Rows; r++)
+	{
+		for (size_t c = 0; c < Columns; c++)
+		{
+			trans.SetValue(c, r, GetValue(r, c));
+		}
+	}
+	
+	ReloadFromOther(trans);
 }
 
 size_t Matrix::GetVectorSize() const
@@ -866,48 +884,4 @@ float* Matrix::GetGPUValues()
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
 {
 	return row * Columns + col;
-}
-
-void Matrix::TransposeArray(float* arr, unsigned int w, unsigned int h) const
-{
-	/*unsigned int lda = ROUND_UP(w, 16);
-	unsigned int ldb = ROUND_UP(h, 16);
-
-	float* A = new float[lda * ldb];
-	float* B = new float[lda * ldb];
-
-	std::copy(arr, arr + w * h, A);
-	std::fill(B, B + lda * ldb, 0);
-
-#pragma omp parallel for
-	for (unsigned int i = 0; i < w; i += 4)
-	{
-		for (unsigned int j = 0; j < h; j += 4)
-		{
-			int max_i2 = i + 4 < h ? i + 4 : h;
-			int max_j2 = j + 4 < w ? j + 4 : w;
-
-			for (int i2 = i; i2 < max_i2; i2 += 4)
-				for (int j2 = j; j2 < max_j2; j2 += 4)
-					TransposeBlock(&A[i2 * lda + j2], &B[j2 * ldb + i2], lda, ldb);
-		}
-	}
-
-	std::copy(B, B + GetElementCount(), arr);
-
-	delete[] A;
-	delete[] B;*/
-}
-
-void Matrix::TransposeBlock(float* A, float* B, unsigned int lda, unsigned int ldb) const
-{
-	__m128 row1 = _mm_load_ps(&A[0 * lda]);
-	__m128 row2 = _mm_load_ps(&A[1 * lda]);
-	__m128 row3 = _mm_load_ps(&A[2 * lda]);
-	__m128 row4 = _mm_load_ps(&A[3 * lda]);
-	_MM_TRANSPOSE4_PS(row1, row2, row3, row4);
-	_mm_store_ps(&B[0 * ldb], row1);
-	_mm_store_ps(&B[1 * ldb], row2);
-	_mm_store_ps(&B[2 * ldb], row3);
-	_mm_store_ps(&B[3 * ldb], row4);
 }
