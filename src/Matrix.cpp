@@ -1,6 +1,6 @@
-#include "Matrix.h"
-#include "Constants.h"
-#include "MatrixException.hpp"
+#include "NeuralNetwork/Matrix.h"
+#include "NeuralNetwork/Constants.h"
+#include "NeuralNetwork/MatrixException.hpp"
 #include <fstream>
 #include <string>
 

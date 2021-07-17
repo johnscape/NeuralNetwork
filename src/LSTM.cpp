@@ -1,6 +1,6 @@
-#include "LSTM.h"
-#include "Optimizer.h"
-#include "Constants.h"
+#include "NeuralNetwork/LSTM.h"
+#include "NeuralNetwork/Optimizer.h"
+#include "NeuralNetwork/Constants.h"
 
 #if USE_GPU
 #include "MatrixGPUMath.cuh"

@@ -1,5 +1,5 @@
-#include "FeedForwardLayer.h"
-#include "Optimizer.h"
+#include "NeuralNetwork/FeedForwardLayer.h"
+#include "NeuralNetwork/Optimizer.h"
 
 #if USE_GPU
 #include "MatrixGPUMath.cuh"

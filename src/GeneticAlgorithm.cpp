@@ -1,8 +1,8 @@
-#include "GeneticAlgorithm.h"
-#include "Layer.h"
+#include "NeuralNetwork/GeneticAlgorithm.h"
+#include "NeuralNetwork/Layer.h"
 #include <time.h>
-#include "Model.h"
-#include "Constants.h"
+#include "NeuralNetwork/Model.h"
+#include "NeuralNetwork/Constants.h"
 #include <iostream>
 GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsigned int individual_count, Fitness fitness) :
 	Optimizer(output), MaxGenerations(generations), IndividialCount(individual_count), CurrentGeneration(0),

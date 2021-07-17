@@ -1,4 +1,4 @@
-#include "Optimizer.h"
+#include "NeuralNetwork/Optimizer.h"
 
 Optimizer::Optimizer(Layer* output) : currentBatch(0), lastError(0)
 {

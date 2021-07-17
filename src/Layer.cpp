@@ -1,10 +1,10 @@
-#include "Layer.h"
-#include "LayerException.hpp"
+#include "NeuralNetwork/Layer.h"
+#include "NeuralNetwork/LayerException.hpp"
 
-#include "InputLayer.h"
-#include "FeedForwardLayer.h"
-#include "RecurrentLayer.h"
-#include "LSTM.h"
+#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/FeedForwardLayer.h"
+#include "NeuralNetwork/RecurrentLayer.h"
+#include "NeuralNetwork/LSTM.h"
 
 unsigned int Layer::LayerCount = 0;
 

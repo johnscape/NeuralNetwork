@@ -1,6 +1,6 @@
-#include "GradientDescent.h"
-#include "InputLayer.h"
-#include "Constants.h"
+#include "NeuralNetwork/GradientDescent.h"
+#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/Constants.h"
 
 
 GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, Layer* output, float learningRate) : Optimizer(output), LearningRate(learningRate)

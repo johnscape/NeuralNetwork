@@ -1,6 +1,6 @@
-#include "InputLayer.h"
-#include "LayerException.hpp"
-#include "Constants.h"
+#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/LayerException.hpp"
+#include "NeuralNetwork/Constants.h"
 
 InputLayer::InputLayer(unsigned int size) : Layer(), Size(size)
 {

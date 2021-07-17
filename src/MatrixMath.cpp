@@ -1,7 +1,7 @@
-#include "MatrixMath.h"
+#include "NeuralNetwork/MatrixMath.h"
 #include <iostream>
-#include "Constants.h"
-#include "MatrixException.hpp"
+#include "NeuralNetwork/Constants.h"
+#include "NeuralNetwork/MatrixException.hpp"
 
 #if USE_GPU
 #include "MatrixGPUMath.cuh"

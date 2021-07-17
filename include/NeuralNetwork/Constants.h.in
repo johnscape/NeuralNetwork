@@ -1,5 +1,5 @@
 #pragma once
 
 #define DEBUG true
-#define USE_GPU false
+#define USE_GPU @USE_CUDA@
 #define TESTING true

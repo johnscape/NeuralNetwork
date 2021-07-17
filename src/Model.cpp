@@ -1,9 +1,9 @@
-#include "Model.h"
+#include "NeuralNetwork/Model.h"
 
-#include "Layer.h"
-#include "Matrix.h"
+#include "NeuralNetwork/Layer.h"
+#include "NeuralNetwork/Matrix.h"
 #include <map>
-#include "Constants.h"
+#include "NeuralNetwork/Constants.h"
 
 #include "rapidjson/document.h"
 #include <fstream>
