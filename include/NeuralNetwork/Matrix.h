@@ -3,12 +3,20 @@
 #include <string>
 #include <iostream>
 
+/**
+ * @brief A class for containing a matrix and the functions to work with it
+*/
 class Matrix
 {
 public:
+	/**
+	 * @brief Enum for selecting padding types
+	*/
 	static enum PadType
 	{
-		CONSTANT
+		CONSTANT, /**< Use a constant value for padding */
+		REFLECTION, /**< Use reflected values for padding */
+		SYMMETRIC /**< Use The nearest value for padding */
 	};
 
 	/**
@@ -280,16 +288,45 @@ public:
 	*/
 	void Clamp(float min = -1, float max = 1);
 
+	/**
+	 * @brief Rounds every float in the matrix to the nearest whole number
+	*/
 	void RoundToInt();
 
+	/**
+	 * @brief Checks is a certain matrix position is valid
+	 * @param row The row of the position
+	 * @param col The column of the position
+	 * @return true if the set position is invalid (i.e.: the position points to a non-existing element), false otherwise
+	*/
 	bool IsOutOfBounds(size_t row, size_t col) const;
 	
+	/**
+	 * @brief Adds a paddig to the matrix
+	 * @param top The number of rows to be added to the top of the matrix
+	 * @param left The number of columns to be added to the left side of the matrix
+	 * @param bottom The number of rows to be added to the bottom of the matrix
+	 * @param right The number of columns to be added to the right side of the matrix
+	 * @param type The type of the padding. See PadType for more info
+	 * @param value The value used for constant padding
+	*/
 	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type = PadType::CONSTANT, float value = 0);
 
+	/**
+	 * @brief Converts the matrix to a square matrix, using zero-padding.
+	*/
 	void ToSquare();
 
+	/**
+	 * @brief Rotates the matrix cloclwise.
+	 * @param times The number of the rotations (e.g.: 2 means two clockwise rotations)
+	*/
 	void Rotate(unsigned int times = 1);
 
+	/**
+	 * @brief Normalizes the matrix (i.e.: divides every value by the largest absolute value)
+	 * @param maxValue Set the maximum value to use for normalization. If unknown, set to 0 and the maximum absolute value in the matrix will be used.
+	*/
 	void Normalize(float maxValue = 0);
 
 

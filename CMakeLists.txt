@@ -9,8 +9,9 @@ project ("NeuralNetwork"	VERSION 0.0.1
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option (USE_CUDA "Enable to build CUDA based computation" OFF)
-option (BUILD_TESTS "Build tests" ON)
+option	(USE_CUDA "Enable to build CUDA based computation" OFF)
+option	(BUILD_TESTS "Build tests" ON)
+option	(BUILD_DOC "Build documentation" ON)
 
 include(FetchContent)
 
@@ -20,6 +21,10 @@ configure_file(
 )
 
 add_subdirectory(src)
+
+if (BUILD_DOC)
+	add_subdirectory(docs)
+endif()
 
 if(BUILD_TESTS)
 	add_subdirectory(tests)
