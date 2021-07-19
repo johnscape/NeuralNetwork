@@ -138,7 +138,7 @@ public:
 	*/
 	void SetId(unsigned int id);
 
-	static enum LayerType
+	enum class LayerType
 	{
 		INPUT,
 		FEEDFORWARD,
