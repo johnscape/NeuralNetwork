@@ -45,6 +45,9 @@ before_script:
 #  - cmake  --build . --target NeuralNetwork
 
 script:
+  - export CC=gcc-7
+  - export CXX=g++-7
+  - cmake --version
   # once CMake has done its job we just build using make as usual
   - make
   # if the project uses ctest we can run the tests like this
