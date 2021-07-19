@@ -223,7 +223,7 @@ Matrix& Matrix::operator+=(const Matrix& other)
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(other.Values + i);
 		_mm_store_ps(floatRes, _mm_add_ps(first, second));
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
@@ -243,7 +243,7 @@ Matrix& Matrix::operator-=(const Matrix& other)
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(other.Values + i);
 		_mm_store_ps(floatRes, _mm_sub_ps(first, second));
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
@@ -305,7 +305,7 @@ Matrix Matrix::operator+(const Matrix& other) const
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(other.Values + i);
 		_mm_store_ps(floatRes, _mm_add_ps(first, second));
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, res.Values + i);
@@ -327,7 +327,7 @@ Matrix Matrix::operator-(const Matrix& other) const
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(other.Values + i);
 		_mm_store_ps(floatRes, _mm_sub_ps(first, second));
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, res.Values + i);
@@ -482,7 +482,7 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
 		__m128 first = _mm_load_ps(a.Values + i);
 		__m128 second = _mm_load_ps(b.Values + i);
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second)); 
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > a.GetRowCount() * a.GetColumnCount())
 			addressEnd = (a.GetRowCount() * a.GetColumnCount()) - i;
 		std::copy(floatRes, floatRes + addressEnd, c.Values + i);
@@ -514,7 +514,7 @@ void Matrix::ElementwiseMultiply(const Matrix& other)
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(other.Values + i);
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second));
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
@@ -546,7 +546,7 @@ float Matrix::DotProcudt(const Matrix& vector) const
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(vector.Values + i);
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second));
-		unsigned int addressEnd = 4;
+		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		for (unsigned int i = 0; i < addressEnd; i++)
@@ -593,7 +593,7 @@ void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsig
 	Matrix padded(Rows + top + bottom, Columns + left + right);
 	switch (type)
 	{
-	case Matrix::CONSTANT:
+	case Matrix::PadType::CONSTANT:
 		padded.FillWith(value);
 		break;
 	default:

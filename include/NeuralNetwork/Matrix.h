@@ -12,7 +12,7 @@ public:
 	/**
 	 * @brief Enum for selecting padding types
 	*/
-	static enum PadType
+	enum class PadType
 	{
 		CONSTANT, /**< Use a constant value for padding */
 		REFLECTION, /**< Use reflected values for padding */
