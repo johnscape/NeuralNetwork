@@ -12,6 +12,7 @@ addons:
 script:
   - export CC=gcc-7
   - export CXX=g++-7
+  - apt-get upgrade cmake
   - cmake --version
   - cmake CMakeLists.txt
   - cmake  --build . --target NeuralNetwork
