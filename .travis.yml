@@ -36,6 +36,7 @@ before_script:
   # run cmake; here we assume that the project's
   # top-level CMakeLists.txt is located at '..'
   - cmake ..
+  - cat Makefile
 
 #script:
 #  - export CC=gcc-7
