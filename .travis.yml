@@ -15,3 +15,6 @@ script:
   - cmake --version
   - cmake CMakeLists.txt
   - cmake  --build . --target NeuralNetwork
+
+after_failure:
+     - cat /home/travis/build/johnscape/NeuralNetwork/CMakeFiles/CMakeOutput.log
