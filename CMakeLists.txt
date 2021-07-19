@@ -1,13 +1,17 @@
 ﻿# CMakeList.txt : CMake project for NeuralNetwork, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.14)
 
 project ("NeuralNetwork"	VERSION 0.0.1
 							DESCRIPTION "A C++ library for machine learning purposes."
 							LANGUAGES CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 option	(USE_CUDA "Enable to build CUDA based computation" OFF)
 option	(BUILD_TESTS "Build tests" ON)
@@ -29,7 +33,3 @@ endif()
 if(BUILD_TESTS)
 	add_subdirectory(tests)
 endif()
-
-# Add source to this project's executable.
-
-# TODO: Add tests and install targets if needed.
