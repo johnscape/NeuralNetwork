@@ -7,6 +7,7 @@
 #include <numeric>
 #include <functional>
 #include <random>
+#include <algorithm>
 #include "nmmintrin.h"
 #include "immintrin.h"
 

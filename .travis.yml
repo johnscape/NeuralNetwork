@@ -52,8 +52,6 @@ script:
   - cmake --version
   # once CMake has done its job we just build using make as usual
   - make
-  # if the project uses ctest we can run the tests like this
-  - make test
 
 after_failure:
      - cat /home/travis/build/johnscape/NeuralNetwork/CMakeFiles/CMakeOutput.log
