@@ -149,7 +149,7 @@ public:
 protected:
 	Layer* LayerInput;
 	Matrix Output;
-	Matrix LayerError;
+	Matrix LayerError; 
 
 	unsigned int Id;
 	bool TrainingMode;

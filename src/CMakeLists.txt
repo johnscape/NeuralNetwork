@@ -12,6 +12,7 @@ add_library(NeuralNetwork
 	Optimizer.cpp
 	GradientDescent.cpp
 	GeneticAlgorithm.cpp
+	Tensor.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include)

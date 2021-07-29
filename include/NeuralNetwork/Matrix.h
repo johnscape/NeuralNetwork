@@ -374,6 +374,8 @@ public:
 	*/
 	static Matrix Concat(const Matrix& a, const Matrix& b, unsigned int dim); //TODO: create an enum for the dimension
 
+	friend class Tensor;
+
 private:
 	float* Values;
 	size_t Rows;
