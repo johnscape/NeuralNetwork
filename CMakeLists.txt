@@ -12,6 +12,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4")
 
 option	(USE_CUDA "Enable to build CUDA based computation" OFF)
 option	(BUILD_TESTS "Build tests" ON)

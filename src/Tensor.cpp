@@ -1,19 +1,22 @@
+#include <utility>
+#include <random>
 #include "NeuralNetwork/Tensor.h"
 #include "NeuralNetwork/TensorException.hpp"
+#include "nmmintrin.h"
 
 Tensor::Tensor() : Values(nullptr), ElementCount(0)
 {
 }
 
-Tensor::Tensor(unsigned int* dimensions, unsigned int dimensionCount, float* values) : ElementCount(1)
+Tensor::Tensor(unsigned int* shape, unsigned int shapeCount, float* values) : ElementCount(1)
 {
-	if (dimensionCount == 0)
-		dimensionCount = *(&dimensions + 1) - dimensions;
+	if (shapeCount == 0)
+		shapeCount = *(&shape + 1) - shape;
 
-	for (unsigned int i = 0; i < dimensionCount; i++)
+	for (unsigned int i = 0; i < shapeCount; i++)
 	{
-		Shape.push_back(dimensions[i]);
-		ElementCount *= dimensions[i];
+		Shape.push_back(shape[i]);
+		ElementCount *= shape[i];
 	}
 
 	Values = new float[ElementCount];
@@ -24,11 +27,11 @@ Tensor::Tensor(unsigned int* dimensions, unsigned int dimensionCount, float* val
 		std::fill(Values, Values + ElementCount, 0);
 }
 
-Tensor::Tensor(std::vector<unsigned int> dimensions, float* values) : ElementCount(1)
+Tensor::Tensor(std::vector<unsigned int> shape, float* values) : ElementCount(1)
 {
-	Shape = dimensions;
-	for (unsigned int i = 0; i < Shape.size(); i++)
-		ElementCount *= Shape[i];
+	Shape = std::move(shape);
+	for (unsigned int i : Shape)
+		ElementCount *= i;
 
 	Values = new float[ElementCount];
 
@@ -48,6 +51,22 @@ Tensor::Tensor(const Matrix& mat)
 	std::copy(mat.Values, mat.Values + ElementCount, Values);
 }
 
+Tensor::Tensor(const Tensor &other)
+{
+	ElementCount = other.ElementCount;
+	Shape = other.Shape;
+	Values = new float[ElementCount];
+	std::copy(other.Values, other.Values + ElementCount, Values);
+}
+
+
+Tensor::Tensor(Tensor &&other) noexcept :
+ElementCount(std::exchange(other.ElementCount, 0)), Values(std::exchange(other.Values,nullptr)),
+Shape(std::move(other.Shape))
+{
+}
+
+
 Tensor::~Tensor()
 {
 	if (Values)
@@ -61,21 +80,30 @@ bool Tensor::IsSameShape(const Tensor& other) const
 	return Shape == other.Shape;
 }
 
-void Tensor::Reshape(std::vector<unsigned int> newDimensions)
+bool Tensor::IsSameShape(const Matrix &other) const
+{
+	unsigned int rows = !Shape.empty() ? Shape[0] : 1;
+	unsigned int cols = Shape.size() >= 2 ? Shape[1] : 1;
+
+
+	return rows == other.GetRowCount() && cols == other.GetColumnCount();
+}
+
+void Tensor::Reshape(std::vector<unsigned int> newShape)
 {
 	unsigned int sum1 = Shape[0];
-	unsigned int sum2 = newDimensions[0];
+	unsigned int sum2 = newShape[0];
 
 	for (unsigned int i = 1; i < Shape.size(); i++)
 		sum1 *= Shape[i];
 	
-	for (unsigned int i = 1; i < newDimensions.size(); i++)
-		sum2 *= newDimensions[i];
+	for (unsigned int i = 1; i < newShape.size(); i++)
+		sum2 *= newShape[i];
 
 	if (sum1 != sum2)
 		throw TensorShapeException();
 
-	Shape = newDimensions;
+	Shape = newShape;
 }
 
 void Tensor::Reshape(unsigned int* newDimensions, unsigned int dimensionCount)
@@ -96,6 +124,28 @@ void Tensor::Reshape(unsigned int* newDimensions, unsigned int dimensionCount)
 
 	Shape.clear();
 	Shape = std::vector<unsigned int>(newDimensions, newDimensions + dimensionCount);
+}
+
+float Tensor::GetValue(unsigned int position) const
+{
+	if (position >= GetElementCount())
+		throw TensorIndexException();
+	return Values[position];
+}
+
+float Tensor::GetValue(unsigned int *position) const
+{
+	return 0;
+}
+
+void Tensor::SetValue(unsigned int pos, float value)
+{
+	Values[pos] = value;
+}
+
+void Tensor::AdjustValue(unsigned int pos, float value)
+{
+	Values[pos] += value;
 }
 
 std::vector<unsigned int> Tensor::GetShape() const
@@ -154,4 +204,787 @@ std::list<Matrix> Tensor::ToMatrixList() const
 		}
 	}
 	return items;
+}
+
+unsigned int Tensor::GetElementCount() const
+{
+	return ElementCount;
+}
+
+
+void Tensor::FillWith(float value)
+{
+	std::fill(Values, Values + GetElementCount(), value);
+}
+
+void Tensor::FillWithRandom(float min, float max)
+{
+	if (min > max)
+	{
+		max += min;
+		min = max - min;
+		max -= min;
+	}
+	static std::random_device device;
+	static std::mt19937 engine;
+	engine.seed(device());
+	std::uniform_real_distribution<> dist(min, max);
+
+	for (size_t i = 0; i < GetElementCount(); i++)
+		Values[i] = static_cast<float>(dist(engine));
+}
+
+unsigned int Tensor::GetMatrixCount() const
+{
+	if (Shape.size() <= 2)
+		return 1;
+
+	unsigned int count = 1;
+	for (int i = 2; i < Shape.size(); ++i)
+		count *= Shape[i];
+	return count;
+}
+
+unsigned int Tensor::CoordinateToPos(unsigned int* coord) const
+{
+	//in a perfect world, the length of the coord will be always equal (or larger) than the number of the dimensions
+	//At the altar of speed, I have sacrificed safety
+	if (GetElementCount() == 0)
+		return 0;
+	if (Shape.size() == 1)
+		return coord[0];
+	if (Shape.size() == 2)
+		return coord[0] * Shape[1] + coord[1];
+
+	unsigned int pos = coord[0] * Shape[1] + coord[1];
+	unsigned int pastSize = Shape[0] * Shape[1];
+
+	for (int i = 2; i < Shape.size(); ++i)
+	{
+		pos += pastSize * coord[i];
+		pastSize *= Shape[i];
+	}
+
+	return pos;
+}
+
+unsigned int Tensor::CoordinateToPos(std::vector<unsigned int> coord) const
+{
+	return CoordinateToPos(&coord[0]);
+}
+
+Tensor Tensor::operator+(const Matrix &other) const
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor t(*this);
+
+	unsigned matrixCount = other.GetElementCount();
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (int mat = 0; mat < GetMatrixCount(); ++mat)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[mat * matrixCount + 	val		],
+					Values[mat * matrixCount + 	val + 1	],
+					Values[mat * matrixCount + 	val + 2	],
+					Values[mat * matrixCount + 	val + 3	]
+			};
+
+			float matrixVals[4] = {
+					other.Values[val * 4],
+					other.Values[val * 4 + 1],
+					other.Values[val * 4 + 2],
+					other.Values[val * 4 + 3],
+			};
+
+			float result[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(matrixVals);
+			__m128 resultVec = _mm_add_ps(tensorVec, matrixVec);
+			_mm_store_ps(result, resultVec);
+
+			std::copy(result, result + 3, t.Values + val);
+		}
+		for (int val = n4; val < matrixCount; ++val)
+		{
+			t.SetValue(val + mat * matrixCount, other.GetValue(val) + GetValue(val + mat * matrixCount));
+		}
+	}
+
+	return t;
+}
+
+Tensor Tensor::operator-(const Matrix &other) const
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor t(*this);
+
+	unsigned matrixCount = other.GetElementCount();
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (int mat = 0; mat < GetMatrixCount(); ++mat)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[mat * matrixCount + 	val		],
+					Values[mat * matrixCount + 	val + 1	],
+					Values[mat * matrixCount + 	val + 2	],
+					Values[mat * matrixCount + 	val + 3	]
+			};
+
+			float matrixVals[4] = {
+					other.Values[val * 4],
+					other.Values[val * 4 + 1],
+					other.Values[val * 4 + 2],
+					other.Values[val * 4 + 3],
+					};
+
+			float result[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(matrixVals);
+			__m128 resultVec = _mm_sub_ps(tensorVec, matrixVec);
+			_mm_store_ps(result, resultVec);
+
+			std::copy(result, result + 3, t.Values + val);
+		}
+		for (int val = n4; val < matrixCount; ++val)
+		{
+			t.SetValue(val + mat * matrixCount, other.GetValue(val) + GetValue(val + mat * matrixCount));
+		}
+	}
+
+	return t;
+}
+
+Tensor Tensor::operator*(const Matrix &other) const
+{
+	unsigned int rows = !Shape.empty() ? Shape[0] : 1;
+	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
+	unsigned int matrixSize = rows * cols;
+
+	if (cols != other.Rows)
+		throw TensorShapeException();
+
+	std::vector<unsigned int> newSize = {rows, static_cast<unsigned int>(other.Columns)};
+	for (int i = 2; i < Shape.size(); ++i)
+		newSize.push_back(Shape[i]);
+
+	Tensor result(newSize);
+
+	__m128 fastCol, fastRow, fastRes;
+
+	for (int m = 0; m < GetMatrixCount(); ++m)
+	{
+		unsigned int matrixStart = m * rows * other.GetColumnCount();
+
+		for (unsigned int col_count = 0; col_count < other.GetColumnCount(); col_count++)
+		{
+			for (unsigned int row_count = 0; row_count < other.GetRowCount(); row_count += 4)
+			{
+				float col[4] = {
+						row_count < other.GetRowCount() ? other.GetValue(row_count, col_count) : 0,
+						row_count + 1 < other.GetRowCount() ? other.GetValue(row_count + 1, col_count) : 0,
+						row_count + 2 < other.GetRowCount() ? other.GetValue(row_count + 2, col_count) : 0,
+						row_count + 3 < other.GetRowCount() ? other.GetValue(row_count + 3, col_count) : 0,
+				};
+
+				fastCol = _mm_load_ps(col);
+
+				for (unsigned int i = 0; i < rows; ++i)
+				{
+					float row[4] = {
+							row_count < cols ? Values[m * matrixSize + i * cols + row_count] : 0,
+							row_count + 1 < cols ? Values[m * matrixSize + i * cols + row_count + 1] : 0,
+							row_count + 2 < cols ? Values[m * matrixSize + i * cols + row_count + 2] : 0,
+							row_count + 3 < cols ? Values[m * matrixSize + i * cols + row_count + 3] : 0,
+					};
+
+					fastRow = _mm_load_ps(row);
+					fastRes = _mm_mul_ps(fastRow, fastCol);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					float fRes = _mm_cvtss_f32(fastRes);
+
+					result.Values[matrixStart + i * other.GetColumnCount() + col_count] += fRes;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+Tensor &Tensor::operator+=(const Matrix &other)
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor t(*this);
+
+	unsigned matrixCount = other.GetElementCount();
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (int mat = 0; mat < GetMatrixCount(); ++mat)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[mat * matrixCount + 	val		],
+					Values[mat * matrixCount + 	val + 1	],
+					Values[mat * matrixCount + 	val + 2	],
+					Values[mat * matrixCount + 	val + 3	]
+			};
+
+			float matrixVals[4] = {
+					other.Values[val * 4],
+					other.Values[val * 4 + 1],
+					other.Values[val * 4 + 2],
+					other.Values[val * 4 + 3],
+			};
+
+			float result[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(matrixVals);
+			__m128 resultVec = _mm_add_ps(tensorVec, matrixVec);
+			_mm_store_ps(result, resultVec);
+
+			std::copy(result, result + 4, t.Values + val + mat * matrixCount);
+		}
+		for (int val = n4; val < matrixCount; ++val)
+		{
+			t.SetValue(val + mat * matrixCount, other.GetValue(val) + GetValue(val + mat * matrixCount));
+		}
+	}
+
+	ReloadFromOther(t);
+
+	return *this;
+}
+
+Tensor &Tensor::operator-=(const Matrix &other)
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor t(*this);
+
+	unsigned matrixCount = other.GetElementCount();
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (int mat = 0; mat < GetMatrixCount(); ++mat)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[mat * matrixCount + 	val		],
+					Values[mat * matrixCount + 	val + 1	],
+					Values[mat * matrixCount + 	val + 2	],
+					Values[mat * matrixCount + 	val + 3	]
+			};
+
+			float matrixVals[4] = {
+					other.Values[val * 4],
+					other.Values[val * 4 + 1],
+					other.Values[val * 4 + 2],
+					other.Values[val * 4 + 3],
+			};
+
+			float result[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(matrixVals);
+			__m128 resultVec = _mm_sub_ps(tensorVec, matrixVec);
+			_mm_store_ps(result, resultVec);
+
+			std::copy(result, result + 4, t.Values + val + mat * matrixCount);
+		}
+		for (int val = n4; val < matrixCount; ++val)
+		{
+			t.SetValue(val + mat * matrixCount, GetValue(val + mat * matrixCount) - other.GetValue(val));
+		}
+	}
+
+	ReloadFromOther(t);
+	return *this;
+}
+
+Tensor &Tensor::operator*=(const Matrix &other)
+{
+	unsigned int rows = !Shape.empty() ? Shape[0] : 1;
+	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
+	unsigned int matrixSize = rows * cols;
+
+	if (cols != other.Rows)
+		throw TensorShapeException();
+
+	std::vector<unsigned int> newSize = {rows, static_cast<unsigned int>(other.Columns)};
+	for (int i = 2; i < Shape.size(); ++i)
+		newSize.push_back(Shape[i]);
+
+	Tensor result(newSize);
+
+	__m128 fastCol, fastRow, fastRes;
+
+	for (int m = 0; m < GetMatrixCount(); ++m)
+	{
+		unsigned int matrixStart = m * rows * other.GetColumnCount();
+
+		for (unsigned int col_count = 0; col_count < other.GetColumnCount(); col_count++)
+		{
+			for (unsigned int row_count = 0; row_count < other.GetRowCount(); row_count += 4)
+			{
+				float col[4] = {
+						row_count < other.GetRowCount() ? other.GetValue(row_count, col_count) : 0,
+						row_count + 1 < other.GetRowCount() ? other.GetValue(row_count + 1, col_count) : 0,
+						row_count + 2 < other.GetRowCount() ? other.GetValue(row_count + 2, col_count) : 0,
+						row_count + 3 < other.GetRowCount() ? other.GetValue(row_count + 3, col_count) : 0,
+				};
+
+				fastCol = _mm_load_ps(col);
+
+				for (unsigned int i = 0; i < rows; ++i)
+				{
+					float row[4] = {
+							row_count < cols ? Values[m * matrixSize + i * cols + row_count] : 0,
+							row_count + 1 < cols ? Values[m * matrixSize + i * cols + row_count + 1] : 0,
+							row_count + 2 < cols ? Values[m * matrixSize + i * cols + row_count + 2] : 0,
+							row_count + 3 < cols ? Values[m * matrixSize + i * cols + row_count + 3] : 0,
+					};
+
+					fastRow = _mm_load_ps(row);
+					fastRes = _mm_mul_ps(fastRow, fastCol);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					float fRes = _mm_cvtss_f32(fastRes);
+
+					result.Values[matrixStart + i * other.GetColumnCount() + col_count] += fRes;
+				}
+			}
+		}
+	}
+
+	ReloadFromOther(result);
+	return *this;
+}
+
+Tensor Tensor::operator+(const Tensor &other) const
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor result(Shape);
+
+	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
+	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
+	unsigned int matrixCount = rows * cols;
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (unsigned int m = 0; m < GetMatrixCount(); ++m)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[m * matrixCount + 	val		],
+					Values[m * matrixCount + 	val + 1	],
+					Values[m * matrixCount + 	val + 2	],
+					Values[m * matrixCount + 	val + 3	]
+			};
+
+			float otherVals[4] = {
+					other.Values[m * matrixCount + 	val		],
+					other.Values[m * matrixCount + 	val + 1	],
+					other.Values[m * matrixCount + 	val + 2	],
+					other.Values[m * matrixCount + 	val + 3	],
+			};
+
+			float res[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(otherVals);
+			__m128 resultVec = _mm_add_ps(tensorVec, matrixVec);
+			_mm_store_ps(res, resultVec);
+
+			std::copy(res, res + 4, result.Values + val + m * matrixCount);
+		}
+		for (unsigned int val = n4; val < matrixCount; ++val)
+		{
+			unsigned int pos = val + m * matrixCount;
+			float res = other.GetValue(pos) + GetValue(pos);
+			result.SetValue(pos, res);
+		}
+	}
+
+	return result;
+}
+
+Tensor Tensor::operator-(const Tensor &other) const
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor result(Shape);
+
+	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
+	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
+	unsigned int matrixCount = rows * cols;
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (unsigned int m = 0; m < GetMatrixCount(); ++m)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[m * matrixCount + 	val		],
+					Values[m * matrixCount + 	val + 1	],
+					Values[m * matrixCount + 	val + 2	],
+					Values[m * matrixCount + 	val + 3	]
+			};
+
+			float otherVals[4] = {
+					other.Values[m * matrixCount + 	val		],
+					other.Values[m * matrixCount + 	val + 1	],
+					other.Values[m * matrixCount + 	val + 2	],
+					other.Values[m * matrixCount + 	val + 3	],
+			};
+
+			float res[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(otherVals);
+			__m128 resultVec = _mm_sub_ps(tensorVec, matrixVec);
+			_mm_store_ps(res, resultVec);
+
+			std::copy(res, res + 4, result.Values + val + m * matrixCount);
+		}
+		for (unsigned int val = n4; val < matrixCount; ++val)
+		{
+			unsigned int pos = val + m * matrixCount;
+			float res = GetValue(pos) - other.GetValue(pos);
+			result.SetValue(pos, res);
+		}
+	}
+
+	return result;
+}
+
+Tensor Tensor::operator*(const Tensor &other) const
+{
+	unsigned int thisRows = !Shape.empty() ? Shape[0] : 1;
+	unsigned int thisCols = Shape.size() > 1 ? Shape[1] : 1;
+
+	unsigned int otherRows = !other.Shape.empty() ? other.Shape[0] : 1;
+	unsigned int otherCols = other.Shape.size() > 1 ? other.Shape[1] : 1;
+
+	unsigned int thisMatSize = thisRows * thisCols;
+	unsigned int otherMatSize = otherRows * otherCols;
+
+	if (thisCols != otherRows || Shape.size() != other.Shape.size())
+		throw TensorShapeException();
+
+	for (int i = 2; i < Shape.size(); ++i)
+		if (Shape[i] != other.Shape[i])
+			throw TensorShapeException();
+
+	std::vector<unsigned int> newSize = {thisRows, static_cast<unsigned int>(otherCols)};
+	for (int i = 2; i < Shape.size(); ++i)
+		newSize.push_back(Shape[i]);
+
+	Tensor result(newSize);
+
+	__m128 fastCol, fastRow, fastRes;
+
+	for (int m = 0; m < GetMatrixCount(); ++m)
+	{
+		unsigned int matrixStart = m * thisRows * otherCols;
+
+		for (unsigned int col_count = 0; col_count < otherCols; col_count++)
+		{
+			for (unsigned int row_count = 0; row_count < otherRows; row_count += 4)
+			{
+				float col[4] = {
+						row_count < otherRows ? other.Values[m * otherMatSize + col_count + row_count * otherCols] : 0, //other.GetValue(row_count, col_count) : 0,
+						row_count + 1 < otherRows ? other.Values[m * otherMatSize + col_count + (row_count + 1) * otherCols] : 0,
+						row_count + 2 < otherRows ? other.Values[m * otherMatSize + col_count + (row_count + 2) * otherCols] : 0,
+						row_count + 3 < otherRows ? other.Values[m * otherMatSize + col_count + (row_count + 3) * otherCols] : 0,
+				};
+
+				fastCol = _mm_load_ps(col);
+
+				for (unsigned int i = 0; i < thisRows; ++i)
+				{
+					float row[4] = {
+							row_count < thisCols ? Values[m * thisMatSize + i * thisCols + row_count] : 0,
+							row_count + 1 < thisCols ? Values[m * thisMatSize + i * thisCols + row_count + 1] : 0,
+							row_count + 2 < thisCols ? Values[m * thisMatSize + i * thisCols + row_count + 2] : 0,
+							row_count + 3 < thisCols ? Values[m * thisMatSize + i * thisCols + row_count + 3] : 0,
+					};
+
+					fastRow = _mm_load_ps(row);
+					fastRes = _mm_mul_ps(fastRow, fastCol);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					float fRes = _mm_cvtss_f32(fastRes);
+
+					result.Values[matrixStart + i * otherCols + col_count] += fRes;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+Tensor &Tensor::operator+=(const Tensor &other)
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor result(Shape);
+
+	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
+	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
+	unsigned int matrixCount = rows * cols;
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (unsigned int m = 0; m < GetMatrixCount(); ++m)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[m * matrixCount + 	val		],
+					Values[m * matrixCount + 	val + 1	],
+					Values[m * matrixCount + 	val + 2	],
+					Values[m * matrixCount + 	val + 3	]
+			};
+
+			float otherVals[4] = {
+					other.Values[m * matrixCount + 	val		],
+					other.Values[m * matrixCount + 	val + 1	],
+					other.Values[m * matrixCount + 	val + 2	],
+					other.Values[m * matrixCount + 	val + 3	],
+			};
+
+			float res[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(otherVals);
+			__m128 resultVec = _mm_add_ps(tensorVec, matrixVec);
+			_mm_store_ps(res, resultVec);
+
+			std::copy(res, res + 4, result.Values + val + m * matrixCount);
+		}
+		for (unsigned int val = n4; val < matrixCount; ++val)
+		{
+			unsigned int pos = val + m * matrixCount;
+			float res = other.GetValue(pos) + GetValue(pos);
+			result.SetValue(pos, res);
+		}
+	}
+
+	ReloadFromOther(result);
+	return *this;
+}
+
+Tensor &Tensor::operator-=(const Tensor &other)
+{
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+
+	Tensor result(Shape);
+
+	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
+	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
+	unsigned int matrixCount = rows * cols;
+
+	unsigned int n4 = matrixCount - (matrixCount % 4);
+
+	for (unsigned int m = 0; m < GetMatrixCount(); ++m)
+	{
+		for (int val = 0; val < n4; val += 4)
+		{
+			float tensorVals[4] = {
+					Values[m * matrixCount + 	val		],
+					Values[m * matrixCount + 	val + 1	],
+					Values[m * matrixCount + 	val + 2	],
+					Values[m * matrixCount + 	val + 3	]
+			};
+
+			float otherVals[4] = {
+					other.Values[m * matrixCount + 	val		],
+					other.Values[m * matrixCount + 	val + 1	],
+					other.Values[m * matrixCount + 	val + 2	],
+					other.Values[m * matrixCount + 	val + 3	],
+			};
+
+			float res[4];
+
+			__m128 tensorVec = _mm_load_ps(tensorVals);
+			__m128 matrixVec = _mm_load_ps(otherVals);
+			__m128 resultVec = _mm_sub_ps(tensorVec, matrixVec);
+			_mm_store_ps(res, resultVec);
+
+			std::copy(res, res + 4, result.Values + val + m * matrixCount);
+		}
+		for (unsigned int val = n4; val < matrixCount; ++val)
+		{
+			unsigned int pos = val + m * matrixCount;
+			float res = GetValue(pos) - other.GetValue(pos);
+			result.SetValue(pos, res);
+		}
+	}
+
+	ReloadFromOther(result);
+	return *this;
+}
+
+Tensor &Tensor::operator*=(const Tensor &other)
+{
+	unsigned int thisRows = !Shape.empty() ? Shape[0] : 1;
+	unsigned int thisCols = Shape.size() > 1 ? Shape[1] : 1;
+
+	unsigned int otherRows = !other.Shape.empty() ? other.Shape[0] : 1;
+	unsigned int otherCols = other.Shape.size() > 1 ? other.Shape[1] : 1;
+
+	unsigned int thisMatSize = thisRows * thisCols;
+	unsigned int otherMatSize = otherRows * otherCols;
+
+	if (thisCols != otherRows || Shape.size() != other.Shape.size())
+		throw TensorShapeException();
+
+	for (int i = 2; i < Shape.size(); ++i)
+		if (Shape[i] != other.Shape[i])
+			throw TensorShapeException();
+
+	std::vector<unsigned int> newSize = {thisRows, static_cast<unsigned int>(otherCols)};
+	for (int i = 2; i < Shape.size(); ++i)
+		newSize.push_back(Shape[i]);
+
+	Tensor result(newSize);
+
+	__m128 fastCol, fastRow, fastRes;
+
+	for (int m = 0; m < GetMatrixCount(); ++m)
+	{
+		unsigned int matrixStart = m * thisRows * otherCols;
+
+		for (unsigned int col_count = 0; col_count < otherCols; col_count++)
+		{
+			for (unsigned int row_count = 0; row_count < otherRows; row_count += 4)
+			{
+				float col[4] = {
+						row_count < otherRows ? other.Values[m * otherMatSize + col_count + row_count * otherCols] : 0, //other.GetValue(row_count, col_count) : 0,
+						row_count + 1 < otherRows ? other.Values[m * otherMatSize + col_count + (row_count + 1) * otherCols] : 0,
+						row_count + 2 < otherRows ? other.Values[m * otherMatSize + col_count + (row_count + 2) * otherCols] : 0,
+						row_count + 3 < otherRows ? other.Values[m * otherMatSize + col_count + (row_count + 3) * otherCols] : 0,
+				};
+
+				fastCol = _mm_load_ps(col);
+
+				for (unsigned int i = 0; i < thisRows; ++i)
+				{
+					float row[4] = {
+							row_count < thisCols ? Values[m * thisMatSize + i * thisCols + row_count] : 0,
+							row_count + 1 < thisCols ? Values[m * thisMatSize + i * thisCols + row_count + 1] : 0,
+							row_count + 2 < thisCols ? Values[m * thisMatSize + i * thisCols + row_count + 2] : 0,
+							row_count + 3 < thisCols ? Values[m * thisMatSize + i * thisCols + row_count + 3] : 0,
+					};
+
+					fastRow = _mm_load_ps(row);
+					fastRes = _mm_mul_ps(fastRow, fastCol);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					fastRes = _mm_hadd_ps(fastRes, fastRes);
+					float fRes = _mm_cvtss_f32(fastRes);
+
+					result.Values[matrixStart + i * otherCols + col_count] += fRes;
+				}
+			}
+		}
+	}
+
+	ReloadFromOther(result);
+	return *this;
+}
+
+Tensor &Tensor::operator=(const Tensor &other)
+{
+	ReloadFromOther(other);
+	return *this;
+}
+
+Tensor &Tensor::operator=(Tensor &&other) noexcept
+{
+	Shape = std::move(other.Shape);
+	std::swap(Values, other.Values);
+	ElementCount = other.ElementCount;
+	return *this;
+}
+
+bool Tensor::operator==(const Tensor &other) const
+{
+	if (!IsSameShape(other))
+		return false;
+	for (unsigned int i = 0; i < ElementCount; i++)
+		if (Values[i] != other.Values[i])
+			return false;
+	return true;
+}
+
+bool Tensor::operator!=(const Tensor &other) const
+{
+	if (!IsSameShape(other))
+		return true;
+	for (unsigned int i = 0; i < ElementCount; i++)
+		if (Values[i] != other.Values[i])
+			return true;
+	return false;
+}
+
+void Tensor::ReloadFromOther(const Tensor &other)
+{
+	delete [] Values;
+	Shape = other.Shape;
+	if (Shape.empty())
+	{
+		ElementCount = 0;
+		Values = nullptr;
+	}
+	else
+	{
+		ElementCount = 1;
+		for (int i = 0; i < Shape.size(); ++i)
+		{
+			ElementCount *= Shape[i];
+		}
+
+		Values = new float[ElementCount];
+		std::copy(other.Values, other.Values + other.GetElementCount(), Values);
+	}
+
+}
+
+void Tensor::ReloadFromOther(const Matrix &other)
+{
+	delete [] Values;
+	Shape = {static_cast<unsigned int>(other.Rows), static_cast<unsigned int>(other.Columns)};
+
+	ElementCount = Shape[0] * Shape[1];
+	Values = new float[ElementCount];
+	std::copy(other.Values, other.Values + other.GetElementCount(), Values);
 }

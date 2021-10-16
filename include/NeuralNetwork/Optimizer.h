@@ -29,7 +29,7 @@ public:
 	 * @param input The input of the model
 	 * @param expected The expected output of the model
 	*/
-	[[Obsolete("Function is obsolete, use TrainStep or TrainFor instead")]]
+	[[deprecated("Function is obsolete, use TrainStep or TrainFor instead")]]
 	virtual void Train(const Matrix& input, const Matrix& expected) = 0;
 
 	/**

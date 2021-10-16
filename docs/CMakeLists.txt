@@ -22,6 +22,6 @@ if (DOXYGEN_FOUND)
         )
 
 else (DOXYGEN_FOUND)
-    message("Doxygen need to be installed to generate the doxygen documentation")
+    message("Doxygen need to be installed to generate the doxygen documentation. Skipping docs generation.")
 endif (DOXYGEN_FOUND)
 
