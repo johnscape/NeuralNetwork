@@ -76,9 +76,19 @@ public:
 	 * @return The value at the described position. If the value does not exists (the position is out of bounds), throws an error.
 	 */
 	float GetValue(unsigned int* position) const;
+
+	/**
+	 * @brief Sets a value at a specific position in the tensor
+	 * @param pos The position of the value
+	 * @param value The new value
+	 */
 	void SetValue(unsigned int pos, float value);
 	void AdjustValue(unsigned int pos, float value);
 
+	/**
+	 * @brief Copies the given tensor into the current one
+	 * @param other The other tensor to copy
+	 */
 	void ReloadFromOther(const Tensor& other);
 	void ReloadFromOther(const Matrix& other);
 

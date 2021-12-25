@@ -236,7 +236,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 			THEN("every value is 6")
 			{
 				for (int i = 0; i < res.GetElementCount(); ++i)
-					REQUIRE(res.GetValue(i) == 6);
+					REQUIRE(res.GetValue((int)3) == 6);
 			}
 		}
 		WHEN("subtracting the matrix from the tensor")
@@ -312,6 +312,88 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 			{
 				for (int i = 0; i < t.GetElementCount(); ++i)
 					REQUIRE(t.GetValue(i) == 18);
+			}
+		}
+	}
+
+	GIVEN("a 5x6x2 predefined tensor and a 5x6 matrix")
+	{
+		float tensorVals[60] = {
+				5, 4, 10, 7, 2, 5,
+				8, 6, 2, 7, 5, 4,
+				0, 1, 7, 6, 2, 4,
+				9, 11, 6, 4, 0, 8,
+				9, 1, 5, 2, 3, 1,
+
+				7, 2, 4, 6, 0, 9,
+				10, 0, 4, 5, 7, 1,
+				8, 1, 5, 4, 1, 0,
+				0, 8, 9, 6, 4, 2,
+				9, 5, 7, 1, 1, 3
+		};
+		float matrixVals[30] = {
+			2, 7, 4, 4, 3, 7,
+			8, 2, 10, 0, 4, 1,
+			1, 6, 2, 8, 9, 0,
+			3, 1, 0, 8, 2, 2,
+			0, 5, 4, 9, 6, 6
+		};
+
+		Tensor t({5, 6, 2}, tensorVals);
+		Matrix mat(5, 6, matrixVals);
+
+		WHEN("adding them together")
+		{
+			Tensor t1 = t + mat;
+			t += mat;
+
+			float addingResult[60] = {
+					7, 11, 14, 11, 5, 12,
+					16, 8, 12, 7, 9, 5,
+					1, 7, 9, 14, 11, 4,
+					12, 12, 6, 12, 2, 10,
+					9, 6, 9, 11, 9, 7,
+
+					9, 9, 8, 10, 3, 16,
+					18, 2, 14, 5, 11, 2,
+					9, 7, 7, 12, 10, 0,
+					3, 9, 9, 14, 6, 4,
+					9, 10, 11, 10, 7, 9
+			};
+
+			Tensor res({5, 6, 2}, addingResult);
+			THEN("the result is is the same")
+			{
+				REQUIRE(t1 == t);
+				REQUIRE(t1 == res);
+				REQUIRE(t == res);
+			}
+		}
+		WHEN("subtracting each other")
+		{
+			Tensor t1 = t - mat;
+			t -= mat;
+
+			float subResult[60] = {
+					3, -3, 6, 3, -1, -2,
+					0, 4, -8, 7, 1, 3,
+					-1, -5, 5, -2, -7, 4,
+					6, 10, 6, -4, -2, 6,
+					9, -4, 1, -7, -3, -5,
+
+					5, -5, 0, 2, -3, 2,
+					2, -2, -6, 5, 3, 0,
+					7, -5, 3, -4, -8, 0,
+					-3, 7, 9, -2, 2, 0,
+					9, 0, 3, -8, -5, -3
+			};
+
+			Tensor res({5, 6, 2}, subResult);
+			THEN("the results are the same")
+			{
+				REQUIRE(t1 == t);
+				REQUIRE(t1 == res);
+				REQUIRE(t == res);
 			}
 		}
 	}

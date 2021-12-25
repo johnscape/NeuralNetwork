@@ -296,10 +296,10 @@ Tensor Tensor::operator+(const Matrix &other) const
 			};
 
 			float matrixVals[4] = {
-					other.Values[val * 4],
-					other.Values[val * 4 + 1],
-					other.Values[val * 4 + 2],
-					other.Values[val * 4 + 3],
+					other.Values[val],
+					other.Values[val + 1],
+					other.Values[val + 2],
+					other.Values[val + 3],
 			};
 
 			float result[4];
@@ -309,11 +309,11 @@ Tensor Tensor::operator+(const Matrix &other) const
 			__m128 resultVec = _mm_add_ps(tensorVec, matrixVec);
 			_mm_store_ps(result, resultVec);
 
-			std::copy(result, result + 3, t.Values + val);
+			std::copy(result, result + 4, t.Values + val + mat * matrixCount);
 		}
 		for (int val = n4; val < matrixCount; ++val)
 		{
-			t.SetValue(val + mat * matrixCount, other.GetValue(val) + GetValue(val + mat * matrixCount));
+			t.Values[val + mat * matrixCount] = other.GetValue(val) + GetValue(val + mat * matrixCount);
 		}
 	}
 
@@ -343,10 +343,10 @@ Tensor Tensor::operator-(const Matrix &other) const
 			};
 
 			float matrixVals[4] = {
-					other.Values[val * 4],
-					other.Values[val * 4 + 1],
-					other.Values[val * 4 + 2],
-					other.Values[val * 4 + 3],
+					other.Values[val],
+					other.Values[val + 1],
+					other.Values[val + 2],
+					other.Values[val + 3],
 					};
 
 			float result[4];
@@ -356,11 +356,11 @@ Tensor Tensor::operator-(const Matrix &other) const
 			__m128 resultVec = _mm_sub_ps(tensorVec, matrixVec);
 			_mm_store_ps(result, resultVec);
 
-			std::copy(result, result + 3, t.Values + val);
+			std::copy(result, result + 4, t.Values + val + mat * matrixCount);
 		}
 		for (int val = n4; val < matrixCount; ++val)
 		{
-			t.SetValue(val + mat * matrixCount, other.GetValue(val) + GetValue(val + mat * matrixCount));
+			t.SetValue(val + mat * matrixCount, GetValue(val + mat * matrixCount) - other.GetValue(val));
 		}
 	}
 
@@ -448,10 +448,10 @@ Tensor &Tensor::operator+=(const Matrix &other)
 			};
 
 			float matrixVals[4] = {
-					other.Values[val * 4],
-					other.Values[val * 4 + 1],
-					other.Values[val * 4 + 2],
-					other.Values[val * 4 + 3],
+					other.Values[val],
+					other.Values[val + 1],
+					other.Values[val + 2],
+					other.Values[val + 3],
 			};
 
 			float result[4];
@@ -497,10 +497,10 @@ Tensor &Tensor::operator-=(const Matrix &other)
 			};
 
 			float matrixVals[4] = {
-					other.Values[val * 4],
-					other.Values[val * 4 + 1],
-					other.Values[val * 4 + 2],
-					other.Values[val * 4 + 3],
+					other.Values[val],
+					other.Values[val + 1],
+					other.Values[val + 2],
+					other.Values[val + 3],
 			};
 
 			float result[4];
