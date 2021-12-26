@@ -2,9 +2,9 @@
 #include "NeuralNetwork/LayerException.hpp"
 
 #include "NeuralNetwork/InputLayer.h"
-#include "NeuralNetwork/FeedForwardLayer.h"
-#include "NeuralNetwork/RecurrentLayer.h"
-#include "NeuralNetwork/LSTM.h"
+//#include "NeuralNetwork/FeedForwardLayer.h"
+//#include "NeuralNetwork/RecurrentLayer.h"
+//#include "NeuralNetwork/LSTM.h"
 
 unsigned int Layer::LayerCount = 0;
 
@@ -15,7 +15,7 @@ Layer::Layer(Layer* inputLayer) : TrainingMode(false), LayerError(), Output()
 	LayerCount++;
 }
 
-Layer::Layer() : TrainingMode(false), LayerError(), Output()
+Layer::Layer() : TrainingMode(false), LayerError()
 {
 	LayerInput = nullptr;
 	Id = LayerCount;
@@ -26,12 +26,12 @@ Layer* Layer::Create(unsigned int type, unsigned int size, Layer* input)
 {
 	if (type == 0)
 		return new InputLayer(size);
-	if (type == 1)
+	/*if (type == 1)
 		return new FeedForwardLayer(input, size);
 	if (type == 2)
 		return new RecurrentLayer(input, size);
 	if (type == 3)
-		return new LSTM(input, size);
+		return new LSTM(input, size);*/
 	return nullptr;
 }
 
@@ -44,16 +44,14 @@ void Layer::SetInput(Layer* input)
 	LayerInput = input;
 }
 
-Matrix& Layer::GetOutput()
+Tensor& Layer::GetOutput()
 {
 	return Output;
 }
 
 unsigned int Layer::OutputSize()
 {
-	if (!Output.IsVector())
-		return -1;
-	return Output.GetVectorSize();
+	return Output.GetShape()[1]; //TODO: Remove function
 }
 
 Layer* Layer::GetInputLayer()

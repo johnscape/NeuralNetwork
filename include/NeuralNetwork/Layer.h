@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Matrix.h"
+#include "Tensor.h"
 #include <memory>
 
 class Optimizer;
@@ -45,9 +45,9 @@ public:
 
 	/**
 	 * @brief Sets a matrix as a constant input for the layer.
-	 * @param input The input matrix.
+	 * @param input The input matrix.one final effort
 	*/
-	virtual void SetInput(const Matrix& input) {}
+	virtual void SetInput(const Tensor& input) {}
 
 	/**
 	 * @brief Calculates the output of the layer.
@@ -58,7 +58,7 @@ public:
 	 * @brief Returns the output matrix
 	 * @return Pointer to the output matrix
 	*/
-	virtual Matrix& GetOutput();
+	virtual Tensor& GetOutput();
 
 	/**
 	 * @brief If the output matrix is a vector, the function returns its length
@@ -70,7 +70,7 @@ public:
 	 * @brief Runs the Compute method then returns with the output matrix
 	 * @return The pointer of the updated output matrix
 	*/
-	virtual Matrix& ComputeAndGetOutput() = 0;
+	virtual Tensor& ComputeAndGetOutput() = 0;
 
 	/**
 	 * @brief Returns the layer where the input values are coming from.
@@ -148,7 +148,7 @@ public:
 
 protected:
 	Layer* LayerInput;
-	Matrix Output;
+	Tensor Output;
 	Matrix LayerError; 
 
 	unsigned int Id;

@@ -1,7 +1,7 @@
 #pragma once
 #include "Layer.h"
 /**
- * @brief This layer is responsible for copying matrices into the model. Use this as the first layer of your network.
+ * @brief This layer is responsible for copying matrices and tensors into the model. Use this as the first layer of your network.
 */
 class InputLayer :
 	public Layer
@@ -11,7 +11,7 @@ public:
 	 * @brief Creates a new input layer with a specified size.
 	 * @param size The size of your input.
 	*/
-	InputLayer(unsigned int size);
+	explicit InputLayer(unsigned int size);
 	virtual ~InputLayer() {}
 
 	/**
@@ -29,13 +29,19 @@ public:
 	 * @brief Runs the calculation and return with the output matrix.
 	 * @return A pointer of the output matrix.
 	*/
-	virtual Matrix& ComputeAndGetOutput();
+	virtual Tensor& ComputeAndGetOutput();
+
+	/**
+	 * @brief Sets a tensor as a constant input for the layer.
+	 * @param input The input tensor.
+	*/
+	virtual void SetInput(const Tensor& input);
 
 	/**
 	 * @brief Sets a matrix as a constant input for the layer.
 	 * @param input The input matrix.
-	*/
-	virtual void SetInput(const Matrix& input);
+	 */
+	void SetInput(const Matrix& input);
 
 	/**
 	 * @brief Calculates the error inside of the layer based on the last output, the input and the error.

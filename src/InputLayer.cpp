@@ -1,11 +1,12 @@
 #include "NeuralNetwork/InputLayer.h"
 #include "NeuralNetwork/LayerException.hpp"
 #include "NeuralNetwork/Constants.h"
+#include "NeuralNetwork/TensorException.hpp"
 
 InputLayer::InputLayer(unsigned int size) : Layer(), Size(size)
 {
 	LayerInput = nullptr;
-	Output.Reset(1, size);
+	Output = Tensor({1, size}, nullptr);
 }
 
 Layer* InputLayer::Clone()
@@ -14,22 +15,25 @@ Layer* InputLayer::Clone()
 }
 
 void InputLayer::Compute()
-{
-	return;
-}
+{}
 
-Matrix& InputLayer::ComputeAndGetOutput()
+Tensor& InputLayer::ComputeAndGetOutput()
 {
 	return Output;
 }
 
-void InputLayer::SetInput(const Matrix& input)
+void InputLayer::SetInput(const Tensor& input)
 {
 #if DEBUG
-	if (!input.IsSameSize(Output))
-		return; //TODO: Throw error
+	if (!input.IsSameShape(Output))
+		throw TensorShapeException();
 #endif // DEBUG
 	Output.Copy(input);
+}
+
+void InputLayer::SetInput(const Matrix &input)
+{
+	SetInput(Tensor(input));
 }
 
 void InputLayer::GetBackwardPass(const Matrix& error, bool recursive)
