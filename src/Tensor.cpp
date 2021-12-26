@@ -51,6 +51,13 @@ Tensor::Tensor(const Matrix& mat)
 	std::copy(mat.Values, mat.Values + ElementCount, Values);
 }
 
+Tensor::Tensor (Matrix&& mat) : Values(nullptr)
+{
+	Shape = {(unsigned int)mat.Rows, (unsigned int)mat.Columns};
+	Values = mat.Values;
+	mat.Values = nullptr;
+}
+
 Tensor::Tensor(const Tensor &other)
 {
 	ElementCount = other.ElementCount;
@@ -204,6 +211,19 @@ std::list<Matrix> Tensor::ToMatrixList() const
 		}
 	}
 	return items;
+}
+
+void Tensor::GetNthMatrix(unsigned int n, Matrix* mat)
+{
+	if (!mat)
+		mat = new Matrix(Shape[0], Shape[1]);
+	else if (mat->GetRowCount() != Shape[0] || mat->GetColumnCount() != Shape[1])
+		throw TensorShapeException();
+
+	if (n >= GetMatrixCount())
+		mat->FillWith(0);
+	else
+		std::copy(Values + n * (Shape[0] * Shape[1]), Values + (n + 1) * (Shape[0] * Shape[1]), mat->Values);
 }
 
 unsigned int Tensor::GetElementCount() const
@@ -579,6 +599,36 @@ Tensor &Tensor::operator*=(const Matrix &other)
 
 	ReloadFromOther(result);
 	return *this;
+}
+
+bool Tensor::operator==(const Matrix& other) const
+{
+	if (Shape.size() > 2)
+		return false;
+	if (Shape[0] != other.GetRowCount() || Shape[1] != other.GetColumnCount())
+		return false;
+	for (int i = 0; i < other.GetElementCount(); ++i)
+	{
+		if (Values[i] != other.Values[i])
+			return false;
+	}
+
+	return true;
+}
+
+bool Tensor::operator!=(const Matrix& other) const
+{
+	if (Shape.size() > 2)
+		return true;
+	if (Shape[0] != other.GetRowCount() || Shape[1] != other.GetColumnCount())
+		return true;
+	for (int i = 0; i < other.GetElementCount(); ++i)
+	{
+		if (Values[i] != other.Values[i])
+			return true;
+	}
+
+	return false;
 }
 
 Tensor Tensor::operator+(const Tensor &other) const
@@ -977,6 +1027,15 @@ void Tensor::ReloadFromOther(const Tensor &other)
 		std::copy(other.Values, other.Values + other.GetElementCount(), Values);
 	}
 
+}
+
+void Tensor::Copy(const Tensor& other)
+{
+#if DEBUG
+	if (!IsSameShape(other))
+		throw TensorShapeException();
+#endif
+	std::copy(other.Values, other.Values + GetElementCount(), Values);
 }
 
 void Tensor::ReloadFromOther(const Matrix &other)

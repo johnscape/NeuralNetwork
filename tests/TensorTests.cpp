@@ -77,6 +77,22 @@ SCENARIO("Creating tensors", "[tensor]")
                     REQUIRE(t.GetValue(i) == 5);
 	        }
 	    }
+		WHEN("callig the matrix move constructor")
+		{
+			Tensor t(std::move(mat));
+			THEN("the tensor's shape is 3x3")
+			{
+				REQUIRE(t.GetShape().size() == 2);
+				REQUIRE(t.GetShape()[0] == 3);
+				REQUIRE(t.GetShape()[1] == 3);
+			}
+			THEN("every value in the tensor is 5")
+			{
+				for (int i = 0; i < 9; ++i)
+					REQUIRE(t.GetValue(i) == 5);
+			}
+
+		}
 	}
 	GIVEN("a 5x3x4 tensor")
 	{

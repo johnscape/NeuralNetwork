@@ -31,6 +31,13 @@ public:
 	 * @param mat The matrix to create from.
 	 */
 	explicit Tensor(const Matrix& mat);
+
+	/**
+	 * @brief Creates a 2D tensor by moving a matrix
+	 * @param mat The matrix to move values from
+	 */
+	explicit Tensor(Matrix&& mat);
+
 	/**
 	 * @brief Creates the tensor by copying another
 	 * @param other The tensor to copy
@@ -93,6 +100,12 @@ public:
 	void ReloadFromOther(const Matrix& other);
 
 	/**
+	 * @brief Copies the values from a same sized tensor
+	 * @param other The tensor to copy from
+	 */
+	void Copy(const Tensor& other);
+
+	/**
 	 * @brief Gets the tensor's shape
 	 * @return A vector containing the shape of the tensor
 	 */
@@ -113,6 +126,13 @@ public:
 	 * @return A list, containing the matrices that represents the tensor
 	 */
 	std::list<Matrix> ToMatrixList() const;
+
+	/**
+	 * @brief Gets the Nth matrix from the tensor
+	 * @param n The number of the wanted matrix.
+	 * @param mat The matrix to copy values into.
+	 */
+	void GetNthMatrix(unsigned int n, Matrix* mat = nullptr);
 
 	/**
 	 * @brief Gets the number of elements in the tensor
@@ -140,6 +160,9 @@ public:
 	Tensor& operator+=(const Matrix& other);
 	Tensor& operator-=(const Matrix& other);
 	Tensor& operator*=(const Matrix& other);
+
+	bool operator==(const Matrix& other) const;
+	bool operator!=(const Matrix& other) const;
 
 	//tensor operators
 	Tensor operator+(const Tensor& other) const;
