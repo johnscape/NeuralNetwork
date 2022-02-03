@@ -6,16 +6,15 @@
 #endif
 
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) :
-	Layer(inputLayer), Size(count), Weights(), Bias(1, count), InnerState(1, count),
+	Layer(inputLayer), Size(count), Weights(), Bias(1, count), InnerState({1, count}, nullptr),
 	WeightError(), BiasError(1, count)
 {
 	unsigned int inputSize = 1;
 	if (LayerInput)
-		inputSize = LayerInput->GetOutput().GetVectorSize();
-	Output.Reset(1, count);
+		inputSize = LayerInput->GetOutput().GetShapeAt(1);
+	Output = Tensor({1, count}, nullptr);
 	Weights.Reset(inputSize, count);
 	WeightError.Reset(inputSize, count);
-	LayerError.Reset(1, inputSize);
 	function = &TanhFunction::GetInstance();
 
 	Bias.FillWith(1);
@@ -43,22 +42,23 @@ void FeedForwardLayer::SetInput(Layer* input)
 	if (input == LayerInput)
 		return;
 	LayerInput = input;
-	if (input->GetOutput().GetVectorSize() == LayerInput->GetOutput().GetVectorSize())
+	if (input->GetOutput().GetShapeAt(1) == LayerInput->GetOutput().GetShape()[1])
 		return;
 	Weights.Reset(LayerInput->OutputSize(), Size);
 }
 
 void FeedForwardLayer::Compute()
 {
-	InnerState.FillWith(0);
-	LayerInput->Compute();
-	Matrix prev_out = LayerInput->GetOutput();
+	Tensor prev_out = LayerInput->ComputeAndGetOutput();
+
 	InnerState = prev_out * Weights;
 	InnerState += Bias;
+	if(!Output.IsSameShape(InnerState))
+		Output = Tensor(InnerState.GetShape());
 	function->CalculateInto(InnerState, Output);
 }
 
-Matrix& FeedForwardLayer::ComputeAndGetOutput()
+Tensor& FeedForwardLayer::ComputeAndGetOutput()
 {
 	Compute();
 	return Output;
@@ -69,27 +69,39 @@ void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 	function = func;
 }
 
-void FeedForwardLayer::GetBackwardPass(const Matrix& error, bool recursive)
+void FeedForwardLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
-	Matrix derivate = function->CalculateDerivateMatrix(Output);
-	LayerError.FillWith(0);
+	Tensor derivate = function->CalculateDerivateTensor(Output);
+	std::vector<unsigned int> newShape = error.GetShape();
+	newShape[1] = LayerInput->OutputSize();
+	LayerError = Tensor(newShape);
+	unsigned int matrixSize = error.GetShapeAt(0) * error.GetShapeAt(1);
+
 #if USE_GPU
 	//GPUMath::FillWith(LayerError, 0); //do i even need this?
 	derivate.CopyFromGPU();
 #endif
 
-	for (unsigned int neuron = 0; neuron < Size; neuron++)
+	for (unsigned int matrix = 0; matrix < error.GetMatrixCount(); matrix++)
 	{
-		float delta = error.GetValue(neuron);
-		delta *= derivate.GetValue(neuron);
-		for (unsigned int incoming = 0; incoming < LayerInput->GetOutput().GetVectorSize(); incoming++)
+		for (unsigned int row = 0; row < error.GetShapeAt(0); row++)
 		{
-			float wt = LayerInput->GetOutput().GetValue(incoming) * delta;
-			WeightError.SetValue(incoming, neuron, wt);
-			LayerError.AdjustValue(incoming, delta * Weights.GetValue(incoming, neuron));
-		}
+			for (unsigned int neuron = 0; neuron < Size; neuron++)
+			{
+				float delta = error.GetValue(matrix * matrixSize + row * error.GetShapeAt(1) + neuron);
+				delta *= derivate.GetValue(matrix * matrixSize + row * error.GetShapeAt(1) + neuron);
+				for (unsigned int incoming = 0; incoming < LayerInput->OutputSize(); incoming++)
+				{
+					float wt = LayerInput->GetOutput().GetValue(
+							matrix * matrixSize + row * error.GetShapeAt(1) + incoming) * delta;
+					float lt = Weights.GetValue(incoming, neuron) * delta;
+					WeightError.AdjustValue(incoming, neuron, wt);
+					LayerError.AdjustValue(matrix * matrixSize + row * error.GetShapeAt(1) + incoming, lt);
+				}
 
-		BiasError.SetValue(neuron, delta);
+				BiasError.AdjustValue(neuron, delta);
+			}
+		}
 	}
 
 #if USE_GPU

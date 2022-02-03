@@ -4,6 +4,27 @@
 #include "NeuralNetwork/TensorException.hpp"
 #include "nmmintrin.h"
 
+std::ostream& operator<<(std::ostream& os, const Tensor& tensor)
+{
+	unsigned int rowCount = tensor.GetShape()[0];
+	unsigned int colCount = tensor.GetShape()[1];
+
+	for (unsigned int i = 0; i < tensor.GetMatrixCount(); ++i)
+	{
+		for (unsigned int j = 0; j < rowCount; ++j)
+		{
+			for (unsigned int k = 0; k < colCount; ++k)
+			{
+				os << tensor.GetValue(k + colCount * j + colCount * rowCount * i) << '\t';
+			}
+			os << std::endl;
+		}
+		os << std::endl;
+	}
+
+	return os;
+}
+
 Tensor::Tensor() : Values(nullptr), ElementCount(0)
 {
 }
@@ -172,6 +193,13 @@ std::string Tensor::GetShapeAsString() const
 	return txt;
 }
 
+unsigned int Tensor::GetShapeAt(unsigned int i) const
+{
+	if (i >= Shape.size())
+		return 1;
+	return Shape[i];
+}
+
 Matrix Tensor::FirstMatrix() const
 {
 	if (Shape.size() >= 2)
@@ -229,6 +257,14 @@ void Tensor::GetNthMatrix(unsigned int n, Matrix* mat)
 unsigned int Tensor::GetElementCount() const
 {
 	return ElementCount;
+}
+
+float Tensor::Sum() const
+{
+	float sum = 0;
+	for (int i = 0; i < GetElementCount(); ++i)
+		sum += Values[i];
+	return sum;
 }
 
 
@@ -448,7 +484,11 @@ Tensor Tensor::operator*(const Matrix &other) const
 Tensor &Tensor::operator+=(const Matrix &other)
 {
 	if (!IsSameShape(other))
+	{
+		if (Shape[1] == other.GetColumnCount())
+			return RowBasedAddition(other, true);
 		throw TensorShapeException();
+	}
 
 	Tensor t(*this);
 
@@ -1046,4 +1086,20 @@ void Tensor::ReloadFromOther(const Matrix &other)
 	ElementCount = Shape[0] * Shape[1];
 	Values = new float[ElementCount];
 	std::copy(other.Values, other.Values + other.GetElementCount(), Values);
+}
+
+Tensor& Tensor::RowBasedAddition(const Matrix &mat, bool local)
+{
+	Matrix newMat(Shape[0], Shape[1]);
+	for (unsigned int i = 0; i < Shape[0]; ++i)
+		std::copy(mat.Values, mat.Values + Shape[1], newMat.Values + i * Shape[1]);
+
+	Tensor result = (*this) + newMat;
+	if (local)
+	{
+		ReloadFromOther(result);
+		return *this;
+	}
+	else
+		return result;
 }

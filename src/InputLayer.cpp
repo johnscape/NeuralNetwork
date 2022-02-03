@@ -25,10 +25,10 @@ Tensor& InputLayer::ComputeAndGetOutput()
 void InputLayer::SetInput(const Tensor& input)
 {
 #if DEBUG
-	if (!input.IsSameShape(Output))
+	if (input.GetShapeAt(1) != input.GetShapeAt(1))
 		throw TensorShapeException();
 #endif // DEBUG
-	Output.Copy(input);
+	Output.ReloadFromOther(input);
 }
 
 void InputLayer::SetInput(const Matrix &input)
@@ -36,7 +36,7 @@ void InputLayer::SetInput(const Matrix &input)
 	SetInput(Tensor(input));
 }
 
-void InputLayer::GetBackwardPass(const Matrix& error, bool recursive)
+void InputLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
 }
 

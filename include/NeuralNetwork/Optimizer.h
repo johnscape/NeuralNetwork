@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Matrix.h"
+#include "Tensor.h"
 #include "Layer.h"
 #include <memory>
 
 #include <vector>
 
-typedef float (*LossFuction)(const Matrix&, const Matrix&);
-typedef float (*LossDerivate)(const Matrix&, const Matrix&, unsigned int);
+typedef float (*LossFuction)(const Tensor&, const Tensor&);
+typedef float (*LossDerivate)(const Tensor&, const Tensor&, unsigned int);
 
 //TODO: Use model class
 
@@ -30,14 +30,14 @@ public:
 	 * @param expected The expected output of the model
 	*/
 	[[deprecated("Function is obsolete, use TrainStep or TrainFor instead")]]
-	virtual void Train(const Matrix& input, const Matrix& expected) = 0;
+	virtual void Train(const Tensor& input, const Tensor& expected) = 0;
 
 	/**
 	 * @brief Trains the model based on the input and the expected output
 	 * @param input The input of the model
 	 * @param expected The expected output of the model
 	*/
-	virtual void TrainStep(const Matrix& input, const Matrix& expected) = 0;
+	virtual void TrainStep(const Tensor& input, const Tensor& expected) = 0;
 
 	/**
 	 * @brief Based on the type of the optimizer, this function will modify the weights of the layers.
@@ -58,7 +58,7 @@ public:
 	 * @param times How many times the training step will be ran
 	 * @param batch The batch number, used for batch normalization
 	*/
-	virtual void TrainFor(const Matrix& input, const Matrix& expected, unsigned int times, unsigned int batch = 32);
+	virtual void TrainFor(const Tensor& input, const Tensor& expected, unsigned int times, unsigned int batch = 32);
 
 	/**
 	 * @brief Runs the optimizer, until the error is below a specified value.
@@ -85,6 +85,8 @@ protected:
 
 	virtual void FindInputLayer();
 	virtual void TrainLayers();
+
+	Tensor GetBatch(const Tensor& original, unsigned int batchSize, unsigned int count);
 
 };
 

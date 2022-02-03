@@ -13,25 +13,24 @@ GradientDescent::~GradientDescent()
 {
 }
 
-Matrix GradientDescent::CalculateOutputError(const Matrix& output, const Matrix& expected)
+Tensor GradientDescent::CalculateOutputError(const Tensor& output, const Tensor& expected)
 {
-	Matrix outputError(1, output.GetColumnCount());
-	for (unsigned int i = 0; i < output.GetColumnCount(); i++)
-	{
+
+	Tensor outputError(output.GetShape(), nullptr);
+	for (unsigned int i = 0; i < outputError.GetElementCount(); i++)
 		outputError.SetValue(i, derivate(output, expected, i));
-	}
 	return outputError;
 }
 
-void GradientDescent::TrainStep(const Matrix& input, const Matrix& output)
+void GradientDescent::TrainStep(const Tensor& input, const Tensor& output)
 {
 	inputLayer->SetInput(input);
-	Matrix outputValue = outputLayer->ComputeAndGetOutput();
-	Matrix outputError = CalculateOutputError(outputValue, output);
+	Tensor outputValue = outputLayer->ComputeAndGetOutput();
+	Tensor outputError = CalculateOutputError(outputValue, output);
 	outputLayer->GetBackwardPass(outputError, true);
 }
 
-void GradientDescent::Train(const Matrix& input, const Matrix& expected)
+void GradientDescent::Train(const Tensor& input, const Tensor& expected)
 {
 	//find input layer
 	Layer* currentLayer = outputLayer;
@@ -42,9 +41,9 @@ void GradientDescent::Train(const Matrix& input, const Matrix& expected)
 	}
 	//calculate
 	currentLayer->SetInput(input);
-	Matrix outputValue = outputLayer->ComputeAndGetOutput(); 
+	Tensor outputValue = outputLayer->ComputeAndGetOutput();
 	//calculate errors
-	Matrix outputError = CalculateOutputError(outputValue, expected);
+	Tensor outputError = CalculateOutputError(outputValue, expected);
 	outputLayer->GetBackwardPass(outputError, true);
 
 	currentLayer = outputLayer;
@@ -69,7 +68,7 @@ void GradientDescent::ModifyWeights(Matrix& weights, const Matrix& errors)
 	{
 		for (unsigned int col = 0; col < weights.GetColumnCount(); col++)
 		{
-			float edit = -LearningRate * errors.GetValue(row, col) / currentBatch;
+			float edit = -LearningRate * errors.GetValue(row, col) / (float)currentBatch;
 			weights.AdjustValue(row, col, edit);
 		}
 	}
@@ -79,5 +78,5 @@ void GradientDescent::Reset()
 {
 	outputLayer = nullptr;
 	inputLayer = nullptr;
-	currentBatch = 0;
+	currentBatch = 1;
 }

@@ -44,6 +44,11 @@ void Layer::SetInput(Layer* input)
 	LayerInput = input;
 }
 
+void Layer::SetInput(const Matrix& input)
+{
+	SetInput((Tensor)input);
+}
+
 Tensor& Layer::GetOutput()
 {
 	return Output;
@@ -51,7 +56,7 @@ Tensor& Layer::GetOutput()
 
 unsigned int Layer::OutputSize()
 {
-	return Output.GetShape()[1]; //TODO: Remove function
+	return Output.GetShape()[1];
 }
 
 Layer* Layer::GetInputLayer()
@@ -59,7 +64,7 @@ Layer* Layer::GetInputLayer()
 	return LayerInput;
 }
 
-Matrix& Layer::GetLayerError()
+Tensor& Layer::GetLayerError()
 {
 	return LayerError;
 }

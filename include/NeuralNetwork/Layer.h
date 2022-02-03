@@ -45,9 +45,15 @@ public:
 
 	/**
 	 * @brief Sets a matrix as a constant input for the layer.
-	 * @param input The input matrix.one final effort
+	 * @param input The input matrix
 	*/
 	virtual void SetInput(const Tensor& input) {}
+
+	/**
+	 * @brief Sets a tensor as a constant input for the layer.
+	 * @param input The input tensor
+	 */
+	virtual void SetInput(const Matrix& input);
 
 	/**
 	 * @brief Calculates the output of the layer.
@@ -83,7 +89,7 @@ public:
 	 * @param error The error of the next layer, used to calculate this layer's error.
 	 * @param recursive If set to true, it will call its input layer with its own error.
 	*/
-	virtual void GetBackwardPass(const Matrix& error, bool recursive = false) = 0;
+	virtual void GetBackwardPass(const Tensor& error, bool recursive = false) = 0;
 
 	/**
 	 * @brief Modifies the weights inside of the layer based on an optimizer algorithm.
@@ -93,9 +99,9 @@ public:
 
 	/**
 	 * @brief Returns with the error of the layer.
-	 * @return A pointer to the matrix where the layer's error is stored.
+	 * @return The tensor where the layer's error is stored.
 	*/
-	virtual Matrix& GetLayerError();
+	virtual Tensor& GetLayerError();
 
 	/**
 	 * @brief Used to tell the layer to store values for later training. Set to true if you want to train your layer.
@@ -149,7 +155,7 @@ public:
 protected:
 	Layer* LayerInput;
 	Tensor Output;
-	Matrix LayerError; 
+	Tensor LayerError;
 
 	unsigned int Id;
 	bool TrainingMode;

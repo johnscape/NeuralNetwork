@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 
+class Tensor;
+
 /**
  * @brief A class for containing a matrix and the functions to work with it
 */
@@ -45,6 +47,8 @@ public:
 	Matrix& operator=(const Matrix& other);
 
 	Matrix& operator=(Matrix&& other) noexcept;
+
+	Matrix(const Tensor& from);
 
 	~Matrix();
 

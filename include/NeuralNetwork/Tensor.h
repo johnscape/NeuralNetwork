@@ -117,6 +117,13 @@ public:
 	std::string GetShapeAsString() const;
 
 	/**
+	 * @brief Returns the size of the tensor at a defined dimension
+	 * @param i The dimension to check
+	 * @return The size of a specific dimension
+	 */
+	unsigned int GetShapeAt(unsigned int i) const;
+
+	/**
 	 * @brief Gets the first nxk values of the tensor and converts it into a matrix
 	 * @return A matrix containing the first nxk values of the tensor
 	 */
@@ -139,6 +146,14 @@ public:
 	 * @return The number of elements
 	 */
 	unsigned int GetElementCount() const;
+
+	/**
+	 * @brief Gets the number of matrices in the tensor
+	 * @return The number of matrices
+	 */
+	unsigned int GetMatrixCount() const;
+
+	float Sum() const;
 
 	/**
 	 * @brief Sets every value of the tensor to a specified value
@@ -179,13 +194,15 @@ public:
 	bool operator==(const Tensor& other) const;
 	bool operator!=(const Tensor& other) const;
 
+	friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
+
 private:
 	std::vector<unsigned int> Shape;
 	float* Values;
 	size_t ElementCount;
 
-	unsigned int GetMatrixCount() const;
-
 	unsigned int CoordinateToPos(unsigned int* coord) const;
 	unsigned int CoordinateToPos(std::vector<unsigned int> coord) const;
+
+	Tensor& RowBasedAddition(const Matrix& mat, bool local);
 };

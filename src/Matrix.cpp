@@ -1,7 +1,7 @@
 #include "NeuralNetwork/Matrix.h"
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/MatrixException.hpp"
-#include <fstream>
+#include "NeuralNetwork/Tensor.h"
 #include <string>
 
 #include <numeric>
@@ -98,6 +98,17 @@ Matrix::Matrix(Matrix&& other) noexcept : GPUValues(other.GPUValues)
 	other.Columns = 0;
 	other.Values = nullptr;
 	other.GPUValues = nullptr;
+}
+
+Matrix::Matrix(const Tensor& from)
+{
+	if (from.GetShape().size() > 2)
+		throw MatrixSizeException();
+	Rows = from.GetShapeAt(0);
+	Columns = from.GetShapeAt(1);
+	Values = new float[Rows * Columns];
+	for (unsigned int i = 0; i < Rows * Columns; ++i)
+		Values[i] = from.GetValue(i);
 }
 
 Matrix::~Matrix()
