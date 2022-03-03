@@ -1,18 +1,17 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/*.h*")
+list(REMOVE_ITEM HEADER_LIST "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/LSTM.h")
+list(REMOVE_ITEM HEADER_LIST "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/Model.h")
 
 add_library(NeuralNetwork
 	Matrix.cpp
-	Model.cpp
 	Layer.cpp
 	InputLayer.cpp
-	FeedForwardLayer.cpp
-	RecurrentLayer.cpp
-	LSTM.cpp
-	Model.cpp
 	Optimizer.cpp
-	GradientDescent.cpp
 	GeneticAlgorithm.cpp
 	Tensor.cpp
+	FeedForwardLayer.cpp
+	GradientDescent.cpp
+	RecurrentLayer.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include)

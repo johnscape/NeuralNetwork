@@ -462,10 +462,7 @@ Matrix Matrix::GetRowMatrix(size_t row) const
 	if (row >= Rows)
 		throw MatrixIndexException();
 
-
-	Matrix rowmat(1, Columns);
-	std::copy(Values + row * Columns, Values + (row + 1) * Columns, rowmat.Values);
-	return rowmat;
+	return Matrix(1, Columns, Values + row * Columns);
 }
 
 Matrix Matrix::GetColumnMatrix(size_t col) const
@@ -716,6 +713,13 @@ void Matrix::PowerSelf(unsigned int p)
 
 void Matrix::Transpose()
 {
+	if (Rows == 1 || Columns == 1)
+	{
+		size_t tmp = Rows;
+		Rows = Columns;
+		Columns = tmp;
+		return;
+	}
 	Matrix trans(Columns, Rows);
 	for (size_t r = 0; r < Rows; r++)
 	{

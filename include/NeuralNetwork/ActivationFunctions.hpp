@@ -7,6 +7,7 @@
 
 #define ACTIVATION_SIGMOID &Sigmoid::GetInstance()
 #define ACTIVATION_TANH &TanhFunction::GetInstance()
+#define ACTIVATION_LINEAR &IdentityFunction::GetInstance()
 
 #if USE_GPU
 #include "GPUActivation.cuh"

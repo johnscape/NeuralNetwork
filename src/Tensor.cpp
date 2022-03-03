@@ -254,6 +254,16 @@ void Tensor::GetNthMatrix(unsigned int n, Matrix* mat)
 		std::copy(Values + n * (Shape[0] * Shape[1]), Values + (n + 1) * (Shape[0] * Shape[1]), mat->Values);
 }
 
+Matrix Tensor::GetRowMatrix(unsigned int matrix, unsigned int row) const
+{
+	return Matrix(1, Shape[1], Values + matrix * Shape[0] * Shape[1] + row * Shape[1]);
+}
+
+Matrix Tensor::ToMatrixByRows() const
+{
+	return Matrix(Shape[0] * GetMatrixCount(), Shape[1], Values);
+}
+
 unsigned int Tensor::GetElementCount() const
 {
 	return ElementCount;

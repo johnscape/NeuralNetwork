@@ -90,6 +90,12 @@ public:
 	 * @param value The new value
 	 */
 	void SetValue(unsigned int pos, float value);
+
+	/**
+	 * @brief Adds a value to a specific cell in the tensor
+	 * @param pos The cell to add to
+	 * @param value The value to increment with
+	 */
 	void AdjustValue(unsigned int pos, float value);
 
 	/**
@@ -140,6 +146,16 @@ public:
 	 * @param mat The matrix to copy values into.
 	 */
 	void GetNthMatrix(unsigned int n, Matrix* mat = nullptr);
+
+	/**
+	 * @brief Converts a specific row into a matrix
+	 * @param matrix The matrix with the wanted row
+	 * @param row The wanted row number
+	 * @return A row matrix of the wanted row
+	 */
+	Matrix GetRowMatrix(unsigned int matrix, unsigned int row) const;
+
+	Matrix ToMatrixByRows() const;
 
 	/**
 	 * @brief Gets the number of elements in the tensor

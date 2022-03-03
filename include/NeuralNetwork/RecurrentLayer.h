@@ -35,13 +35,13 @@ public:
 	 * @brief Returns the output matrix
 	 * @return Pointer to the output matrix
 	*/
-	virtual Matrix& GetOutput();
+	virtual Tensor& GetOutput();
 
 	/**
 	 * @brief Runs the calculation and return with the output matrix.
 	 * @return A pointer of the output matrix.
 	*/
-	virtual Matrix& ComputeAndGetOutput();
+	virtual Tensor& ComputeAndGetOutput();
 
 	/**
 	 * @brief Sets the activation function we want to use.
@@ -54,7 +54,7 @@ public:
 	 * @param error The error of the next layer, used to calculate this layer's error.
 	 * @param recursive If set to true, it will call its input layer with its own error. Used to train the model.
 	*/
-	virtual void GetBackwardPass(const Matrix& error, bool recursive = false);
+	virtual void GetBackwardPass(const Tensor& error, bool recursive = false);
 
 	/**
 	 * @brief Modifies the weights inside of the layer based on an optimizer algorithm.
@@ -109,14 +109,13 @@ private:
 	Matrix Weights;
 	Matrix Bias;
 	Matrix RecursiveWeight;
-	Matrix InnerState;
+	Tensor InnerState;
+	Matrix RecursiveState;
 
 	Matrix WeightError;
 	Matrix BiasError;
 	Matrix RecursiveWeightError;
 
-	std::deque<Matrix> TrainingStates;
-	std::deque<Matrix> IncomingValues;
-
+	Tensor IncomingValues;
 };
 

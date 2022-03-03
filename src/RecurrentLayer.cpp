@@ -6,17 +6,17 @@
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
 	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size),
-	Weights(), Bias(1, size), InnerState(1, size), WeightError(), BiasError(1, size),
-	RecursiveWeight(size, size), RecursiveWeightError(size, size)
+	Weights(), Bias(1, size), InnerState(), WeightError(), BiasError(1, size),
+	RecursiveWeight(size, size), RecursiveWeightError(size, size), RecursiveState(1, size)
 {
-	Weights.Reset(inputLayer->GetOutput().GetVectorSize(), size);
-	Output.Reset(1, size);
-	WeightError.Reset(inputLayer->GetOutput().GetVectorSize(), size);
-	LayerError.Reset(1, inputLayer->GetOutput().GetVectorSize());
+	Weights.Reset(inputLayer->GetOutput().GetShapeAt(1), size);
+	Output = Tensor({1, size}, nullptr);
+	WeightError.Reset(inputLayer->GetOutput().GetShapeAt(1), size);
 	function = &TanhFunction::GetInstance();
 
 	Bias.FillWith(1);
 	Weights.FillWithRandom();
+	RecursiveWeight.FillWithRandom();
 }
 
 RecurrentLayer::~RecurrentLayer()
@@ -34,29 +34,38 @@ Layer* RecurrentLayer::Clone()
 
 void RecurrentLayer::Compute()
 {
-	LayerInput->Compute();
-	InnerState = LayerInput->GetOutput() * Weights;
-	InnerState += Output * RecursiveWeight;
-	InnerState += Bias;
-	function->CalculateInto(InnerState, Output);
-	if (TrainingMode)
+	IncomingValues = LayerInput->ComputeAndGetOutput();
+	InnerState = IncomingValues * Weights;
+	for (unsigned int mat = 0; mat < InnerState.GetMatrixCount(); ++mat)
 	{
-		TrainingStates.push_back(Matrix(InnerState));
-		IncomingValues.push_back(Matrix((LayerInput->GetOutput())));
-		if (TrainingStates.size() > TimeSteps)
+		for (unsigned int row = 0; row < InnerState.GetShapeAt(0); ++row)
 		{
-			TrainingStates.pop_front();
-			IncomingValues.pop_front();
+			Matrix rowMat = InnerState.GetRowMatrix(mat, row);
+			rowMat += Bias;
+			rowMat += RecursiveState * RecursiveWeight;
+			RecursiveState = rowMat;
+			for (unsigned int col = 0; col < InnerState.GetShapeAt(1); ++col)
+			{
+				unsigned int pos = mat * InnerState.GetShapeAt(0) * InnerState.GetShapeAt(1);
+				pos += row * InnerState.GetShapeAt(1);
+				pos += col;
+				InnerState.SetValue(pos, RecursiveState.GetValue(col));
+			}
 		}
 	}
+
+	if (!Output.IsSameShape(InnerState))
+		Output = Tensor(InnerState);
+
+	function->CalculateInto(InnerState, Output);
 }
 
-Matrix& RecurrentLayer::GetOutput()
+Tensor& RecurrentLayer::GetOutput()
 {
 	return Output;
 }
 
-Matrix& RecurrentLayer::ComputeAndGetOutput()
+Tensor& RecurrentLayer::ComputeAndGetOutput()
 {
 	Compute();
 	return Output;
@@ -64,69 +73,63 @@ Matrix& RecurrentLayer::ComputeAndGetOutput()
 
 void RecurrentLayer::SetActivationFunction(ActivationFunction* func)
 {
-	if (function)
-		delete function;
 	function = func;
 }
 
-void RecurrentLayer::GetBackwardPass(const Matrix& error, bool recursive)
+void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
-	Matrix derivate = function->CalculateDerivateMatrix(Output);
+	//TODO: Implement tensor elementwise multiply
+	//LayerError = weight * (error .* derivate)
+	Tensor derivate = function->CalculateDerivateTensor(Output);
 	LayerError.FillWith(0);
 #if USE_GPU
 	derivate->CopyFromGPU();
 #endif // USE_GPU
 
+	Matrix states = InnerState.ToMatrixByRows();
 
+	//If I call this function for once at every batch, this can stay, otherwise create a parameter
 	std::vector<Matrix> powers;
-	for (unsigned int i = 0; i <= TimeSteps; i++)
+	for (unsigned int i = 0; i < 3; ++i)
 	{
-		if (!i)
-			continue;
-		powers.push_back(RecursiveWeight.Power(i));
+		if (i == 0)
+			powers.push_back(RecursiveWeight);
+		else
+			powers.push_back(RecursiveWeight.Power(i + 1));
 	}
 
-	for (unsigned int neuron = 0; neuron < Size; neuron++)
+	for (unsigned int mat = 0; mat < error.GetMatrixCount(); ++mat)
 	{
-		float delta = error.GetValue(neuron);
-		delta *= derivate.GetValue(neuron);
-		for (unsigned int time = 0; time < TimeSteps; time++)
+		for (unsigned int row = 0; row < error.GetShapeAt(0); ++row)
 		{
-			if (TimeSteps - time >= TrainingStates.size())
-				continue;
-			for (unsigned int incoming = 0; incoming < LayerInput->GetOutput().GetVectorSize(); incoming++)
-			{
-				float wt = 0;
-				if (time)
-				{
-					for (unsigned int recursive = 0; recursive < Size; recursive++)
-						wt += error.GetValue(recursive) * derivate.GetValue(recursive) * powers[time].GetValue(neuron, recursive) * IncomingValues[TimeSteps - time].GetValue(incoming);
-				}
-				else
-					wt = IncomingValues[IncomingValues.size() - 1].GetValue(incoming) * delta;
-				WeightError.AdjustValue(incoming, neuron, wt);
-				LayerError.AdjustValue(incoming, delta * Weights.GetValue(incoming, neuron));
-			}
-			for (unsigned int recursive = 0; recursive < Size; recursive++)
-			{
-				float wt = 0;
-				if (time)
-				{
-					for (unsigned int r = 0; r < Size; r++)
-						wt += error.GetValue(r) * derivate.GetValue(r) * powers[time].GetValue(neuron, r) * TrainingStates[TimeSteps - time].GetValue(recursive);
-				}
-				else
-					wt = TrainingStates[TrainingStates.size() - 1].GetValue(recursive) * delta;
+			Matrix incoming = IncomingValues.GetRowMatrix(mat, row); //i_t
+			incoming.Transpose();
 
-				RecursiveWeightError.AdjustValue(recursive, neuron, wt);
-			}
+			Matrix derivated = derivate.GetRowMatrix(mat, row); //o_t/s_t
+			derivated.ElementwiseMultiply(error.GetRowMatrix(mat, row)); //E_t/s_t
+			Matrix weightErr = incoming * derivated; //E_t/W
 
+			for (int i = 0; i < TimeSteps; ++i) //Do I need to update for every timestep, or just for i=3?
+			{
+				if (i >= row)
+					break;
+				Matrix state = states.GetRowMatrix(row - i - 1);
+				state.Transpose();
+				if (i == 0)
+					RecursiveWeightError += state * derivated;
+				else
+				{
+					Matrix tmp = powers[i - 1] * state;
+					tmp *= derivated;
+					float vals[4] = {tmp.GetValue(0), tmp.GetValue(1), tmp.GetValue(2), tmp.GetValue(3)};
+					RecursiveWeightError += tmp;
+				}
+
+			}
+			WeightError += weightErr;
+			BiasError += derivated;
 		}
-
-		BiasError.AdjustValue(neuron, delta);
 	}
-
-	powers.clear();
 
 	if (recursive)
 		LayerInput->GetBackwardPass(LayerError);
@@ -153,11 +156,6 @@ void RecurrentLayer::Train(Optimizer* optimizer)
 void RecurrentLayer::SetTrainingMode(bool mode)
 {
 	TrainingMode = mode;
-	if (!mode)
-	{
-		while (!TrainingStates.empty())
-			TrainingStates.pop_front();
-	}
 }
 
 Matrix& RecurrentLayer::GetWeights()

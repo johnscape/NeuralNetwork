@@ -32,6 +32,7 @@ void GradientDescent::TrainStep(const Tensor& input, const Tensor& output)
 
 void GradientDescent::Train(const Tensor& input, const Tensor& expected)
 {
+	currentBatch = input.GetShapeAt(0);
 	//find input layer
 	Layer* currentLayer = outputLayer;
 	while (currentLayer->GetInputLayer())

@@ -6,7 +6,7 @@
 
 namespace LossFunctions
 {
-	float MSE(const Tensor& output, const Tensor& expected)
+	inline float MSE(const Tensor& output, const Tensor& expected)
 	{
 		float sum = 0;
 		for (int i = 0; i < output.GetElementCount(); ++i)
@@ -14,7 +14,7 @@ namespace LossFunctions
 		return sum / (float)output.GetElementCount();
 	}
 
-	float MSE_Derivate(const Tensor& output, const Tensor& expected, unsigned int selected)
+	inline float MSE_Derivate(const Tensor& output, const Tensor& expected, unsigned int selected)
 	{
 		return output.GetValue(selected) - expected.GetValue(selected);
 	}
