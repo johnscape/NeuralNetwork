@@ -8,31 +8,22 @@
 
 
 LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps) : 
-    Layer(inputLayer), CellStateSize(cellStateSize), TimeSteps(timeSteps), cellTanh(1, cellStateSize),
-    DeltaOut(1, cellStateSize), CellState(1, cellStateSize), InnerState(1, cellStateSize)
+    Layer(inputLayer), CellStateSize(cellStateSize), TimeSteps(timeSteps), CellState(1, cellStateSize),
+	InnerState(1, inputLayer->GetOutput().GetShapeAt(0) + cellStateSize)
 {
-    for (unsigned char i = 0; i < 4; i++)
-    {
-        InputWeights.push_back(Matrix(LayerInput->GetOutput().GetVectorSize(), CellStateSize));
-        RecursiveWeights.push_back(Matrix(CellStateSize, CellStateSize));
-        InputWeights[InputWeights.size() - 1].FillWithRandom();
-        RecursiveWeights[RecursiveWeights.size() - 1].FillWithRandom();
-        Biases.push_back(Matrix(1, CellStateSize));
-        InputWeightOutputs.push_back(Matrix(1, CellStateSize));
-        RecursiveWeightOuputs.push_back(Matrix(1, CellStateSize));
-
-        InputWeightErrors.push_back(Matrix(LayerInput->GetOutput().GetVectorSize(), CellStateSize));
-        RecursiveWeightErrors.push_back(Matrix(CellStateSize, CellStateSize));
-        BiasErrors.push_back(Matrix(1, CellStateSize));
-    }
-    
-
-    Output.Reset(1, CellStateSize);
+	for (unsigned char i = 0; i < 4; i++)
+	{
+		Matrix w(InnerState.GetColumnCount(), cellStateSize);
+		Matrix b(1, cellStateSize);
+		Weights.push_back(w);
+		Biases.push_back(b);
+	}
+    Output = Tensor({1, CellStateSize}, nullptr);
 
     Tanh = &TanhFunction::GetInstance();
     Sig = &Sigmoid::GetInstance();
 
-    LayerError.Reset(1, LayerInput->GetOutput().GetVectorSize());
+    LayerError = Tensor({1, LayerInput->GetOutput().GetShapeAt(0)}, nullptr);
 }
 
 LSTM::~LSTM()
@@ -42,270 +33,91 @@ LSTM::~LSTM()
 Layer* LSTM::Clone()
 {
     LSTM* r = new LSTM(LayerInput, CellStateSize, TimeSteps);
+	std::list<Matrix>::iterator w, b;
     for (unsigned char i = 0; i < 4; i++)
     {
-        r->GetWeight(i).Copy(InputWeights[i]);
-        r->GetRecursiveWeight(i).Copy(RecursiveWeights[i]);
-        r->GetBias(i).Copy(Biases[i]);
+        r->GetWeight(i).Copy(*w);
+        r->GetBias(i).Copy(*b);
+		w++; b++;
     }
     return r;
 }
 
 void LSTM::Compute()
 {
-    for (unsigned char i = 0; i < 4; i++)
-    {
-        InputWeightOutputs[i].FillWith(0);
-        RecursiveWeightOuputs[i].FillWith(0);
-#if USE_GPU
-        GPUMath::FillWith(InputWeightOutputs[i], 0);
-        GPUMath::FillWith(RecursiveWeightOuputs[i], 0);
-#endif // USE_GPU
-    }
+	Matrix input = LayerInput->ComputeAndGetOutput().ToMatrixByRows();
+	Matrix tempOutput(input.GetRowCount(), CellStateSize);
+	Matrix gate1, gate2, gate3, gate4;
+	Matrix cellTanh(1, CellStateSize);
+	for (size_t r = 0; r < input.GetRowCount(); ++r)
+	{
+		Matrix row = input.GetRowMatrix(r);
+		InnerState = Matrix::Concat(InnerState, row, 1);
+		std::list<Matrix>::iterator weight, bias;
+		weight = Weights.begin();
+		bias = Biases.begin();
+		//Gate 1
+		gate1 = InnerState * *weight;
+		gate1 += *bias;
+		gate1 = Sig->CalculateMatrix(gate1);
+		//Gate 2
+		weight++;
+		bias++;
+		gate2 = InnerState * *weight;
+		gate2 += *bias;
+		gate2 = Sig->CalculateMatrix(gate2);
+		//Gate 3
+		weight++;
+		bias++;
+		gate3 = InnerState * *weight;
+		gate3 += *bias;
+		gate3 = Tanh->CalculateMatrix(gate3);
+		//Gate 4
+		weight++;
+		bias++;
+		gate4 = InnerState * *weight;
+		gate4 += *bias;
+		gate4 = Sig->CalculateMatrix(gate4);
+		//Update cell
+		CellState.ElementwiseMultiply(gate1);
+		gate3.ElementwiseMultiply(gate2);
+		CellState += gate3;
+		Tanh->CalculateInto(CellState, cellTanh);
+		gate4.ElementwiseMultiply(cellTanh);
+		InnerState.ReloadFromOther(gate4);
+		for (size_t i = 0; i < CellStateSize; i++)
+			tempOutput.SetValue(r, i, InnerState.GetValue(i));
+	}
 
-    LayerInput->Compute();
-    Matrix input = LayerInput->GetOutput();
-    std::vector<Matrix> currentStates;
-    
-    //forget gate
-    InputWeightOutputs[0] = input * InputWeights[0];
-    RecursiveWeightOuputs[0] = InnerState * RecursiveWeights[0];
-    InputWeightOutputs[0] += RecursiveWeightOuputs[0];
-    InputWeightOutputs[0] += Biases[0];
-    Sig->CalculateInto(InputWeightOutputs[0], InputWeightOutputs[0]);
-    CellState.ElementwiseMultiply(InputWeightOutputs[0]);
-    if (TrainingMode)
-        currentStates.push_back(Matrix(InputWeightOutputs[0]));
-
-    //input gate
-    InputWeightOutputs[1] = input * InputWeights[1];
-    RecursiveWeightOuputs[1] = InnerState * RecursiveWeights[1];
-    InputWeightOutputs[1] += RecursiveWeightOuputs[1];
-    InputWeightOutputs[1] += Biases[1];
-    Sig->CalculateInto(InputWeightOutputs[1], InputWeightOutputs[1]);
-    if (TrainingMode)
-        currentStates.push_back(Matrix(InputWeightOutputs[1]));
-
-    //update gate
-    InputWeightOutputs[2] = input * InputWeights[2];
-    RecursiveWeightOuputs[2] = InnerState * RecursiveWeights[2];
-    InputWeightOutputs[2] += RecursiveWeightOuputs[2];
-    InputWeightOutputs[2] += Biases[2];
-    Tanh->CalculateInto(InputWeightOutputs[2], InputWeightOutputs[2]);
-    if (TrainingMode)
-        currentStates.push_back(Matrix(InputWeightOutputs[2]));
-    InputWeightOutputs[2].ElementwiseMultiply(InputWeightOutputs[1]);
-    CellState += InputWeightOutputs[2];
-
-    //output gate
-    InputWeightOutputs[3] = input * InputWeights[3];
-    RecursiveWeightOuputs[3] = InnerState * RecursiveWeights[3];
-    InputWeightOutputs[3] += RecursiveWeightOuputs[3];
-    InputWeightOutputs[3] += Biases[3];
-    Sig->CalculateInto(InputWeightOutputs[3], InputWeightOutputs[3]);
-    if (TrainingMode)
-        currentStates.push_back(Matrix(InputWeightOutputs[3]));
-
-    //output
-    Tanh->CalculateInto(CellState, cellTanh);
-    InputWeightOutputs[3].ElementwiseMultiply(cellTanh);
-    InnerState.Copy(InputWeightOutputs[3]);
-    Output.Copy(InnerState);
-    if (TrainingMode)
-    {
-        currentStates.push_back(Matrix(CellState));
-        currentStates.push_back(Matrix(input));
-        currentStates.push_back(Matrix(Output));
-        savedStates.push_back(currentStates);
-        if (savedStates.size() >= TimeSteps)
-        {
-            savedStates.pop_front();
-        }
-    }
+	std::vector<unsigned int> outputSize = Output.GetShape();
+	Output = Tensor(tempOutput);
+	Output.Reshape(outputSize);
 }
 
-Matrix& LSTM::GetOutput()
+Tensor& LSTM::GetOutput()
 {
     return Output;
 }
 
-Matrix& LSTM::ComputeAndGetOutput()
+Tensor& LSTM::ComputeAndGetOutput()
 {
     Compute();
     return Output;
 }
 
-void LSTM::GetBackwardPass(const Matrix& error, bool recursive)
+void LSTM::GetBackwardPass(const Tensor& error, bool recursive)
 {
-#if USE_GPU
-    error->CopyToGPU();
-#endif // USE_GPU
 
-    //TODO: Rewrite this abomination
-
-    //Matrix gateIError(LayerInput->GetOutput().GetVectorSize(), CellStateSize);
-    //Matrix gateRError(CellStateSize, CellStateSize);
-
-    //Matrix dGate(1, CellStateSize);
-
-    //Matrix deltaOut(1, CellStateSize);
-    //Matrix dOut(1, CellStateSize);
-
-    //Matrix dState(1, CellStateSize);
-    //Matrix dStateLast(1, CellStateSize); //dState in the last iteration, t+1
-
-    //Matrix tanhState(1, CellStateSize);
-    //Matrix tempState(1, CellStateSize);
-    //Matrix ones(1, CellStateSize);
-
-    //Matrix inputTranspose(LayerInput->GetOutput().GetVectorSize(), 1);
-    //Matrix outputTranspose(CellStateSize, 1);
-
-    //Matrix inputErrorSum(LayerInput->GetOutput().GetVectorSize(), 1);
-
-    //errors.push_back(Matrix(error));
-    //if (errors.size() >= TimeSteps)
-    //    errors.pop_front();
-
-    //for (signed int time = TimeSteps - 1; time >= 0; time--)
-    //{
-    //    if (time >= savedStates.size())
-    //        continue;
-
-    //    //setup transposes vals
-    //    inputTranspose.ReloadFromOther(savedStates[time][5]);
-    //    inputTranspose.Copy(savedStates[time][5]);
-    //    if (time - 1 >= 0)
-    //        outputTranspose.Copy(savedStates[time - 1][6]);
-    //    else
-    //        outputTranspose.FillWith(0);
-
-    //    //calculate delta Out
-    //    dOut.FillWith(0);
-    //    dOut += deltaOut;
-    //    dOut += errors[time];
-
-    //    //calculate delta State
-    //    dStateLast.Copy(dState);
-    //    dState.FillWith(0);
-    //    MatrixMath::FillWith(dState, 0);
-    //    MatrixMath::AddIn(dState, dOut);
-    //    MatrixMath::ElementviseMultiply(dState, savedStates[time][3]);
-
-    //    MatrixMath::Copy(savedStates[time][4], tanhState);
-    //    Tanh->CalculateInto(tanhState, tanhState);
-    //    Tanh->CalculateDerivateInto(tanhState, tanhState);
-    //    MatrixMath::ElementviseMultiply(dState, tanhState);
-
-    //    MatrixMath::FillWith(deltaOut, 0);
-
-    //    if (time < savedStates.size() - 1)
-    //    {
-    //        MatrixMath::Copy(dStateLast, tempState);
-    //        MatrixMath::ElementviseMultiply(tempState, savedStates[time + 1][0]);
-    //        MatrixMath::AddIn(dState, tempState);
-    //    }
-
-    //    //calc forget gate error
-    //    if (time > 0)
-    //    {
-    //        //Matrix fGateiDelta = new Matrix(*savedDStates[savedDStates.size() - 1]);
-    //        MatrixMath::Copy(dState, dGate);
-    //        MatrixMath::ElementviseMultiply(dGate, savedStates[time - 1][4]);
-    //        MatrixMath::ElementviseMultiply(dGate, savedStates[time][0]);
-    //        MatrixMath::FillWith(ones, 1);
-    //        MatrixMath::SubstractIn(ones, savedStates[time][0]);
-    //        MatrixMath::ElementviseMultiply(dGate, ones);
-
-    //        UpdateWeightErrors(gateIError, gateRError, inputTranspose, dGate, outputTranspose, 0);
-    //        MatrixMath::Multiply(dGate, RecursiveWeights[0], deltaOut);
-    //        MatrixMath::Transpose(dGate);
-    //        MatrixMath::Multiply(InputWeights[0], dGate, inputErrorSum);
-    //        MatrixMath::Transpose(dGate);
-    //    }
-
-    //    //calc input gate error
-    //    MatrixMath::Copy(dState, dGate);
-    //    MatrixMath::ElementviseMultiply(dGate, savedStates[time][2]);
-    //    MatrixMath::ElementviseMultiply(dGate, savedStates[time][1]);
-    //    MatrixMath::FillWith(ones, 1);
-    //    MatrixMath::SubstractIn(ones, savedStates[time][1]);
-    //    MatrixMath::ElementviseMultiply(dGate, ones);
-
-    //    UpdateWeightErrors(gateIError, gateRError, inputTranspose, dGate, outputTranspose, 1);
-    //    MatrixMath::Multiply(dGate, RecursiveWeights[1], deltaOut);
-    //    MatrixMath::Transpose(dGate);
-    //    MatrixMath::Multiply(InputWeights[1], dGate, inputErrorSum);
-    //    MatrixMath::Transpose(dGate);
-
-    //    //calc update gate error
-    //    MatrixMath::Copy(dState, dGate);
-    //    MatrixMath::ElementviseMultiply(dGate, savedStates[time][1]);
-    //    MatrixMath::Copy(savedStates[time][2], ones);
-    //    Tanh->CalculateDerivateInto(ones, ones);
-    //    MatrixMath::ElementviseMultiply(dGate, ones);
-
-    //    UpdateWeightErrors(gateIError, gateRError, inputTranspose, dGate, outputTranspose, 2);
-    //    MatrixMath::Multiply(dGate, RecursiveWeights[2], deltaOut);
-    //    MatrixMath::Transpose(dGate);
-    //    MatrixMath::Multiply(InputWeights[2], dGate, inputErrorSum);
-    //    MatrixMath::Transpose(dGate);
-
-    //    //calc output gate error
-    //    MatrixMath::Copy(dOut, dGate);
-    //    MatrixMath::Copy(savedStates[time][4], ones);
-    //    Tanh->CalculateInto(ones, ones);
-    //    MatrixMath::ElementviseMultiply(dGate, ones);
-    //    MatrixMath::ElementviseMultiply(dGate, savedStates[time][3]);
-    //    MatrixMath::FillWith(ones, 1);
-    //    MatrixMath::SubstractIn(ones, savedStates[time][3]);
-    //    MatrixMath::ElementviseMultiply(dGate, ones);
-
-    //    UpdateWeightErrors(gateIError, gateRError, inputTranspose, dGate, outputTranspose, 3);
-    //    MatrixMath::Multiply(dGate, RecursiveWeights[3], deltaOut);
-    //    MatrixMath::Transpose(dGate);
-    //    MatrixMath::Multiply(InputWeights[3], dGate, inputErrorSum);
-    //    MatrixMath::Transpose(dGate);
-    //}
-
-    //MatrixMath::Transpose(inputErrorSum);
-    //MatrixMath::AddIn(LayerError, inputErrorSum);
-
-#if USE_GPU
-    LayerError->CopyFromGPU();
-#endif // USE_GPU
 }
 
 void LSTM::UpdateWeightErrors(Matrix& gateIError, Matrix& gateRError, Matrix& inputTranspose, Matrix& dGate, Matrix& outputTranspose, int weight)
 {
-    gateIError = inputTranspose * dGate;
-    gateRError = outputTranspose * dGate;
-
-    InputWeightErrors[weight] += gateIError;
-    RecursiveWeightErrors[weight] += gateRError;
-
-    BiasErrors[weight] += dGate;
-
-#if USE_GPU
-    InputWeightErrors[weight]->CopyFromGPU();
-    RecursiveWeightErrors[weight]->CopyFromGPU();
-    BiasErrors[weight]->CopyFromGPU();
-#endif // USE_GPU
 
 }
 
 void LSTM::Train(Optimizer* optimizer)
 {
-    for (unsigned char i = 0; i < 4; i++)
-    {
-        optimizer->ModifyWeights(InputWeights[i], InputWeightErrors[i]);
-        optimizer->ModifyWeights(RecursiveWeights[i], RecursiveWeightErrors[i]);
-        optimizer->ModifyWeights(Biases[i], BiasErrors[i]);
 
-        InputWeightErrors[i].FillWith(0);
-        RecursiveWeightErrors[i].FillWith(0);
-        BiasErrors[i].FillWith(0);
-    }
 }
 
 void LSTM::SetTrainingMode(bool mode, bool recursive)
@@ -319,17 +131,18 @@ void LSTM::SetTrainingMode(bool mode, bool recursive)
 
 Matrix& LSTM::GetWeight(unsigned char weight)
 {
-    return InputWeights[weight];
-}
-
-Matrix& LSTM::GetRecursiveWeight(unsigned char weight)
-{
-    return RecursiveWeights[weight];
+	std::list<Matrix>::iterator it = Weights.begin();
+	for (unsigned char i = 0; i < weight; ++i)
+		it++;
+	return *it;
 }
 
 Matrix& LSTM::GetBias(unsigned char weight)
 {
-    return Biases[weight];
+    std::list<Matrix>::iterator it = Biases.begin();
+	for (unsigned char i = 0; i < weight; ++i)
+		it++;
+	return *it;
 }
 
 void LSTM::LoadFromJSON(const char* data, bool isFile)

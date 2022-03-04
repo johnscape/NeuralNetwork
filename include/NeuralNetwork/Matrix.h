@@ -22,6 +22,15 @@ public:
 	};
 
 	/**
+	 * @brief Enum for concatenation dimension
+	 */
+	enum class ConcatType
+	{
+		BY_ROW,
+		BY_COLUMN
+	};
+
+	/**
 	 * @brief Creates a 1x1 matrix, with a 0 element.
 	*/
 	Matrix();

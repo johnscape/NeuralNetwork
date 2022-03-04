@@ -1,5 +1,4 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/*.h*")
-list(REMOVE_ITEM HEADER_LIST "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/LSTM.h")
 list(REMOVE_ITEM HEADER_LIST "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/Model.h")
 
 add_library(NeuralNetwork
@@ -12,6 +11,7 @@ add_library(NeuralNetwork
 	FeedForwardLayer.cpp
 	GradientDescent.cpp
 	RecurrentLayer.cpp
+	LSTM.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include)

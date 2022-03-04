@@ -1,5 +1,6 @@
 #pragma once
 #include "Matrix.h"
+#include "Tensor.h"
 #include "ActivationFunctions.hpp"
 #include "Layer.h"
 #include <vector>
@@ -36,20 +37,20 @@ public:
      * @brief Returns the output matrix
      * @return Pointer to the output matrix
     */
-    virtual Matrix& GetOutput();
+    virtual Tensor& GetOutput();
 
     /**
      * @brief Runs the Compute method then returns with the output matrix
      * @return The pointer of the updated output matrix
     */
-    virtual Matrix& ComputeAndGetOutput();
+    virtual Tensor& ComputeAndGetOutput();
     
     /**
      * @brief Calculates the error inside of the layer based on the last output, the input and the error.
      * @param error The error of the next layer, used to calculate this layer's error.
      * @param recursive If set to true, it will call its input layer with its own error.
     */
-    virtual void GetBackwardPass(const Matrix& error, bool recursive = false);
+    virtual void GetBackwardPass(const Tensor& error, bool recursive = false);
 
     /**
      * @brief Modifies the weights inside of the layer based on an optimizer algorithm.
@@ -70,13 +71,6 @@ public:
      * @return Matrix pointer of the specified input weight
     */
     Matrix& GetWeight(unsigned char weight);
-
-    /**
-     * @brief Returns the recursive weight from a selected gate.
-     * @param weight The selected gate
-     * @return Matrix pointer of the specified recursive weight
-    */
-    Matrix& GetRecursiveWeight(unsigned char weight);
 
     /**
      * @brief Returns the bias from a selected gate.
@@ -101,7 +95,7 @@ public:
     */
     virtual std::string SaveToJSON(const char* fileName = nullptr);
 
-    enum Gate
+    enum class Gate
     {
         FORGET = 0,
         INPUT = 1,
@@ -110,24 +104,14 @@ public:
     };
 
 private:
-    std::vector<Matrix> InputWeights;
-    std::vector<Matrix> RecursiveWeights;
-    std::vector<Matrix> Biases;
-    std::vector<Matrix> InputWeightOutputs;
-    std::vector<Matrix> RecursiveWeightOuputs;
-
-    std::vector<Matrix> InputWeightErrors;
-    std::vector<Matrix> RecursiveWeightErrors;
-    std::vector<Matrix> BiasErrors;
+    std::list<Matrix> Weights;
+    std::list<Matrix> Biases;
 
     std::deque<std::vector<Matrix>> savedStates;
     std::deque<Matrix> errors;
 
     Matrix CellState;
     Matrix InnerState;
-
-    Matrix cellTanh;
-    Matrix DeltaOut;
 
     unsigned int CellStateSize;
     unsigned int TimeSteps;

@@ -509,7 +509,33 @@ Matrix Matrix::Eye(unsigned int i)
 
 Matrix Matrix::Concat(const Matrix& a, const Matrix& b, unsigned int dim)
 {
-	return Matrix();
+	if (dim == 0) //add rows after each other
+	{
+		if (a.GetColumnCount() != b.GetColumnCount())
+			throw MatrixSizeException();
+		Matrix result(a.GetRowCount() + b.GetRowCount(), a.GetColumnCount());
+		std::copy(a.Values, a.Values + a.GetElementCount(), result.Values);
+		std::copy(b.Values, b.Values + b.GetElementCount(), result.Values + a.GetElementCount());
+		return result;
+	}
+	else
+	{
+		if (a.GetRowCount() != b.GetRowCount())
+			throw MatrixSizeException();
+		Matrix result(a.GetRowCount(), a.GetColumnCount() + b.GetColumnCount());
+		for (unsigned int row = 0; row < a.GetRowCount(); row++)
+		{
+			std::copy(
+					a.Values + row * a.GetColumnCount(),
+					a.Values + (row + 1) * a.GetColumnCount(),
+					result.Values + row * result.GetColumnCount());
+			std::copy(
+					b.Values + row * b.GetColumnCount(),
+					b.Values + (row + 1) * b.GetColumnCount(),
+					result.Values + row * result.GetColumnCount() + a.GetColumnCount());
+		}
+		return result;
+	}
 }
 
 void Matrix::ElementwiseMultiply(const Matrix& other)
@@ -747,12 +773,14 @@ size_t Matrix::GetVectorSize() const
 
 void Matrix::ReloadFromOther(const Matrix& m)
 {
-	delete[] Values;
+	size_t count = m.GetElementCount();
 	Columns = m.GetColumnCount();
 	Rows = m.GetRowCount();
-	size_t count = GetElementCount();
-	Values = new float[count];
-
+	if (count != GetElementCount())
+	{
+		delete[] Values;
+		Values = new float[count];
+	}
 	std::copy(m.Values, m.Values + count, Values);
 
 #if USE_GPU
