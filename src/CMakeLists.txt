@@ -12,6 +12,7 @@ add_library(NeuralNetwork
 	GradientDescent.cpp
 	RecurrentLayer.cpp
 	LSTM.cpp
+    TempMatrix.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include)

@@ -2,6 +2,7 @@
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/MatrixException.hpp"
 #include "NeuralNetwork/Tensor.h"
+#include "NeuralNetwork/TempMatrix.h"
 #include <string>
 
 #include <numeric>
@@ -118,6 +119,11 @@ Matrix::~Matrix()
 #if USE_GPU
 	cudaFree(GPUValues);
 #endif
+}
+
+TempMatrix Matrix::ToTempMatrix()
+{
+	return {Rows, Columns, Values};
 }
 
 size_t Matrix::GetColumnCount() const
@@ -774,13 +780,13 @@ size_t Matrix::GetVectorSize() const
 void Matrix::ReloadFromOther(const Matrix& m)
 {
 	size_t count = m.GetElementCount();
-	Columns = m.GetColumnCount();
-	Rows = m.GetRowCount();
 	if (count != GetElementCount())
 	{
 		delete[] Values;
 		Values = new float[count];
 	}
+	Columns = m.GetColumnCount();
+	Rows = m.GetRowCount();
 	std::copy(m.Values, m.Values + count, Values);
 
 #if USE_GPU
@@ -864,7 +870,7 @@ void Matrix::LoadFromJSON(const char* data, bool isFile)
 #endif*/
 }
 
-std::string Matrix::SaveToJSON(const char* fileName)
+std::string Matrix::SaveToJSON(const char* fileName) const
 {
 	/*rapidjson::Document doc;
 	doc.SetObject();

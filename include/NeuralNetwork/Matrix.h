@@ -4,6 +4,7 @@
 #include <iostream>
 
 class Tensor;
+class TempMatrix;
 
 /**
  * @brief A class for containing a matrix and the functions to work with it
@@ -59,7 +60,9 @@ public:
 
 	Matrix(const Tensor& from);
 
-	~Matrix();
+	virtual ~Matrix();
+
+	TempMatrix ToTempMatrix();
 
 	/**
 	 * @brief Returns the number of the columns.
@@ -174,7 +177,7 @@ public:
 	 * @param fileName The file to save into. If don't want to save, leave it null.
 	 * @return A string containing the JSON data of the matrix.
 	*/
-	std::string SaveToJSON(const char* fileName = nullptr);
+	std::string SaveToJSON(const char* fileName = nullptr) const;
 
 	/**
 	 * @brief If GPU is used, this function copies the values from the RAM to the GPU memory
@@ -389,7 +392,7 @@ public:
 
 	friend class Tensor;
 
-private:
+protected:
 	float* Values;
 	size_t Rows;
 	size_t Columns;
