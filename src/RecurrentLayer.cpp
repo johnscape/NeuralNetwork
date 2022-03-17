@@ -121,7 +121,6 @@ void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 				{
 					Matrix tmp = powers[i - 1] * state;
 					tmp *= derivated;
-					float vals[4] = {tmp.GetValue(0), tmp.GetValue(1), tmp.GetValue(2), tmp.GetValue(3)};
 					RecursiveWeightError += tmp;
 				}
 

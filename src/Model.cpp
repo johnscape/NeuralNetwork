@@ -5,7 +5,6 @@
 #include <map>
 #include "NeuralNetwork/Constants.h"
 
-#include "rapidjson/document.h"
 #include <fstream>
 #include <string>
 
