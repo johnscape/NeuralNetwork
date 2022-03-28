@@ -235,10 +235,34 @@ Matrix& Matrix::operator+=(const Matrix& other)
 		throw MatrixException();
 
 	float floatRes[4];
+	float currentValues[4];
+	float otherValues[4];
 	for (size_t i = 0; i < GetElementCount(); i += 4)
 	{
-		__m128 first = _mm_load_ps(Values + i);
-		__m128 second = _mm_load_ps(other.Values + i);
+		__m128 first, second;
+		if (i + 4 < GetElementCount())
+		{
+			first = _mm_load_ps(Values + i);
+			second = _mm_load_ps(other.Values + i);
+		}
+		else
+		{
+			for (unsigned char j = 0; j < 4; j++)
+			{
+				if (i + j < GetElementCount())
+				{
+					currentValues[j] = Values[i + j];
+					otherValues[j] = other.Values[i + j];
+				}
+				else
+				{
+					currentValues[j] = 0;
+					otherValues[j] = 0;
+				}
+			}
+			first = _mm_load_ps(currentValues);
+			second = _mm_load_ps(otherValues);
+		}
 		_mm_store_ps(floatRes, _mm_add_ps(first, second));
 		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
@@ -469,6 +493,13 @@ Matrix Matrix::GetRowMatrix(size_t row) const
 		throw MatrixIndexException();
 
 	return Matrix(1, Columns, Values + row * Columns);
+}
+
+TempMatrix Matrix::GetTempRowMatrix(size_t row) const
+{
+	if (row >= Rows)
+		throw MatrixIndexException();
+	return TempMatrix(1, Columns, Values + row * Columns);
 }
 
 Matrix Matrix::GetColumnMatrix(size_t col) const
@@ -782,7 +813,8 @@ void Matrix::ReloadFromOther(const Matrix& m)
 	size_t count = m.GetElementCount();
 	if (count != GetElementCount())
 	{
-		delete[] Values;
+		if (Values)
+			delete[] Values;
 		Values = new float[count];
 	}
 	Columns = m.GetColumnCount();

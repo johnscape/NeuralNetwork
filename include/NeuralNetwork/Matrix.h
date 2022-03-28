@@ -252,6 +252,8 @@ public:
 	*/
 	Matrix GetRowMatrix(size_t row) const;
 
+	TempMatrix GetTempRowMatrix(size_t row) const;
+
 	/**
 	 * @brief Creates a copy from a specific column of the matrix
 	 * @param col The column to copy
