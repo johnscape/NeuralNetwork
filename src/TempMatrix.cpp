@@ -1,8 +1,5 @@
-//
-// Created by attila on 2022. 03. 10..
-//
-
 #include "NeuralNetwork/TempMatrix.h"
+#include "NeuralNetwork/MatrixException.hpp"
 
 TempMatrix::TempMatrix() : Matrix()
 {}
@@ -22,5 +19,42 @@ TempMatrix::~TempMatrix()
 Matrix TempMatrix::ToMatrix()
 {
 	return Matrix(Rows, Columns, Values);
+}
+
+void TempMatrix::Transpose()
+{
+	if (Rows == 1 || Columns == 1)
+	{
+		size_t tmp = Rows;
+		Rows = Columns;
+		Columns = tmp;
+	}
+	else
+		throw StaticMatrixException();
+}
+
+Matrix TempMatrix::operator+(const Matrix &other) const
+{
+	return Matrix::operator+(other);
+}
+
+Matrix TempMatrix::operator-(const Matrix &other) const
+{
+	return Matrix::operator-(other);
+}
+
+Matrix TempMatrix::operator*(const Matrix &other) const
+{
+	return Matrix::operator*(other);
+}
+
+bool TempMatrix::operator==(const Matrix &other) const
+{
+	return Matrix::operator==(other);
+}
+
+bool TempMatrix::operator!=(const Matrix &other) const
+{
+	return Matrix::operator!=(other);
 }
 

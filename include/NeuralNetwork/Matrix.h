@@ -364,7 +364,7 @@ public:
 	/**
 	 * @brief Transposes the matrix
 	*/
-	void Transpose();
+	virtual void Transpose();
 
 	friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
 

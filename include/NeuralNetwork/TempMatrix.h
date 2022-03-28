@@ -18,6 +18,7 @@ public:
 	~TempMatrix();
 
 	Matrix ToMatrix();
+	virtual void Transpose();
 
 	//deleted functions
 	void SetValue(size_t row, size_t col, float val) = delete;
@@ -45,7 +46,13 @@ public:
 	void Rotate(unsigned int times) = delete;
 	void Normalize(float maxValue) = delete;
 	void PowerSelf(unsigned int p) = delete;
-	void Transpose() = delete;
+
+	//operators
+	Matrix operator+(const Matrix& other) const;
+	Matrix operator-(const Matrix& other) const;
+	Matrix operator*(const Matrix& other) const;
+	bool operator==(const Matrix& other) const;
+	bool operator!=(const Matrix& other) const;
 
 };
 

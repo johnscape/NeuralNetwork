@@ -259,9 +259,9 @@ Matrix Tensor::GetRowMatrix(unsigned int matrix, unsigned int row) const
 	return Matrix(1, Shape[1], Values + matrix * Shape[0] * Shape[1] + row * Shape[1]);
 }
 
-Matrix Tensor::ToMatrixByRows() const
+TempMatrix Tensor::ToMatrixByRows() const
 {
-	return Matrix(Shape[0] * GetMatrixCount(), Shape[1], Values);
+	return TempMatrix(Shape[0] * GetMatrixCount(), Shape[1], Values);
 }
 
 unsigned int Tensor::GetElementCount() const

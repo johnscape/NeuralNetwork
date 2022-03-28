@@ -34,3 +34,11 @@ class MatrixVectorException : public std::exception
 		return "Error code: 13 - Matrix is not a vector";
 	}
 };
+
+class StaticMatrixException : public std::exception
+{
+	const char * what() const throw()
+	{
+		return "Error code: 14 - A constant/temp matrix cannot be modified";
+	}
+};

@@ -86,7 +86,7 @@ void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 	derivate->CopyFromGPU();
 #endif // USE_GPU
 
-	Matrix states = InnerState.ToMatrixByRows();
+	TempMatrix states = InnerState.ToMatrixByRows();
 
 	//If I call this function for once at every batch, this can stay, otherwise create a parameter
 	std::vector<Matrix> powers;
@@ -113,7 +113,7 @@ void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 			{
 				if (i >= row)
 					break;
-				Matrix state = states.GetRowMatrix(row - i - 1);
+				TempMatrix state = states.GetTempRowMatrix(row - i - 1);
 				state.Transpose();
 				if (i == 0)
 					RecursiveWeightError += state * derivated;

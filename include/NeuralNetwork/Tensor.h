@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include "NeuralNetwork/Matrix.h"
+#include "NeuralNetwork/TempMatrix.h"
 
 
 class Tensor
@@ -154,8 +155,9 @@ public:
 	 * @return A row matrix of the wanted row
 	 */
 	Matrix GetRowMatrix(unsigned int matrix, unsigned int row) const;
+	//TempMatrix GetRowTempMatrix(unsigned int matrix, unsigned int row) const;
 
-	Matrix ToMatrixByRows() const;
+	TempMatrix ToMatrixByRows() const;
 
 	/**
 	 * @brief Gets the number of elements in the tensor

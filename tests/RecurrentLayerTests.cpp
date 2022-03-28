@@ -8,13 +8,6 @@
 
 #include <cmath>
 
-/**
- * Layer test TODOs:
- * - Setting a value
- * - Getting the output with 2 pre-defined states
- * - Getting the GDS result
- */
-
 SCENARIO("Setting an input for a recurrent layer", "[layer][init]")
 {
 	GIVEN("a recurrent layer with the size of 8")
