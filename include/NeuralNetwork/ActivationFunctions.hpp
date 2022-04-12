@@ -106,7 +106,74 @@ private:
 
 };
 
-//TODO: Add Binary step
+class BinaryStep : public ActivationFunction
+{
+public:
+	static BinaryStep& GetInstance()
+	{
+		static BinaryStep func;
+		return func;
+	}
+
+	BinaryStep(const BinaryStep& f) = delete;
+	void operator=(const BinaryStep& f) = delete;
+
+	~BinaryStep() = default;
+	Matrix CalculateMatrix(const Matrix& input) override
+	{
+		Matrix c(input.GetRowCount(), input.GetColumnCount());
+		for (size_t i = 0; i < input.GetElementCount(); ++i)
+			c.SetValue(i, input.GetValue(i) > 0 ? 1 : 0);
+		return c;
+	}
+
+	Matrix CalculateDerivateMatrix(const Matrix& output, float extra) override
+	{
+		Matrix c(output);
+		c.FillWith(0);
+		return c;
+	}
+
+	void CalculateInto(const Matrix& input, Matrix& target) override
+	{
+		for (size_t i = 0; i < input.GetElementCount(); ++i)
+			target.SetValue(i, input.GetValue(i) > 0 ? 1 : 0);
+	}
+
+	void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra) override
+	{
+		target.FillWith(0);
+	}
+
+	Tensor CalculateTensor(const Tensor& input) override
+	{
+		Tensor t(input);
+		for (unsigned int i = 0; i < t.GetElementCount(); i++)
+			t.SetValue(i, t.GetValue(i) > 0 ? 1 : 0);
+		return t;
+	}
+
+	Tensor CalculateDerivateTensor(const Tensor& output, float extra) override
+	{
+		Tensor t(output.GetShape());
+		t.FillWith(0);
+		return t;
+	}
+
+	void CalculateInto(const Tensor& input, Tensor& target) override
+	{
+		for (unsigned int i = 0; i < input.GetElementCount(); i++)
+			target.SetValue(i, input.GetValue(i) > 0 ? 1 : 0);
+	}
+
+	void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) override
+	{
+		target.FillWith(0);
+	}
+
+private:
+	BinaryStep() = default;
+};
 
 /**
  * @brief Sigmoid activation function
