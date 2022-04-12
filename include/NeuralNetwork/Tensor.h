@@ -78,12 +78,6 @@ public:
 	 * @return The value. If the position does not exists, an error is thrown.
 	 */
 	float GetValue(unsigned int position) const;
-	/**
-	 * @brief Gets a value from the tensor at a defined position.
-	 * @param position An array, describing the position of an element in the tensor (e.g.: 3, 2, 1)
-	 * @return The value at the described position. If the value does not exists (the position is out of bounds), throws an error.
-	 */
-	float GetValue(unsigned int* position) const;
 
 	/**
 	 * @brief Sets a value at a specific position in the tensor

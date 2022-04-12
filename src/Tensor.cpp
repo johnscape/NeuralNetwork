@@ -161,11 +161,6 @@ float Tensor::GetValue(unsigned int position) const
 	return Values[position];
 }
 
-float Tensor::GetValue(unsigned int *position) const
-{
-	return 0;
-}
-
 void Tensor::SetValue(unsigned int pos, float value)
 {
 	Values[pos] = value;
