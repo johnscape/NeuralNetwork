@@ -13,13 +13,20 @@ class LSTM :
     public Layer
 {
 public:
+	enum class Gate
+	{
+		FORGET,
+		INPUT,
+		ACTIVATION,
+		OUTPUT
+	};
+
     /**
      * @brief Creates a layer with an LSTM cell
      * @param inputLayer The layer where the input comes from
      * @param cellStateSize The size of the cell
-     * @param timeSteps The past steps stored for training.
     */
-    LSTM(Layer* inputLayer, unsigned int cellStateSize, unsigned int timeSteps = 3);
+    LSTM(Layer* inputLayer, unsigned int cellStateSize);
     virtual ~LSTM();
 
     /**
@@ -79,7 +86,19 @@ public:
     */
     Matrix& GetBias(unsigned char weight);
 
-    //TODO: select weight by enum
+	/**
+	 * @brief Returns the input weight from a selected gate.
+	 * @param gate The selected gate
+	 * @return Matrix pointer of the specified input weight
+	 */
+	Matrix& GetWeight(Gate gate);
+
+	/**
+	 * @brief Returns the bias from a selected gate.
+	 * @param gate The selected gate
+	 * @return Matrix pointer of the specified bias
+	 */
+	Matrix& GetBias(Gate gate);
 
     /**
      * @brief Loads the layer from JSON.
@@ -95,26 +114,19 @@ public:
     */
     virtual std::string SaveToJSON(const char* fileName = nullptr);
 
-    enum class Gate
-    {
-        FORGET = 0,
-        INPUT = 1,
-        UPDATE = 2, //INPUT MODULATION
-        OUTPUT = 3
-    };
-
 private:
     std::list<Matrix> Weights;
     std::list<Matrix> Biases;
 
-    std::deque<std::vector<Matrix>> savedStates;
-    std::deque<Matrix> errors;
+	std::list<Matrix> WeightErrors;
+	std::list<Matrix> BiasErrors;
+
+    std::list<Matrix> SavedStates, SavedCells, Gate1, Gate2, Gate3, Gate4;
 
     Matrix CellState;
     Matrix InnerState;
 
     unsigned int CellStateSize;
-    unsigned int TimeSteps;
 
     ActivationFunction* Tanh;
     ActivationFunction* Sig;
