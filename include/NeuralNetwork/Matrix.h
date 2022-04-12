@@ -268,7 +268,7 @@ public:
 	void ElementwiseMultiply(const Matrix& other);
 
 	/**
-	 * @brief Calculates the outer product with another matrix. Note: both of the matrices must be vectors!
+	 * @brief Calculates the outer product with another vector.
 	 * @param vector The other vector to calculate with.
 	 * @return The result of the outer product.
 	*/
@@ -390,7 +390,16 @@ public:
 	 * @param dim The dimension of the concatenation (0 - rows, 1 - cols)
 	 * @return The concatenated matrix
 	*/
-	static Matrix Concat(const Matrix& a, const Matrix& b, unsigned int dim); //TODO: create an enum for the dimension
+	static Matrix Concat(const Matrix& a, const Matrix& b, unsigned int dim);
+
+	/**
+	 * @brief Concatenates two marices and returns the result
+	 * @param a The matrix to concatenate to
+	 * @param b The matrix to concatenate
+	 * @param type How the matrices should be concatenated
+	 * @return The concatenated matrix
+	 */
+	static Matrix Concat(const Matrix& a, const Matrix& b, ConcatType type);
 
 	friend class Tensor;
 

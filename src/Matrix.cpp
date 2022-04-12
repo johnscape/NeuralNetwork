@@ -279,16 +279,41 @@ Matrix& Matrix::operator-=(const Matrix& other)
 		throw MatrixException();
 
 	float floatRes[4];
+	float currentValues[4];
+	float otherValues[4];
 	for (size_t i = 0; i < GetElementCount(); i += 4)
 	{
-		__m128 first = _mm_load_ps(Values + i);
-		__m128 second = _mm_load_ps(other.Values + i);
+		__m128 first, second;
+		if (i + 4 < GetElementCount())
+		{
+			first = _mm_load_ps(Values + i);
+			second = _mm_load_ps(other.Values + i);
+		}
+		else
+		{
+			for (unsigned char j = 0; j < 4; j++)
+			{
+				if (i + j < GetElementCount())
+				{
+					currentValues[j] = Values[i + j];
+					otherValues[j] = other.Values[i + j];
+				}
+				else
+				{
+					currentValues[j] = 0;
+					otherValues[j] = 0;
+				}
+			}
+			first = _mm_load_ps(currentValues);
+			second = _mm_load_ps(otherValues);
+		}
 		_mm_store_ps(floatRes, _mm_sub_ps(first, second));
 		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
 	}
+
 	return *this;
 }
 
@@ -338,21 +363,45 @@ Matrix Matrix::operator+(const Matrix& other) const
 	if (!IsSameSize(other))
 		throw MatrixException();
 
-	Matrix res(Rows, Columns);
+	Matrix result(Rows, Columns);
 
 	float floatRes[4];
+	float currentValues[4];
+	float otherValues[4];
 	for (size_t i = 0; i < GetElementCount(); i += 4)
 	{
-		__m128 first = _mm_load_ps(Values + i);
-		__m128 second = _mm_load_ps(other.Values + i);
+		__m128 first, second;
+		if (i + 4 < GetElementCount())
+		{
+			first = _mm_load_ps(Values + i);
+			second = _mm_load_ps(other.Values + i);
+		}
+		else
+		{
+			for (unsigned char j = 0; j < 4; j++)
+			{
+				if (i + j < GetElementCount())
+				{
+					currentValues[j] = Values[i + j];
+					otherValues[j] = other.Values[i + j];
+				}
+				else
+				{
+					currentValues[j] = 0;
+					otherValues[j] = 0;
+				}
+			}
+			first = _mm_load_ps(currentValues);
+			second = _mm_load_ps(otherValues);
+		}
 		_mm_store_ps(floatRes, _mm_add_ps(first, second));
 		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
-		std::copy(floatRes, floatRes + addressEnd, res.Values + i);
+		std::copy(floatRes, floatRes + addressEnd, result.Values + i);
 	}
 
-	return res;
+	return result;
 }
 
 Matrix Matrix::operator-(const Matrix& other) const
@@ -360,21 +409,45 @@ Matrix Matrix::operator-(const Matrix& other) const
 	if (!IsSameSize(other))
 		throw MatrixException();
 
-	Matrix res(Rows, Columns);
+	Matrix result(Rows, Columns);
 
 	float floatRes[4];
+	float currentValues[4];
+	float otherValues[4];
 	for (size_t i = 0; i < GetElementCount(); i += 4)
 	{
-		__m128 first = _mm_load_ps(Values + i);
-		__m128 second = _mm_load_ps(other.Values + i);
+		__m128 first, second;
+		if (i + 4 < GetElementCount())
+		{
+			first = _mm_load_ps(Values + i);
+			second = _mm_load_ps(other.Values + i);
+		}
+		else
+		{
+			for (unsigned char j = 0; j < 4; j++)
+			{
+				if (i + j < GetElementCount())
+				{
+					currentValues[j] = Values[i + j];
+					otherValues[j] = other.Values[i + j];
+				}
+				else
+				{
+					currentValues[j] = 0;
+					otherValues[j] = 0;
+				}
+			}
+			first = _mm_load_ps(currentValues);
+			second = _mm_load_ps(otherValues);
+		}
 		_mm_store_ps(floatRes, _mm_sub_ps(first, second));
 		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
-		std::copy(floatRes, floatRes + addressEnd, res.Values + i);
+		std::copy(floatRes, floatRes + addressEnd, result.Values + i);
 	}
 
-	return res;
+	return result;
 }
 
 Matrix Matrix::operator*(const Matrix& other) const
@@ -472,7 +545,9 @@ inline bool Matrix::IsSquare() const
 
 Matrix Matrix::GetSubMatrix(size_t startRow, size_t startColumn, size_t rowNum, size_t colNum) const
 {
-	if (startColumn + colNum >= Columns || startRow + rowNum >= Rows)
+	if (startColumn + colNum > Columns || startRow + rowNum > Rows)
+		throw MatrixIndexException();
+	if (rowNum == 0 || colNum == 0)
 		throw MatrixIndexException();
 
 	Matrix sub(rowNum, colNum);
@@ -573,6 +648,14 @@ Matrix Matrix::Concat(const Matrix& a, const Matrix& b, unsigned int dim)
 		}
 		return result;
 	}
+}
+
+Matrix Matrix::Concat(const Matrix& a, const Matrix& b, Matrix::ConcatType type)
+{
+	if (type == Matrix::ConcatType::BY_ROW)
+		return Matrix::Concat(a, b, 0);
+	else if (type == Matrix::ConcatType::BY_COLUMN)
+		return Matrix::Concat(a, b, 1);
 }
 
 void Matrix::ElementwiseMultiply(const Matrix& other)
@@ -739,7 +822,7 @@ void Matrix::Normalize(float maxValue)
 	if (max < 0)
 		max *= -1;
 
-	for (size_t i = 0; i < GetElementCount(); i++) //TODO: find std equivalent
+	for (size_t i = 0; i < GetElementCount(); i++)
 		Values[i] /= max;
 }
 
