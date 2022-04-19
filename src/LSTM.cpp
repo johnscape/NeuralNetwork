@@ -158,7 +158,7 @@ void LSTM::GetBackwardPass(const Tensor& error, bool recursive)
 	state--;
 	cell--;
 
-	for (unsigned int step = derivateMatrix.GetRowCount() - 1; step >= 0; step--)
+	for (unsigned int step = derivateMatrix.GetRowCount() - 1; step >= 0 && step <= derivateMatrix.GetRowCount(); step--)
 	{
 		TempMatrix errorRow = errors.GetTempRowMatrix(step);
 		TempMatrix derivateRow = errors.GetTempRowMatrix(step);
