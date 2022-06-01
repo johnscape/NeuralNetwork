@@ -1,6 +1,7 @@
 #pragma once
 #include "Optimizer.h"
 #include <memory>
+#include "LossFunctions/LossFunction.hpp"
 /**
  * @brief Optimizer for supervised learning, using gradient descent
 */
@@ -15,7 +16,7 @@ public:
      * @param output The output layer of the model.
      * @param learningRate The learning rate (alpha) of the optimizer.
     */
-    GradientDescent(LossFuction loss, LossDerivate derivate, Layer* output, float learningRate);
+    GradientDescent(LossFunction* lossFunction, Layer* output, float learningRate);
     virtual ~GradientDescent();
 
     /**
@@ -42,8 +43,7 @@ public:
 private:
     float LearningRate;
 
-    LossFuction loss;
-    LossDerivate derivate;
+    LossFunction* errorFunction;
 
     Tensor CalculateOutputError(const Tensor& output, const Tensor& expected);
 };

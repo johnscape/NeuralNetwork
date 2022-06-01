@@ -3,7 +3,7 @@
 #include "NeuralNetwork/Layers/LSTM.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/GradientDescent.h"
-#include "NeuralNetwork/LossFunctions/LossFunctions.hpp"
+#include "NeuralNetwork/LossFunctions/MSE.hpp"
 
 /**
  * Layer test TODOs:
@@ -86,7 +86,7 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
 		}
 		WHEN("training the network")
 		{
-			GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &lstm, 0.1);
+			GradientDescent trainer(new MSE(), &lstm, 0.1);
 			trainer.Train(inputValue, expectedValues);
 
 			THEN("The new weights should be different")

@@ -3,7 +3,7 @@
 #include "NeuralNetwork/Layers/FeedForwardLayer.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/GradientDescent.h"
-#include "NeuralNetwork/LossFunctions/LossFunctions.hpp"
+#include "NeuralNetwork/LossFunctions/MSE.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -91,7 +91,7 @@ SCENARIO("Training the feed forward layer", "[layer][training]")
 
 		outputLayer.SetActivationFunction(ACTIVATION_SIGMOID);
 
-		GradientDescent gds(LossFunctions::MSE, LossFunctions::MSE_Derivate, &outputLayer, 0.5f);
+		GradientDescent gds(new MSE(), &outputLayer, 0.5f);
 
 		WHEN("running the network")
 		{
@@ -126,7 +126,8 @@ SCENARIO("Training the feed forward layer", "[layer][training]")
 			input.SetInput(testInput);
 			Tensor result = outputLayer.ComputeAndGetOutput();
 
-			float error = LossFunctions::MSE(result, expected);
+			MSE func;
+			float error = func.Loss(result, expected);
 			REQUIRE(abs(error - 0.298371109) < 0.01);
 			gds.Train(testInput, expected);
 

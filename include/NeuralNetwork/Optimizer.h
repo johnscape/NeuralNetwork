@@ -6,9 +6,6 @@
 
 #include <vector>
 
-typedef float (*LossFuction)(const Tensor&, const Tensor&);
-typedef float (*LossDerivate)(const Tensor&, const Tensor&, unsigned int);
-
 //TODO: Use model class
 
 /**
@@ -25,11 +22,10 @@ public:
 	virtual ~Optimizer();
 
 	/**
-	 * @brief Trains the model based on the input and the expected output
+	 * @brief Executes a single train step on the model based on the input and the expected output
 	 * @param input The input of the model
 	 * @param expected The expected output of the model
 	*/
-	[[deprecated("Function is obsolete, use TrainStep or TrainFor instead")]]
 	virtual void Train(const Tensor& input, const Tensor& expected) = 0;
 
 	/**

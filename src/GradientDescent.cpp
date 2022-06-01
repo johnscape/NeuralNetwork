@@ -2,15 +2,16 @@
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Constants.h"
 
-
-GradientDescent::GradientDescent(LossFuction loss, LossDerivate derivate, Layer* output, float learningRate) : Optimizer(output), LearningRate(learningRate)
+//TODO: Replace pointer
+GradientDescent::GradientDescent(LossFunction* lossFunction, Layer* output, float learningRate) :
+	Optimizer(output), LearningRate(learningRate)
 {
-	this->derivate = derivate;
-	this->loss = loss;
+	errorFunction = lossFunction;
 }
 
 GradientDescent::~GradientDescent()
 {
+	delete errorFunction;
 }
 
 Tensor GradientDescent::CalculateOutputError(const Tensor& output, const Tensor& expected)
@@ -18,7 +19,7 @@ Tensor GradientDescent::CalculateOutputError(const Tensor& output, const Tensor&
 
 	Tensor outputError(output.GetShape(), nullptr);
 	for (unsigned int i = 0; i < outputError.GetElementCount(); i++)
-		outputError.SetValue(i, derivate(output, expected, i));
+		outputError.SetValue(i, errorFunction->Derivate(output, expected, i));
 	return outputError;
 }
 

@@ -4,7 +4,7 @@
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/ActivationFunctions.hpp"
 #include "NeuralNetwork/GradientDescent.h"
-#include "NeuralNetwork/LossFunctions/LossFunctions.hpp"
+#include "NeuralNetwork/LossFunctions/MSE.hpp"
 
 #include <cmath>
 
@@ -121,7 +121,7 @@ SCENARIO("Training a recurrent layer", "[layer][training]")
 		expected.SetValue(6, 0);
 		expected.SetValue(7, 1);
 
-		GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &rnn, 0.5f);
+		GradientDescent trainer(new MSE(), &rnn, 0.5f);
 
 		WHEN("running the network")
 		{
