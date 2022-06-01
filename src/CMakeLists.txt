@@ -26,6 +26,7 @@ add_library(NeuralNetwork
 		Optimizers/GradientDescent.cpp
         Layers/RecurrentLayer.cpp
         Layers/LSTM.cpp
+		Layers/ConvLayer.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include ${rapidjson_SOURCE_DIR}/include)
