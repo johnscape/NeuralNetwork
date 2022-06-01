@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Tensor.h"
-#include "Layer.h"
+#include "NeuralNetwork/Layers/Layer.h"
 #include <memory>
 
 #include <vector>

@@ -1,9 +1,9 @@
 #pragma once
-#include "Layer.h"
-#include "ActivationFunctions.hpp"
+#include "NeuralNetwork/Layers/Layer.h"
+#include "NeuralNetwork/ActivationFunctions.hpp"
 #include <queue>
 #include <memory>
-#include "Optimizer.h"
+#include "NeuralNetwork/Optimizer.h"
 
 /**
  * @brief This layer uses a single weight matrix to calculate with past information.

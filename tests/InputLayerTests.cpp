@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/Layers/InputLayer.h"
 
 /**
  * Layer test TODOs:

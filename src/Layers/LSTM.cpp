@@ -1,4 +1,4 @@
-#include "NeuralNetwork/LSTM.h"
+#include "NeuralNetwork/Layers/LSTM.h"
 #include "NeuralNetwork/Optimizer.h"
 #include "NeuralNetwork/TempMatrix.h"
 

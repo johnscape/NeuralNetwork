@@ -1,8 +1,8 @@
 #pragma once
-#include "Matrix.h"
-#include "Tensor.h"
-#include "ActivationFunctions.hpp"
-#include "Layer.h"
+#include "NeuralNetwork/Matrix.h"
+#include "NeuralNetwork/Tensor.h"
+#include "NeuralNetwork/ActivationFunctions.hpp"
+#include "NeuralNetwork/Layers/Layer.h"
 #include <vector>
 #include <deque>
 

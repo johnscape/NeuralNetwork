@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "NeuralNetwork/LSTM.h"
-#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/Layers/LSTM.h"
+#include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/GradientDescent.h"
-#include "NeuralNetwork/LossFunctions.hpp"
+#include "NeuralNetwork/LossFunctions/LossFunctions.hpp"
 
 /**
  * Layer test TODOs:

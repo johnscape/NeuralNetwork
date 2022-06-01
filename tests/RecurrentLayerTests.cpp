@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include "NeuralNetwork/RecurrentLayer.h"
-#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/Layers/RecurrentLayer.h"
+#include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/ActivationFunctions.hpp"
 #include "NeuralNetwork/GradientDescent.h"
-#include "NeuralNetwork/LossFunctions.hpp"
+#include "NeuralNetwork/LossFunctions/LossFunctions.hpp"
 
 #include <cmath>
 

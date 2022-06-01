@@ -1,7 +1,7 @@
-#include "NeuralNetwork/Layer.h"
-#include "NeuralNetwork/LayerException.hpp"
+#include "NeuralNetwork/Layers/Layer.h"
+#include "NeuralNetwork/Layers/LayerException.hpp"
 
-#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/Layers/InputLayer.h"
 //#include "NeuralNetwork/FeedForwardLayer.h"
 //#include "NeuralNetwork/RecurrentLayer.h"
 //#include "NeuralNetwork/LSTM.h"
@@ -56,7 +56,7 @@ Tensor& Layer::GetOutput()
 
 unsigned int Layer::OutputSize()
 {
-	return Output.GetShape()[1];
+	return Output.GetShapeAt(1);
 }
 
 Layer* Layer::GetInputLayer()

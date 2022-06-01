@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Tensor.h"
+#include "NeuralNetwork/Tensor.h"
 #include <memory>
 
 class Optimizer;
@@ -67,8 +67,8 @@ public:
 	virtual Tensor& GetOutput();
 
 	/**
-	 * @brief If the output matrix is a vector, the function returns its length
-	 * @return -1 if the output matrix is not a vector, the length of the vector otherwise
+	 * @brief Returns the second dimension of the output
+	 * @return The second dimension of the output
 	*/
 	virtual unsigned int OutputSize();
 

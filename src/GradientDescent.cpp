@@ -1,5 +1,5 @@
 #include "NeuralNetwork/GradientDescent.h"
-#include "NeuralNetwork/InputLayer.h"
+#include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Constants.h"
 
 

@@ -1,4 +1,4 @@
-#include "NeuralNetwork/RecurrentLayer.h"
+#include "NeuralNetwork/Layers/RecurrentLayer.h"
 
 #if USE_GPU
 #include "MatrixGPUMath.cuh"

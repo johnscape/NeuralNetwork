@@ -1,5 +1,5 @@
 #include "NeuralNetwork/GeneticAlgorithm.h"
-#include "NeuralNetwork/Layer.h"
+#include "NeuralNetwork/Layers/Layer.h"
 #include <time.h>
 #include "NeuralNetwork/Model.h"
 #include "NeuralNetwork/Constants.h"

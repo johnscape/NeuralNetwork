@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Tensor.h"
-#include "Constants.h"
-#include "MatrixException.hpp"
+#include "NeuralNetwork/Tensor.h"
+#include "NeuralNetwork/Constants.h"
+#include "NeuralNetwork/MatrixException.hpp"
 
 namespace LossFunctions
 {

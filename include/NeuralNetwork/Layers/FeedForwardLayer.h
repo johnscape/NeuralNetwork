@@ -1,6 +1,6 @@
 #pragma once
-#include "Layer.h"
-#include "ActivationFunctions.hpp"
+#include "NeuralNetwork/Layers/Layer.h"
+#include "NeuralNetwork/ActivationFunctions.hpp"
 
 /**
  * @brief This class represents a simple feed forward layer.

@@ -1,4 +1,4 @@
-#include "NeuralNetwork/FeedForwardLayer.h"
+#include "NeuralNetwork/Layers/FeedForwardLayer.h"
 #include "NeuralNetwork/Optimizer.h"
 
 #if USE_GPU

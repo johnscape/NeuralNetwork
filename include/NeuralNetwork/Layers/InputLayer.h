@@ -1,5 +1,5 @@
 #pragma once
-#include "Layer.h"
+#include "NeuralNetwork/Layers/Layer.h"
 /**
  * @brief This layer is responsible for copying matrices and tensors into the model. Use this as the first layer of your network.
 */

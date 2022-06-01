@@ -17,15 +17,15 @@ find_package(RapidJSON)
 add_library(NeuralNetwork
 	Matrix.cpp
 	TempMatrix.cpp
-	Layer.cpp
-	InputLayer.cpp
+        Layers/Layer.cpp
+        Layers/InputLayer.cpp
 	Optimizer.cpp
 	GeneticAlgorithm.cpp
 	Tensor.cpp
-	FeedForwardLayer.cpp
+        Layers/FeedForwardLayer.cpp
 	GradientDescent.cpp
-	RecurrentLayer.cpp
-	LSTM.cpp
+        Layers/RecurrentLayer.cpp
+        Layers/LSTM.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include ${rapidjson_SOURCE_DIR}/include)

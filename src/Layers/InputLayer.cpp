@@ -1,5 +1,5 @@
-#include "NeuralNetwork/InputLayer.h"
-#include "NeuralNetwork/LayerException.hpp"
+#include "NeuralNetwork/Layers/InputLayer.h"
+#include "NeuralNetwork/Layers/LayerException.hpp"
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/TensorException.hpp"
 

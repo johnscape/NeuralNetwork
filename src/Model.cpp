@@ -1,6 +1,6 @@
 #include "NeuralNetwork/Model.h"
 
-#include "NeuralNetwork/Layer.h"
+#include "NeuralNetwork/Layers/Layer.h"
 #include "NeuralNetwork/Matrix.h"
 #include <map>
 #include "NeuralNetwork/Constants.h"
