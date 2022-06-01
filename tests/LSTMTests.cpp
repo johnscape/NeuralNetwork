@@ -88,6 +88,45 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
 		{
 			GradientDescent trainer(LossFunctions::MSE, LossFunctions::MSE_Derivate, &lstm, 0.1);
 			trainer.Train(inputValue, expectedValues);
+
+			THEN("The new weights should be different")
+			{
+				Matrix wa(3, 1);
+				Matrix wi(3, 1);
+				Matrix wf(3, 1);
+				Matrix wo(3, 1);
+
+				wa.SetValue(0, 0.45267);
+				wa.SetValue(1, 0.25922);
+				wa.SetValue(2, 0.15104);
+
+				wi.SetValue(0, 0.95022);
+				wi.SetValue(1, 0.80067);
+				wi.SetValue(2, 0.80006);
+
+				wf.SetValue(0, 0.70031);
+				wf.SetValue(1, 0.45189);
+				wf.SetValue(2, 0.10034);
+
+				wo.SetValue(0, 0.60259);
+				wo.SetValue(1, 0.41626);
+				wo.SetValue(2, 0.25297);
+
+				Matrix waDiff = wa - lstm.GetWeight(LSTM::Gate::ACTIVATION);
+				Matrix wiDiff = wi - lstm.GetWeight(LSTM::Gate::INPUT);
+				Matrix wfDiff = wf - lstm.GetWeight(LSTM::Gate::FORGET);
+				Matrix woDiff = wo - lstm.GetWeight(LSTM::Gate::OUTPUT);
+
+				REQUIRE(abs(waDiff.Sum()) < 0.01f);
+				REQUIRE(abs(wiDiff.Sum()) < 0.01f);
+				REQUIRE(abs(wfDiff.Sum()) < 0.01f);
+				REQUIRE(abs(woDiff.Sum()) < 0.01f);
+
+				REQUIRE(abs(lstm.GetBias(LSTM::Gate::ACTIVATION).GetValue(0) - 0.20364) < 0.01f);
+				REQUIRE(abs(lstm.GetBias(LSTM::Gate::INPUT).GetValue(0) - 0.65028) < 0.01f);
+				REQUIRE(abs(lstm.GetBias(LSTM::Gate::FORGET).GetValue(0) - 0.15063) < 0.01f);
+				REQUIRE(abs(lstm.GetBias(LSTM::Gate::OUTPUT).GetValue(0) - 0.10536) < 0.01f);
+			}
 		}
 	}
 }
