@@ -1,5 +1,5 @@
 #include "NeuralNetwork/Layers/LSTM.h"
-#include "NeuralNetwork/Optimizer.h"
+#include "NeuralNetwork/Optimizers/Optimizer.h"
 #include "NeuralNetwork/TempMatrix.h"
 
 //NOTE Gate order is the following: Forget, Input, Activation, Output

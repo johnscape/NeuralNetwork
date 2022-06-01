@@ -1,4 +1,4 @@
-#include "NeuralNetwork/GradientDescent.h"
+#include "NeuralNetwork/Optimizers/GradientDescent.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Constants.h"
 

@@ -2,7 +2,7 @@
 
 #include "NeuralNetwork/Layers/FeedForwardLayer.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
-#include "NeuralNetwork/GradientDescent.h"
+#include "NeuralNetwork/Optimizers/GradientDescent.h"
 #include "NeuralNetwork/LossFunctions/MSE.hpp"
 
 #include <cmath>

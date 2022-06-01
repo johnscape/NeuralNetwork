@@ -3,7 +3,7 @@
 #include "NeuralNetwork/Layers/RecurrentLayer.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/ActivationFunctions.hpp"
-#include "NeuralNetwork/GradientDescent.h"
+#include "NeuralNetwork/Optimizers/GradientDescent.h"
 #include "NeuralNetwork/LossFunctions/MSE.hpp"
 
 #include <cmath>

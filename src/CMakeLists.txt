@@ -19,11 +19,11 @@ add_library(NeuralNetwork
 	TempMatrix.cpp
         Layers/Layer.cpp
         Layers/InputLayer.cpp
-	Optimizer.cpp
+		Optimizers/Optimizer.cpp
 	GeneticAlgorithm.cpp
 	Tensor.cpp
         Layers/FeedForwardLayer.cpp
-	GradientDescent.cpp
+		Optimizers/GradientDescent.cpp
         Layers/RecurrentLayer.cpp
         Layers/LSTM.cpp
 	${HEADER_LIST})

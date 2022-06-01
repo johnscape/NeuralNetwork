@@ -3,7 +3,7 @@
 #include "NeuralNetwork/ActivationFunctions.hpp"
 #include <queue>
 #include <memory>
-#include "NeuralNetwork/Optimizer.h"
+#include "NeuralNetwork/Optimizers/Optimizer.h"
 
 /**
  * @brief This layer uses a single weight matrix to calculate with past information.

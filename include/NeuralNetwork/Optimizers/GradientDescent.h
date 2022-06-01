@@ -1,7 +1,7 @@
 #pragma once
 #include "Optimizer.h"
 #include <memory>
-#include "LossFunctions/LossFunction.hpp"
+#include "NeuralNetwork/LossFunctions/LossFunction.hpp"
 /**
  * @brief Optimizer for supervised learning, using gradient descent
 */
