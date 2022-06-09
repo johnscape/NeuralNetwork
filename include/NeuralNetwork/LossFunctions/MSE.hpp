@@ -1,9 +1,4 @@
-//
-// Created by attila on 2022.06.01..
-//
-
-#ifndef NEURALNETWORK_MSE_HPP
-#define NEURALNETWORK_MSE_HPP
+#pragma once
 
 #include "NeuralNetwork/LossFunctions/LossFunction.hpp"
 #include <cmath>
@@ -24,4 +19,3 @@ public:
 		return output.GetValue(selected) - expected.GetValue(selected);
 	}
 };
-#endif //NEURALNETWORK_MSE_HPP

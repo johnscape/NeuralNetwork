@@ -1,9 +1,4 @@
-//
-// Created by attila on 2022. 03. 10..
-//
-
-#ifndef NEURALNETWORK_TEMPMATRIX_H
-#define NEURALNETWORK_TEMPMATRIX_H
+#pragma once
 
 #include "Matrix.h"
 
@@ -55,6 +50,3 @@ public:
 	bool operator!=(const Matrix& other) const;
 
 };
-
-
-#endif //NEURALNETWORK_TEMPMATRIX_H
