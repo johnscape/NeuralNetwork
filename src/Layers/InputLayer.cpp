@@ -3,10 +3,16 @@
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/TensorException.hpp"
 
-InputLayer::InputLayer(unsigned int size) : Layer(), Size(size)
+InputLayer::InputLayer(unsigned int size) : Layer(), Size(1, size)
 {
 	LayerInput = nullptr;
 	Output = Tensor({1, size}, nullptr);
+}
+
+InputLayer::InputLayer(std::vector<unsigned int>& size) : Layer(), Size(size)
+{
+	LayerInput = nullptr;
+	Output = Tensor(Size, nullptr);
 }
 
 Layer* InputLayer::Clone()
@@ -24,10 +30,6 @@ Tensor& InputLayer::ComputeAndGetOutput()
 
 void InputLayer::SetInput(const Tensor& input)
 {
-#if DEBUG
-	if (input.GetShapeAt(1) != input.GetShapeAt(1))
-		throw TensorShapeException();
-#endif // DEBUG
 	Output.ReloadFromOther(input);
 }
 

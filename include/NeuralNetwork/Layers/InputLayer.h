@@ -12,6 +12,7 @@ public:
 	 * @param size The size of your input.
 	*/
 	explicit InputLayer(unsigned int size);
+	explicit InputLayer(std::vector<unsigned int>& size);
 	virtual ~InputLayer() {}
 
 	/**
@@ -70,6 +71,6 @@ public:
 	*/
 	virtual std::string SaveToJSON(const char* fileName = nullptr);
 private:
-	unsigned int Size;
+	std::vector<unsigned int> Size;
 };
 
