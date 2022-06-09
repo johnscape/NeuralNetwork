@@ -12,7 +12,7 @@ public:
 	 * @param size The size of your input.
 	*/
 	explicit InputLayer(unsigned int size);
-	explicit InputLayer(std::vector<unsigned int>& size);
+	explicit InputLayer(std::vector<unsigned int> size);
 	virtual ~InputLayer() {}
 
 	/**

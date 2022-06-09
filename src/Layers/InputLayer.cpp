@@ -9,7 +9,7 @@ InputLayer::InputLayer(unsigned int size) : Layer(), Size(1, size)
 	Output = Tensor({1, size}, nullptr);
 }
 
-InputLayer::InputLayer(std::vector<unsigned int>& size) : Layer(), Size(size)
+InputLayer::InputLayer(std::vector<unsigned int> size) : Layer(), Size(size)
 {
 	LayerInput = nullptr;
 	Output = Tensor(Size, nullptr);
