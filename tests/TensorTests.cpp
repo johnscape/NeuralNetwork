@@ -1,8 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "../include/NeuralNetwork/Matrix.h"
-#include "../include/NeuralNetwork/Tensor.h"
-#include "../include/NeuralNetwork/TensorException.hpp"
+#include "NeuralNetwork/Matrix.h"
+#include "NeuralNetwork/Tensor.h"
+#include "NeuralNetwork/TensorException.hpp"
+#include "NeuralNetwork/TempMatrix.h"
 
 SCENARIO("Creating tensors", "[tensor]")
 {
@@ -199,6 +200,15 @@ SCENARIO("converting tensor to matrix", "[tensor][matrix]")
 					REQUIRE(it->GetRowCount() == 3);
 					REQUIRE(it->GetColumnCount() == 5);
 				}
+			}
+		}
+		WHEN("getting the second matrix as temp matrix")
+		{
+			TempMatrix mat = t.GetNthTempMatrix(1);
+			THEN("the matrix is 3x5")
+			{
+				REQUIRE(mat.GetRowCount() == 3);
+				REQUIRE(mat.GetColumnCount() == 5);
 			}
 		}
 	}

@@ -143,6 +143,13 @@ public:
 	void GetNthMatrix(unsigned int n, Matrix* mat = nullptr);
 
 	/**
+	 * @brief Gets the n-th matrix in order into a temp matrix
+	 * @param n The matrix to select
+	 * @return The selected matrix as a temp matrix
+	 */
+	TempMatrix GetNthTempMatrix(unsigned int n);
+
+	/**
 	 * @brief Converts a specific row into a matrix
 	 * @param matrix The matrix with the wanted row
 	 * @param row The wanted row number
@@ -165,7 +172,16 @@ public:
 	 */
 	unsigned int GetMatrixCount() const;
 
+	/**
+	 * @brief Adds the values in the tensor together
+	 * @return The sum of values inside of the tensor
+	 */
 	float Sum() const;
+
+	/**
+	 * @brief Removes the 1 dimensions from the tensor
+	 */
+	void Squeeze();
 
 	/**
 	 * @brief Sets every value of the tensor to a specified value

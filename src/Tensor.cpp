@@ -249,6 +249,22 @@ void Tensor::GetNthMatrix(unsigned int n, Matrix* mat)
 		std::copy(Values + n * (Shape[0] * Shape[1]), Values + (n + 1) * (Shape[0] * Shape[1]), mat->Values);
 }
 
+TempMatrix Tensor::GetNthTempMatrix(unsigned int n)
+{
+	if (n >= GetMatrixCount())
+		throw TensorIndexException();
+	unsigned int matSize = Shape[0];
+	unsigned int rows = Shape[0];
+	unsigned int cols = Shape[1];
+	if (Shape.size() >= 2)
+	{
+		matSize *= Shape[1];
+		cols = Shape[1];
+	}
+
+	return TempMatrix(rows, cols, Values + n * matSize);
+}
+
 Matrix Tensor::GetRowMatrix(unsigned int matrix, unsigned int row) const
 {
 	return Matrix(1, Shape[1], Values + matrix * Shape[0] * Shape[1] + row * Shape[1]);
@@ -272,6 +288,16 @@ float Tensor::Sum() const
 	return sum;
 }
 
+void Tensor::Squeeze()
+{
+	std::vector<unsigned int> newShape;
+	for (unsigned int s : Shape)
+		if (s != 1)
+			newShape.push_back(s);
+	if (newShape.empty())
+		newShape.push_back(1);
+	Shape = newShape;
+}
 
 void Tensor::FillWith(float value)
 {
