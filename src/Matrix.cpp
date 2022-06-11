@@ -732,13 +732,21 @@ Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride) const
 			{
 				for (int kc = 0; kc < kernel.GetColumnCount(); kc += 4)
 				{
-					float matValues[4] = {GetValue(r + kr, c + kc), 0, 0, 0};
-					float kerValues[4] = {kernel.GetValue(kr, kc), 0, 0, 0};
+					float matValues[4] = {GetValue((r * stride) + kr, (c * stride) + kc),
+										  0,
+										  0,
+										  0
+					};
+					float kerValues[4] = {kernel.GetValue(kr, kc),
+										  0,
+										  0,
+										  0
+					};
 					for (unsigned int i = 1; i < 4; ++i)
 					{
 						if (kc + i >= kernel.GetColumnCount())
 							break;
-						matValues[i] = GetValue(r + kr, c + kc + i);
+						matValues[i] = GetValue((r * stride) + kr, (c * stride) + kc + i);
 						kerValues[i] = kernel.GetValue(kr, kc + i);
 					}
 
