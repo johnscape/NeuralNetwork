@@ -710,6 +710,56 @@ float Matrix::DotProcudt(const Matrix& vector) const
 	return sum;
 }
 
+Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride) const
+{
+	unsigned int rowDiff = Rows - kernel.GetRowCount();
+	unsigned int colDiff = Columns - kernel.GetColumnCount();
+	if (rowDiff % stride != 0 || colDiff % stride != 0)
+		throw MatrixSizeException();
+
+	unsigned int newRows = (rowDiff / stride) + 1;
+	unsigned int newCols = (colDiff / stride) + 1;
+
+
+
+	Matrix result(newRows, newCols);
+	//result.FillWith(0);
+	for (unsigned int r = 0; r < newRows; ++r)
+	{
+		for (unsigned int c = 0; c < newCols; ++c)
+		{
+			for (unsigned int kr = 0; kr < kernel.GetRowCount(); ++kr)
+			{
+				for (int kc = 0; kc < kernel.GetColumnCount(); kc += 4)
+				{
+					float matValues[4] = {GetValue(r + kr, c + kc), 0, 0, 0};
+					float kerValues[4] = {kernel.GetValue(kr, kc), 0, 0, 0};
+					for (unsigned int i = 1; i < 4; ++i)
+					{
+						if (kc + i >= kernel.GetColumnCount())
+							break;
+						matValues[i] = GetValue(r + kr, c + kc + i);
+						kerValues[i] = kernel.GetValue(kr, kc + i);
+					}
+
+					//Do a dot product on the vectors
+					__m128 matReg = _mm_load_ps(matValues);
+					__m128 kerReg = _mm_load_ps(kerValues);
+					__m128 r1 = _mm_mul_ps(matReg, kerReg);
+					__m128 shuf   = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(2, 3, 0, 1));
+					__m128 sums   = _mm_add_ps(r1, shuf);
+					shuf          = _mm_movehl_ps(shuf, sums);
+					sums          = _mm_add_ss(sums, shuf);
+					float res =  _mm_cvtss_f32(sums);
+					result.AdjustValue(r, c, res);
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 float Matrix::Sum() const
 {
 	return std::accumulate(Values, Values + GetElementCount(), 0);

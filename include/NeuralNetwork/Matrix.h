@@ -401,6 +401,8 @@ public:
 	 */
 	static Matrix Concat(const Matrix& a, const Matrix& b, ConcatType type);
 
+	Matrix Convolute(const Matrix& kernel, unsigned int stride) const;
+
 	friend class Tensor;
 
 protected:

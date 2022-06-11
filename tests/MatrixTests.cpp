@@ -587,6 +587,28 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 			}
 		}
 	}
+	GIVEN("a 5x5 2 matrix and a 3x3 1 matrix")
+	{
+		Matrix a(5, 5);
+		Matrix b(3, 3);
+
+		a.FillWith(2);
+		b.FillWith(1);
+
+		WHEN("convoluting the matrices")
+		{
+			Matrix c = a.Convolute(b, 1);
+			THEN("the result will be 3x3")
+			{
+				REQUIRE(c.GetRowCount() == 3);
+				REQUIRE(c.GetColumnCount() == 3);
+			}
+			THEN("all values is 18")
+			{
+				REQUIRE(abs(c.Sum() - 18 * c.GetElementCount()) < 0.001f);
+			}
+		}
+	}
 }
 
 SCENARIO("getting sub-matrices", "[matrix]")
