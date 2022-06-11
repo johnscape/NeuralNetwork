@@ -158,7 +158,13 @@ public:
 	Matrix GetRowMatrix(unsigned int matrix, unsigned int row) const;
 	//TempMatrix GetRowTempMatrix(unsigned int matrix, unsigned int row) const;
 
+	/**
+	 * @brief Returns the tensor as a temp matrix, with all of the matrices converted into new rows
+	 * @return A temp matrix with extra rows as matrices
+	 */
 	TempMatrix ToMatrixByRows() const;
+
+	void LoadMatrix(unsigned int n, Matrix* mat);
 
 	/**
 	 * @brief Gets the number of elements in the tensor

@@ -710,7 +710,7 @@ float Matrix::DotProcudt(const Matrix& vector) const
 	return sum;
 }
 
-Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride) const
+Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride, Matrix* target) const
 {
 	unsigned int rowDiff = Rows - kernel.GetRowCount();
 	unsigned int colDiff = Columns - kernel.GetColumnCount();
@@ -720,6 +720,8 @@ Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride) const
 	unsigned int newRows = (rowDiff / stride) + 1;
 	unsigned int newCols = (colDiff / stride) + 1;
 
+	if (target && (target->GetRowCount() != newRows || target->GetColumnCount() != newCols))
+			throw MatrixSizeException();
 
 
 	Matrix result(newRows, newCols);
@@ -764,6 +766,9 @@ Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride) const
 			}
 		}
 	}
+
+	if (target)
+		target->ReloadFromOther(result);
 
 	return result;
 }

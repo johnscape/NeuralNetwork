@@ -212,6 +212,30 @@ SCENARIO("converting tensor to matrix", "[tensor][matrix]")
 			}
 		}
 	}
+
+	GIVEN("a 3x5x2 1 tensor and matrix of 2s")
+	{
+		Tensor t({3, 5, 2}, nullptr);
+		Matrix m(3, 5);
+
+		t.FillWith(1);
+		m.FillWith(2);
+
+		WHEN("loading the matrix into the tensor")
+		{
+			t.LoadMatrix(1, &m);
+
+			THEN("the last 15 value is 2")
+			{
+				REQUIRE(abs(t.Sum() - 45) < 0.01f);
+				for (int i = 0; i < 15; ++i)
+				{
+					REQUIRE(t.GetValue(14 + i) == 2);
+					REQUIRE(t.GetValue(i) == 1);
+				}
+			}
+		}
+	}
 }
 
 SCENARIO("modifying the tensors", "[tensor]")

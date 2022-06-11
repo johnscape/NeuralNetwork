@@ -275,6 +275,16 @@ TempMatrix Tensor::ToMatrixByRows() const
 	return TempMatrix(Shape[0] * GetMatrixCount(), Shape[1], Values);
 }
 
+void Tensor::LoadMatrix(unsigned int n, Matrix* mat)
+{
+	if (n >= GetMatrixCount())
+		return;
+	if (mat->GetRowCount() != Shape[0] || mat->GetColumnCount() != Shape[1])
+		throw TensorShapeException();
+
+	std::copy(mat->Values, mat->Values + mat->GetElementCount(), Values + n * Shape[0] * Shape[1]);
+}
+
 unsigned int Tensor::GetElementCount() const
 {
 	return ElementCount;

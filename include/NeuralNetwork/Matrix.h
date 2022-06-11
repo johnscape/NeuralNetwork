@@ -402,12 +402,13 @@ public:
 	static Matrix Concat(const Matrix& a, const Matrix& b, ConcatType type);
 
 	/**
-	 * @brief Creates a new matrix by convoluting this matrix with a kernel or filter
-	 * @param kernel The kernel or filter to apply
-	 * @param stride
-	 * @return
+	 * @brief Uses convolution on the matrix with the given kernel/filter.
+	 * @param kernel The kernel/filter to use for the operation
+	 * @param stride The size of the steps taken during the operation
+	 * @param target If a matrix given, the result will be saved in it
+	 * @return The result of the convolution operation
 	 */
-	Matrix Convolute(const Matrix& kernel, unsigned int stride) const;
+	Matrix Convolute(const Matrix& kernel, unsigned int stride=1, Matrix* target=nullptr) const;
 
 	friend class Tensor;
 
