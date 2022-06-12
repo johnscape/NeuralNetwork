@@ -51,9 +51,6 @@ public:
 		return func;
 	}
 
-	IdentityFunction(const IdentityFunction& f) = delete;
-	void operator=(const IdentityFunction& f) = delete;
-
 	~IdentityFunction() = default;
 	Matrix CalculateMatrix(const Matrix& input) override
 	{ 
@@ -114,9 +111,6 @@ public:
 		static BinaryStep func;
 		return func;
 	}
-
-	BinaryStep(const BinaryStep& f) = delete;
-	void operator=(const BinaryStep& f) = delete;
 
 	~BinaryStep() = default;
 	Matrix CalculateMatrix(const Matrix& input) override
@@ -186,9 +180,6 @@ public:
 		static Sigmoid func;
 		return func;
 	}
-
-	Sigmoid(const Sigmoid& f) = delete;
-	void operator=(const Sigmoid& f) = delete;
 
 	~Sigmoid() = default;
 	Matrix CalculateMatrix(const Matrix& input) override
@@ -287,9 +278,6 @@ public:
 		return func;
 	}
 
-	TanhFunction(const TanhFunction& f)		 = delete;
-	void operator=(const TanhFunction& f)	 = delete;
-
 	~TanhFunction() = default;
 	Matrix CalculateMatrix(const Matrix& input) override
 	{
@@ -378,4 +366,119 @@ private:
 	static float CalculateDerivate(float a) { return (float)(1 - pow(a, 2)); }
 
 	TanhFunction() = default;
+};
+
+class RELU : public ActivationFunction
+{
+public:
+	static RELU& GetInstance()
+	{
+		static RELU func;
+		return func;
+	}
+
+	virtual Matrix CalculateMatrix(const Matrix& input)
+	{
+		Matrix c(input);
+		for (unsigned int i = 0; i < c.GetElementCount(); ++i) {
+			float v = c.GetValue(i);
+			if (v <= 0)
+				c.SetValue(i, 0);
+			else
+				c.SetValue(i, v);
+		}
+		return c;
+	}
+
+	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra) {
+		Matrix c(output);
+		for (unsigned int i = 0; i < c.GetElementCount(); ++i)
+		{
+			float v = c.GetValue(i);
+			if (v <= 0)
+				c.SetValue(i, 0);
+			else
+				c.SetValue(i, 1);
+		}
+		return c;
+	}
+
+	Matrix CalculateDerivateMatrix(const Matrix& output) {
+		return CalculateDerivateMatrix(output, 0);
+	}
+
+	virtual void CalculateInto(const Matrix& input, Matrix& target) {
+		for (unsigned int i = 0; i < input.GetElementCount(); ++i) {
+			float v = input.GetValue(i);
+			if (v <= 0)
+				target.SetValue(i, 0);
+			else
+				target.SetValue(i, v);
+		}
+	}
+
+	virtual void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra) {
+		for (unsigned int i = 0; i < output.GetElementCount(); ++i)
+		{
+			if (output.GetValue(i) <= 0)
+				target.SetValue(i, 0);
+			else
+				target.SetValue(i, 1);
+		}
+	}
+
+	virtual Tensor CalculateTensor(const Tensor& input) {
+		Tensor c(input);
+		for (unsigned int i = 0; i < c.GetElementCount(); ++i) {
+			float v = c.GetValue(i);
+			if (v <= 0)
+				c.SetValue(i, 0);
+			else
+				c.SetValue(i, v);
+		}
+		return c;
+	}
+
+	virtual Tensor CalculateDerivateTensor(const Tensor& output, float extra) {
+		Tensor c(output);
+		for (unsigned int i = 0; i < c.GetElementCount(); ++i)
+		{
+			float v = c.GetValue(i);
+			if (v <= 0)
+				c.SetValue(i, 0);
+			else
+				c.SetValue(i, 1);
+		}
+		return c;
+	}
+	Tensor CalculateDerivateTensor(const Tensor& output) {
+		return CalculateDerivateTensor(output, 0);
+	}
+
+	virtual void CalculateInto(const Tensor& input, Tensor& target) {
+		for (unsigned int i = 0; i < input.GetElementCount(); ++i) {
+			float v = input.GetValue(i);
+			if (v <= 0)
+				target.SetValue(i, 0);
+			else
+				target.SetValue(i, v);
+		}
+	}
+
+	virtual void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) {
+		for (unsigned int i = 0; i < output.GetElementCount(); ++i)
+		{
+			if (output.GetValue(i) <= 0)
+				target.SetValue(i, 0);
+			else
+				target.SetValue(i, 1);
+		}
+	}
+
+	void CalculateDerivateInto(const Tensor& output, Tensor& target) {
+		CalculateDerivateInto(output, target, 0);
+	}
+
+private:
+	RELU() = default;
 };
