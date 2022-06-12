@@ -164,6 +164,11 @@ public:
 	 */
 	TempMatrix ToMatrixByRows() const;
 
+	/**
+	 * @brief Copies a matrix into a specified position in the tensor
+	 * @param n The matrix to overwrite
+	 * @param mat The matrix to copy the values from
+	 */
 	void LoadMatrix(unsigned int n, Matrix* mat);
 
 	/**

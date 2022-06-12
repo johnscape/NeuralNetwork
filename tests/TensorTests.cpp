@@ -230,7 +230,7 @@ SCENARIO("converting tensor to matrix", "[tensor][matrix]")
 				REQUIRE(abs(t.Sum() - 45) < 0.01f);
 				for (int i = 0; i < 15; ++i)
 				{
-					REQUIRE(t.GetValue(14 + i) == 2);
+					REQUIRE(t.GetValue(15 + i) == 2);
 					REQUIRE(t.GetValue(i) == 1);
 				}
 			}

@@ -1,4 +1,5 @@
 #include "NeuralNetwork/Layers/ConvLayer.h"
+#include "NeuralNetwork/ActivationFunctions.hpp"
 
 ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int stride, unsigned int nrFilters,
 	 unsigned int minimumPad, Matrix::PadType padType, float padFill) : Layer(inputLayer), Stride(stride),
@@ -7,18 +8,18 @@ ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int st
 	std::vector<unsigned int> outputShape = inputLayer->GetOutput().GetShape();
 	unsigned int firstDim = outputShape[0] - kernelSize;
 	unsigned int secondDim = outputShape[1] - kernelSize;
-	unsigned int pad = minimumPad;
-	while ((firstDim + 2 * pad) % (stride + 1) != 0 && (secondDim + 2 * pad) % (stride + 1) != 0)
-		pad++;
-	PadSize = pad;
-	outputShape[0] = (firstDim + 2 * PadSize) / (Stride + 1);
-	outputShape[1] = (secondDim + 2 * PadSize) / (Stride + 1);
+	PadSize = minimumPad;
+	while ((firstDim + 2 * PadSize) % (stride + 1) != 0 && (secondDim + 2 * PadSize) % (stride + 1) != 0)
+		PadSize++;
+	outputShape[0] = ((firstDim + 2 * PadSize) / Stride) + 1;
+	outputShape[1] = ((secondDim + 2 * PadSize) / Stride) + 1;
 	outputShape[2] = nrFilters;
 
 	Kernel = Tensor({kernelSize, kernelSize, inputLayer->GetOutput().GetShapeAt(2), nrFilters});
 	Kernel.FillWithRandom();
 
 	Output = Tensor(outputShape);
+	function = &RELU::GetInstance();
 }
 
 ConvLayer::~ConvLayer()
@@ -33,7 +34,37 @@ Layer *ConvLayer::Clone()
 
 void ConvLayer::Compute()
 {
+	Tensor input = LayerInput->ComputeAndGetOutput();
+	unsigned int kernelRowCount = Kernel.GetShapeAt(0);
+	unsigned int channelRowCount = kernelRowCount * Kernel.GetShapeAt(2);
 
+	unsigned int inputSteps = input.GetMatrixCount() / Kernel.GetShapeAt(2);
+	Matrix convResult(Output.GetShapeAt(0), Output.GetShapeAt(1));
+
+	Matrix inputStep(input.GetShapeAt(0), input.GetShapeAt(1));
+
+	for (int is = 0; is < inputSteps; ++is)
+	{
+		for (unsigned int k = 0; k < Kernel.GetShapeAt(3); k++) //kernel selection
+		{
+			for (unsigned int ch = 0; ch < Kernel.GetShapeAt(2); ++ch) //channel selection
+			{
+				inputStep.Reset(input.GetShapeAt(0), input.GetShapeAt(1));
+				TempMatrix ker = Kernel.GetNthTempMatrix(ch + k * Kernel.GetShapeAt(2));
+				//TempMatrix inp = input.GetNthTempMatrix(ch + Kernel.GetShapeAt(2) * is);
+				input.GetNthMatrix(ch + Kernel.GetShapeAt(2) * is, &inputStep);
+				if (PadSize > 0)
+					inputStep.Pad(PadSize, PadSize, PadSize, PadSize, PaddingType, PadFill);
+				inputStep.Convolute(ker, Stride, &convResult);
+
+				TempMatrix currentOutput = Output.GetNthTempMatrix(k + Kernel.GetShapeAt(3) * is);
+				convResult += currentOutput;
+				Output.LoadMatrix(k + Kernel.GetShapeAt(3) * is, &convResult);
+			}
+		}
+	}
+
+	function->CalculateInto(Output, Output);
 }
 
 Tensor &ConvLayer::ComputeAndGetOutput()

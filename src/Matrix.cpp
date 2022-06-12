@@ -977,10 +977,13 @@ void Matrix::ReloadFromOther(const Matrix& m)
 
 void Matrix::Reset(size_t rows, size_t columns)
 {
-	delete[] Values;
-	Rows = rows;
-	Columns = columns;
-	Values = new float[Rows * Columns];
+	if (rows != Rows || columns != Columns)
+	{
+		delete[] Values;
+		Rows = rows;
+		Columns = columns;
+		Values = new float[Rows * Columns];
+	}
 	std::fill(Values, Values + (rows * columns), 0);
 }
 

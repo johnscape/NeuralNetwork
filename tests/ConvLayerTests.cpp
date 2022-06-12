@@ -33,3 +33,27 @@ SCENARIO("Setting an input to the Conv Layer", "[layer][init]")
 		}
 	}
 }
+
+SCENARIO("Getting the output from the Conv Layer", "[layer][computation]")
+{
+	GIVEN("a basic conv layer and an input layer")
+	{
+		InputLayer input({3, 3});
+		ConvLayer conv(&input, 1, 1);
+
+		conv.GetKernel().FillWith(1);
+		WHEN("running this network")
+		{
+			Tensor inp({3, 3}, nullptr);
+			inp.FillWithRandom(0, 1);
+			input.SetInput(inp);
+			Tensor output = conv.ComputeAndGetOutput();
+			output.Squeeze();
+			THEN("the output has to be the same as the input")
+			{
+				REQUIRE(output.GetShape() == inp.GetShape());
+				REQUIRE(output == inp);
+			}
+		}
+	}
+}

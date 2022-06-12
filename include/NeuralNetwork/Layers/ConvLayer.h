@@ -2,6 +2,7 @@
 
 #include "Layer.h"
 
+class ActivationFunction;
 
 class ConvLayer : public Layer
 {
@@ -28,4 +29,6 @@ private:
 	unsigned int Stride;
 	Matrix::PadType PaddingType;
 	float PadFill;
+
+	ActivationFunction* function;
 };
