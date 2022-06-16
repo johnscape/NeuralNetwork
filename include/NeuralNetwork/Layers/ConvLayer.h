@@ -30,5 +30,7 @@ private:
 	Matrix::PadType PaddingType;
 	float PadFill;
 
+	Tensor KernelError;
+
 	ActivationFunction* function;
 };

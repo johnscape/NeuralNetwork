@@ -1,5 +1,7 @@
 #include "NeuralNetwork/Layers/ConvLayer.h"
 #include "NeuralNetwork/ActivationFunctions.hpp"
+#include "NeuralNetwork/TensorException.hpp"
+#include <cmath>
 
 ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int stride, unsigned int nrFilters,
 	 unsigned int minimumPad, Matrix::PadType padType, float padFill) : Layer(inputLayer), Stride(stride),
@@ -9,8 +11,13 @@ ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int st
 	unsigned int firstDim = outputShape[0] - kernelSize;
 	unsigned int secondDim = outputShape[1] - kernelSize;
 	PadSize = minimumPad;
-	while ((firstDim + 2 * PadSize) % (stride + 1) != 0 && (secondDim + 2 * PadSize) % (stride + 1) != 0)
-		PadSize++;
+	if (Stride > 1)
+	{
+		float padFirst = (float)((Stride - 1) * firstDim - Stride + kernelSize) / 2;
+		float padSecond= (float)((Stride - 1) * secondDim - Stride + kernelSize) / 2;
+		if (padFirst > PadSize || padSecond > PadSize)
+			PadSize = padFirst > padSecond ? ceil(padFirst) : ceil(padSecond);
+	}
 	outputShape[0] = ((firstDim + 2 * PadSize) / Stride) + 1;
 	outputShape[1] = ((secondDim + 2 * PadSize) / Stride) + 1;
 	outputShape[2] = nrFilters;
@@ -20,6 +27,9 @@ ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int st
 
 	Output = Tensor(outputShape);
 	function = &RELU::GetInstance();
+
+	LayerError = Tensor(inputLayer->GetOutput().GetShape(), nullptr);
+	KernelError = Tensor(Kernel.GetShape(), nullptr);
 }
 
 ConvLayer::~ConvLayer()
@@ -75,6 +85,11 @@ Tensor &ConvLayer::ComputeAndGetOutput()
 
 void ConvLayer::GetBackwardPass(const Tensor &error, bool recursive)
 {
+	KernelError.FillWith(0);
+	LayerError.FillWith(0);
+
+	Tensor derivate = function->CalculateDerivateTensor(error);
+
 
 }
 
