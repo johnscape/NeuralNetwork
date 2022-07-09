@@ -41,6 +41,7 @@ public:
 	 * @param errors The error to calculate the new weights from
 	*/
 	virtual void ModifyWeights(Matrix& weights, const Matrix& errors) = 0;
+	virtual void ModifyWeights(Tensor& weights, const Tensor& errors) = 0;
 
 	/**
 	 * @brief Resets the trainer and the network

@@ -66,13 +66,19 @@ void GradientDescent::Train(const Tensor& input, const Tensor& expected)
 
 void GradientDescent::ModifyWeights(Matrix& weights, const Matrix& errors)
 {
-	for (unsigned int row = 0; row < weights.GetRowCount(); row++)
+	for (unsigned int i = 0; i < (unsigned int)weights.GetElementCount(); ++i)
 	{
-		for (unsigned int col = 0; col < weights.GetColumnCount(); col++)
-		{
-			float edit = -LearningRate * errors.GetValue(row, col) / (float)currentBatch;
-			weights.AdjustValue(row, col, edit);
-		}
+		float edit = -LearningRate * errors.GetValue(i) / (float)currentBatch;
+		weights.AdjustValue(i, edit);
+	}
+}
+
+void GradientDescent::ModifyWeights(Tensor& weights, const Tensor& errors)
+{
+	for (unsigned int i = 0; i < weights.GetElementCount(); ++i)
+	{
+		float edit = -LearningRate * errors.GetValue(i) / (float)currentBatch;
+		weights.AdjustValue(i, edit);
 	}
 }
 
