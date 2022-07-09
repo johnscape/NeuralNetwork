@@ -724,7 +724,7 @@ Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride, Matrix* targ
 			throw MatrixSizeException();
 
 
-	Matrix result(newRows, newCols);
+	Matrix result(newRows, newCols); //TODO: Do not create if thrown away
 	//result.FillWith(0);
 	for (unsigned int r = 0; r < newRows; ++r)
 	{
@@ -847,24 +847,55 @@ void Matrix::ToSquare()
 
 void Matrix::Rotate(unsigned int times)
 {
-	if (!IsSquare())
-		throw MatrixException();
+	times = times % 4;
 	if (times == 0)
 		return;
-	for (unsigned int t = 0; t < times; t++)
+	//If the matrix is square then we don't need anything special
+	//But there might be a faster method
+	/*if (IsSquare())
 	{
-		for (int i = 0; i < Rows / 2; i++)
+		for (unsigned int t = 0; t < times; t++)
 		{
-			for (int j = i; j < Rows - i - 1; j++)
+			for (int i = 0; i < Rows / 2; i++)
 			{
-				float temp = GetValue(i, j);
-				SetValue(i, j, GetValue(Rows - 1 - j, i));
-				SetValue(Rows - 1 - j, i, GetValue(Rows - 1 - i, Rows - 1 - j));
-				SetValue(Rows - 1 - i, Rows - 1 - j, GetValue(j, Rows - 1 - i));
-				SetValue(j, Rows - 1 - i, temp);
+				for (int j = i; j < Rows - i - 1; j++)
+				{
+					float temp = GetValue(i, j);
+					SetValue(i, j, GetValue(Rows - 1 - j, i));
+					SetValue(Rows - 1 - j, i, GetValue(Rows - 1 - i, Rows - 1 - j));
+					SetValue(Rows - 1 - i, Rows - 1 - j, GetValue(j, Rows - 1 - i));
+					SetValue(j, Rows - 1 - i, temp);
+				}
+			}
+		}
+		return;
+	}*/
+
+	float* tmpArray = new float[Rows * Columns];
+	if (times == 1 || times == 3)
+	{
+		for (unsigned int r = 0; r < Columns; ++r)
+		{
+			for (unsigned int c = 0; c < Rows; ++c)
+			{
+				if (times == 1)
+					tmpArray[c + r * Rows] = Values[r + (Rows - 1 - c) * Columns];
+				else
+					tmpArray[c + r * Rows] = Values[c * Columns + (Columns - 1 - r)];
 			}
 		}
 	}
+	else
+	{
+		for (unsigned int r = 0; r < Rows; ++r)
+		{
+			std::copy(Values + r * Columns, Values + (r + 1) * Columns, tmpArray + (Rows - 1 - r) * Columns);
+			std::reverse(tmpArray + (Rows - 1 - r) * Columns, tmpArray + (Rows - r) * Columns);
+		}
+	}
+
+	delete[] Values;
+	Values = tmpArray;
 }
 
 void Matrix::Normalize(float maxValue)
