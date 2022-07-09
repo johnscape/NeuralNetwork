@@ -852,7 +852,7 @@ void Matrix::Rotate(unsigned int times)
 		return;
 	//If the matrix is square then we don't need anything special
 	//But there might be a faster method
-	/*if (IsSquare())
+	if (IsSquare())
 	{
 		for (unsigned int t = 0; t < times; t++)
 		{
@@ -869,7 +869,7 @@ void Matrix::Rotate(unsigned int times)
 			}
 		}
 		return;
-	}*/
+	}
 
 	float* tmpArray = new float[Rows * Columns];
 	if (times == 1 || times == 3)
