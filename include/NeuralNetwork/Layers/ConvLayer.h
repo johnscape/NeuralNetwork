@@ -25,6 +25,7 @@ public:
 
 private:
 	Tensor Kernel;
+	Tensor InputStep; //Saved input for training purposes
 	unsigned int PadSize;
 	unsigned int Stride;
 	Matrix::PadType PaddingType;

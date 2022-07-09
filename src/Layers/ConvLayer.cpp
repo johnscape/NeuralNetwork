@@ -1,6 +1,7 @@
 #include "NeuralNetwork/Layers/ConvLayer.h"
 #include "NeuralNetwork/ActivationFunctions.hpp"
 #include "NeuralNetwork/TensorException.hpp"
+#include "NeuralNetwork/Optimizers/Optimizer.h"
 #include <cmath>
 
 ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int stride, unsigned int nrFilters,
@@ -22,6 +23,8 @@ ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int st
 	outputShape[1] = ((secondDim + 2 * PadSize) / Stride) + 1;
 	outputShape[2] = nrFilters;
 
+	//TODO: Handle different dimensions
+	//Kernel shape: rows	cols	inputChannels	nrFilters
 	Kernel = Tensor({kernelSize, kernelSize, inputLayer->GetOutput().GetShapeAt(2), nrFilters});
 	Kernel.FillWithRandom();
 
@@ -45,6 +48,18 @@ Layer *ConvLayer::Clone()
 void ConvLayer::Compute()
 {
 	Tensor input = LayerInput->ComputeAndGetOutput();
+	if (TrainingMode) //Set up training input
+	{
+		if (PadSize == 0)
+			InputStep = input;
+		else
+		{
+			std::vector<unsigned int> shape = input.GetShape();
+			shape[0] += 2 * PadSize;
+			shape[1] += 2 * PadSize;
+			InputStep = Tensor(shape, nullptr);
+		}
+	}
 	unsigned int kernelRowCount = Kernel.GetShapeAt(0);
 	unsigned int channelRowCount = kernelRowCount * Kernel.GetShapeAt(2);
 
@@ -64,7 +79,11 @@ void ConvLayer::Compute()
 				//TempMatrix inp = input.GetNthTempMatrix(ch + Kernel.GetShapeAt(2) * is);
 				input.GetNthMatrix(ch + Kernel.GetShapeAt(2) * is, &inputStep);
 				if (PadSize > 0)
+				{
 					inputStep.Pad(PadSize, PadSize, PadSize, PadSize, PaddingType, PadFill);
+					if (TrainingMode)
+						InputStep.LoadMatrix(ch + Kernel.GetShapeAt(2) * is, &inputStep);
+				}
 				inputStep.Convolute(ker, Stride, &convResult);
 
 				TempMatrix currentOutput = Output.GetNthTempMatrix(k + Kernel.GetShapeAt(3) * is);
@@ -73,7 +92,6 @@ void ConvLayer::Compute()
 			}
 		}
 	}
-
 	function->CalculateInto(Output, Output);
 }
 
@@ -90,12 +108,30 @@ void ConvLayer::GetBackwardPass(const Tensor &error, bool recursive)
 
 	Tensor derivate = function->CalculateDerivateTensor(error);
 
+	Matrix inputStep(InputStep.GetShapeAt(0), InputStep.GetShapeAt(1));
+	Matrix convResult(Kernel.GetShapeAt(0), Kernel.GetShapeAt(1));
 
+	std::cout << "Beginning error" << std::endl;
+	std::cout << error << std::endl;
+	std::cout << "End error" << std::endl;
+
+	for (unsigned int c = 0; c < Output.GetShapeAt(2); c++)
+	{
+		for (unsigned int i = 0; i < InputStep.GetMatrixCount(); i++)
+		{
+			unsigned int inputChannel = i % InputStep.GetShapeAt(2);
+			InputStep.GetNthMatrix(i, &inputStep);
+			TempMatrix usedError = error.GetNthTempMatrix(c);
+			inputStep.Convolute(usedError, Stride, &convResult);
+			convResult += KernelError.GetNthTempMatrix(c * Kernel.GetShapeAt(2) + inputChannel);
+			KernelError.LoadMatrix(c * Kernel.GetShapeAt(2) + inputChannel, &convResult);
+		}
+	}
 }
 
 void ConvLayer::Train(Optimizer *optimizer)
 {
-
+	optimizer->ModifyWeights(Kernel, KernelError);
 }
 
 void ConvLayer::LoadFromJSON(const char *data, bool isFile)
