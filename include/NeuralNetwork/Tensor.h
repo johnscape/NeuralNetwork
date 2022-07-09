@@ -147,7 +147,7 @@ public:
 	 * @param n The matrix to select
 	 * @return The selected matrix as a temp matrix
 	 */
-	TempMatrix GetNthTempMatrix(unsigned int n);
+	TempMatrix GetNthTempMatrix(unsigned int n) const;
 
 	/**
 	 * @brief Converts a specific row into a matrix

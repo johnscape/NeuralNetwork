@@ -26,7 +26,7 @@ public:
 	 * @param input The input of the model
 	 * @param expected The expected output of the model
 	*/
-	virtual void Train(const Tensor& input, const Tensor& expected) = 0;
+	virtual void Train(const Tensor& input, const Tensor& expected, unsigned int batchDimension = 0) = 0;
 
 	/**
 	 * @brief Trains the model based on the input and the expected output

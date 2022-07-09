@@ -26,7 +26,7 @@ public:
     */
     virtual void TrainStep(const Tensor& input, const Tensor& output);
 
-	virtual void Train(const Tensor& input, const Tensor& output);
+	virtual void Train(const Tensor& input, const Tensor& output, unsigned int batchDimension = 0);
 
     /**
      * @brief Based on the type of the optimizer, this function will modify the weights of the layers.

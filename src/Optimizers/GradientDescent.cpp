@@ -31,9 +31,9 @@ void GradientDescent::TrainStep(const Tensor& input, const Tensor& output)
 	outputLayer->GetBackwardPass(outputError, true);
 }
 
-void GradientDescent::Train(const Tensor& input, const Tensor& expected)
+void GradientDescent::Train(const Tensor& input, const Tensor& expected, unsigned int batchDimension)
 {
-	currentBatch = input.GetShapeAt(0);
+	currentBatch = input.GetShapeAt(batchDimension);
 	//find input layer
 	Layer* currentLayer = outputLayer;
 	while (currentLayer->GetInputLayer())
@@ -66,6 +66,7 @@ void GradientDescent::Train(const Tensor& input, const Tensor& expected)
 
 void GradientDescent::ModifyWeights(Matrix& weights, const Matrix& errors)
 {
+	//TODO: Use matrix operations
 	for (unsigned int i = 0; i < (unsigned int)weights.GetElementCount(); ++i)
 	{
 		float edit = -LearningRate * errors.GetValue(i) / (float)currentBatch;
@@ -75,8 +76,10 @@ void GradientDescent::ModifyWeights(Matrix& weights, const Matrix& errors)
 
 void GradientDescent::ModifyWeights(Tensor& weights, const Tensor& errors)
 {
+	//TODO: Use tensor operations
 	for (unsigned int i = 0; i < weights.GetElementCount(); ++i)
 	{
+		float tmp = errors.GetValue(i);
 		float edit = -LearningRate * errors.GetValue(i) / (float)currentBatch;
 		weights.AdjustValue(i, edit);
 	}

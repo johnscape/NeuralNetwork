@@ -249,7 +249,7 @@ void Tensor::GetNthMatrix(unsigned int n, Matrix* mat)
 		std::copy(Values + n * (Shape[0] * Shape[1]), Values + (n + 1) * (Shape[0] * Shape[1]), mat->Values);
 }
 
-TempMatrix Tensor::GetNthTempMatrix(unsigned int n)
+TempMatrix Tensor::GetNthTempMatrix(unsigned int n) const
 {
 	if (n >= GetMatrixCount())
 		throw TensorIndexException();
