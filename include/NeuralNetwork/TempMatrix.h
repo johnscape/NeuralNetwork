@@ -14,6 +14,7 @@ public:
 
 	Matrix ToMatrix();
 	virtual void Transpose();
+	virtual void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type, float value, Matrix* result);
 
 	//deleted functions
 	void SetValue(size_t row, size_t col, float val) = delete;
@@ -36,7 +37,6 @@ public:
 	void ElementwiseMultiply(const Matrix& other) = delete;
 	void Clamp(float min, float max) = delete;
 	void RoundToInt() = delete;
-	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type, float value) = delete;
 	void ToSquare() = delete;
 	void Rotate(unsigned int times) = delete;
 	void Normalize(float maxValue) = delete;

@@ -58,3 +58,11 @@ bool TempMatrix::operator!=(const Matrix &other) const
 	return Matrix::operator!=(other);
 }
 
+void TempMatrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, Matrix::PadType type,
+					 float value, Matrix *result)
+{
+	if (result == nullptr)
+		throw MatrixException();
+	Matrix::Pad(top, left, bottom, right, type, value, result);
+}
+
