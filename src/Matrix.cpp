@@ -725,7 +725,6 @@ Matrix Matrix::Convolute(const Matrix& kernel, unsigned int stride, Matrix* targ
 
 
 	Matrix result(newRows, newCols); //TODO: Do not create if thrown away
-	//result.FillWith(0);
 	for (unsigned int r = 0; r < newRows; ++r)
 	{
 		for (unsigned int c = 0; c < newCols; ++c)
@@ -805,7 +804,8 @@ bool Matrix::IsOutOfBounds(size_t row, size_t col) const
 	return (row >= Rows || col >= Columns);
 }
 
-void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type, float value)
+void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type,
+				 float value, Matrix* result)
 {
 	Matrix padded(Rows + top + bottom, Columns + left + right);
 	switch (type)
@@ -820,7 +820,12 @@ void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsig
 	for (size_t i = 0; i < Rows; i++)
 		std::copy(Values + i * Columns, Values + (i + 1) * Columns, padded.Values + left + (top + i) * padded.GetColumnCount());
 
-	ReloadFromOther(padded);
+	if (result == nullptr)
+		ReloadFromOther(padded);
+	else if (result->Columns == padded.Columns && result->Rows == padded.Rows)
+		result->ReloadFromOther(padded);
+	else
+		throw MatrixSizeException();
 }
 
 void Matrix::ToSquare()

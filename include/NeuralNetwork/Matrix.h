@@ -328,7 +328,8 @@ public:
 	 * @param type The type of the padding. See PadType for more info
 	 * @param value The value used for constant padding
 	*/
-	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right, PadType type = PadType::CONSTANT, float value = 0);
+	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right,
+			 PadType type = PadType::CONSTANT, float value = 0, Matrix* result=nullptr);
 
 	/**
 	 * @brief Converts the matrix to a square matrix, using zero-padding.

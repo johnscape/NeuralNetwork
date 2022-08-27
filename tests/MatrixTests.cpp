@@ -716,6 +716,22 @@ SCENARIO("matrix reformating and padding")
 				REQUIRE(mat.GetValue(2, 2) == 3);
 			}
 		}
+		WHEN("copying the pad into a different matrix")
+		{
+			Matrix result(3, 3);
+			mat.Pad(0, 0, 0, 1, Matrix::PadType::CONSTANT, 0, &result);
+			THEN("the result matrix is still 3x3")
+			{
+				REQUIRE(result.GetRowCount() == 3);
+				REQUIRE(result.GetColumnCount() == 3);
+			}
+			THEN("the rightmost column is 0")
+			{
+				REQUIRE(result.GetValue(0, 2) == 0);
+				REQUIRE(result.GetValue(1, 2) == 0);
+				REQUIRE(result.GetValue(2, 2) == 0);
+			}
+		}
 		WHEN("squaring matrix")
 		{
 			mat.ToSquare();
