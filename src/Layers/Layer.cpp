@@ -1,10 +1,12 @@
+#include <utility>
+
 #include "NeuralNetwork/Layers/Layer.h"
 #include "NeuralNetwork/Layers/LayerException.hpp"
-
 #include "NeuralNetwork/Layers/InputLayer.h"
-//#include "NeuralNetwork/FeedForwardLayer.h"
-//#include "NeuralNetwork/RecurrentLayer.h"
-//#include "NeuralNetwork/LSTM.h"
+#include "NeuralNetwork/Layers/FeedForwardLayer.h"
+#include "NeuralNetwork/Layers/RecurrentLayer.h"
+#include "NeuralNetwork/Layers/LSTM.h"
+#include "NeuralNetwork/Layers/ConvLayer.h"
 
 unsigned int Layer::LayerCount = 0;
 
@@ -22,16 +24,19 @@ Layer::Layer() : TrainingMode(false), LayerError()
 	LayerCount++;
 }
 
-Layer* Layer::Create(unsigned int type, unsigned int size, Layer* input)
+Layer* Layer::Create(Layer::LayerType type, std::vector<unsigned int> size, Layer* input)
 {
-	if (type == 0)
-		return new InputLayer(size);
-	/*if (type == 1)
-		return new FeedForwardLayer(input, size);
-	if (type == 2)
-		return new RecurrentLayer(input, size);
-	if (type == 3)
-		return new LSTM(input, size);*/
+	if (type == LayerType::INPUT)
+		return new InputLayer(std::move(size));
+	if (type == LayerType::FORWARD)
+		return new FeedForwardLayer(input, size[0]);
+	if (type == LayerType::RECURRENT)
+		return new RecurrentLayer(input, size[0]);
+	if (type == LayerType::LSTM)
+		return new LSTM(input, size[0]);
+	if (type == LayerType::CONV)
+		return new ConvLayer(input, size[0], 1);
+
 	return nullptr;
 }
 

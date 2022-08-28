@@ -12,6 +12,18 @@ class Layer
 {
 public:
 	/**
+	 * @brief Enum for layer classification
+	 */
+	enum class LayerType
+	{
+		INPUT, /**< Input layer */
+		FORWARD, /**< Feedforward layer */
+		RECURRENT, /**< Simple recurrent layer to learn from past data  */
+		LSTM, /**< Long short-term memory */
+		CONV /**< Convolutional layer */
+	};
+
+	/**
 	 * @brief Creates an abstract layer.
 	 * @param inputLayer The layer where the input comes from. Set to null for an input layer.
 	*/
@@ -34,7 +46,7 @@ public:
 	 * @param size The size of the layer
 	 * @return A new layer based on the parameters
 	*/
-	static Layer* Create(unsigned int type, unsigned int size, Layer* input = nullptr);
+	static Layer* Create(LayerType type, std::vector<unsigned int> size, Layer* input = nullptr);
 	virtual ~Layer();
 
 	/**
@@ -143,14 +155,6 @@ public:
 	 * @param id The new id
 	*/
 	void SetId(unsigned int id);
-
-	enum class LayerType
-	{
-		INPUT,
-		FEEDFORWARD,
-		RECURRENT,
-		LSTMLAYER
-	};
 
 protected:
 	Layer* LayerInput;

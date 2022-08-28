@@ -1,5 +1,4 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/*.h*")
-list(REMOVE_ITEM HEADER_LIST "${PROJECT_SOURCE_DIR}/include/NeuralNetwork/Model.h")
 
 
 FetchContent_Declare(
@@ -17,16 +16,17 @@ find_package(RapidJSON)
 add_library(NeuralNetwork
 	Matrix.cpp
 	TempMatrix.cpp
-        Layers/Layer.cpp
-        Layers/InputLayer.cpp
-		Optimizers/Optimizer.cpp
-	GeneticAlgorithm.cpp
 	Tensor.cpp
-        Layers/FeedForwardLayer.cpp
-		Optimizers/GradientDescent.cpp
-        Layers/RecurrentLayer.cpp
-        Layers/LSTM.cpp
-		Layers/ConvLayer.cpp
+	Model.cpp
+	Optimizers/GradientDescent.cpp
+	Optimizers/Optimizer.cpp
+	GeneticAlgorithm.cpp
+	Layers/FeedForwardLayer.cpp
+	Layers/Layer.cpp
+	Layers/InputLayer.cpp
+	Layers/RecurrentLayer.cpp
+	Layers/LSTM.cpp
+	Layers/ConvLayer.cpp
 	${HEADER_LIST})
 
 target_include_directories(NeuralNetwork PUBLIC ../include ${rapidjson_SOURCE_DIR}/include)
