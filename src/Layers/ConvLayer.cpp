@@ -106,14 +106,11 @@ void ConvLayer::GetBackwardPass(const Tensor &error, bool recursive)
 	KernelError.FillWith(0);
 	LayerError.FillWith(0);
 
+	//Kernel error
 	Tensor derivate = function->CalculateDerivateTensor(error);
 
 	Matrix inputStep(InputStep.GetShapeAt(0), InputStep.GetShapeAt(1));
 	Matrix convResult(Kernel.GetShapeAt(0), Kernel.GetShapeAt(1));
-
-	std::cout << "Beginning error" << std::endl;
-	std::cout << error << std::endl;
-	std::cout << "End error" << std::endl;
 
 	for (unsigned int c = 0; c < Output.GetShapeAt(2); c++)
 	{
@@ -127,6 +124,31 @@ void ConvLayer::GetBackwardPass(const Tensor &error, bool recursive)
 			KernelError.LoadMatrix(c * Kernel.GetShapeAt(2) + inputChannel, &convResult);
 		}
 	}
+
+	//Layer error
+	Matrix tmpKernel(Kernel.GetShapeAt(0), Kernel.GetShapeAt(1));
+	Matrix fullError(error.GetShapeAt(0) + 2, error.GetShapeAt(1) + 2);
+	convResult.Reset(InputStep.GetShapeAt(0), InputStep.GetShapeAt(1));
+
+	for (unsigned int k = 0; k < Kernel.GetShapeAt(3); ++k)
+	{
+		for (unsigned int i = 0; i < Kernel.GetShapeAt(2); ++i)
+		{
+
+			Kernel.GetNthMatrix(k * Kernel.GetShapeAt(2) + i, &tmpKernel);
+			tmpKernel.Rotate(2);
+
+			TempMatrix usedError = error.GetNthTempMatrix(k);
+			usedError.Pad(1, 1, 1, 1, Matrix::PadType::CONSTANT, 0, &fullError);
+			fullError.Convolute(tmpKernel, Stride, &convResult);
+			convResult += LayerError.GetNthTempMatrix(i);
+			LayerError.LoadMatrix(i, &convResult);
+
+		}
+	}
+
+	if (recursive)
+		LayerInput->GetBackwardPass(LayerError, true);
 }
 
 void ConvLayer::Train(Optimizer *optimizer)
