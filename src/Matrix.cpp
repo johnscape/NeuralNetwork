@@ -240,10 +240,11 @@ Matrix& Matrix::operator+=(const Matrix& other)
 	for (size_t i = 0; i < GetElementCount(); i += 4)
 	{
 		__m128 first, second;
+
 		if (i + 4 < GetElementCount())
 		{
-			first = _mm_load_ps(Values + i);
-			second = _mm_load_ps(other.Values + i);
+			first = _mm_loadu_ps(Values + i);
+			second = _mm_loadu_ps(other.Values + i);
 		}
 		else
 		{

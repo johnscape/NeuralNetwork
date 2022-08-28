@@ -328,7 +328,7 @@ public:
 	 * @param type The type of the padding. See PadType for more info
 	 * @param value The value used for constant padding
 	*/
-	void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right,
+	virtual void Pad(unsigned int top, unsigned int left, unsigned int bottom, unsigned int right,
 			 PadType type = PadType::CONSTANT, float value = 0, Matrix* result=nullptr);
 
 	/**
