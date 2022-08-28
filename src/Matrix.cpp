@@ -2,15 +2,17 @@
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/MatrixException.hpp"
 #include "NeuralNetwork/Tensor.h"
-#include "NeuralNetwork/TempMatrix.h"
 #include <string>
 
 #include <numeric>
-#include <functional>
 #include <random>
 #include <algorithm>
 #include "nmmintrin.h"
-#include "immintrin.h"
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/writer.h>
+#include <fstream>
 
 #if USE_GPU
 #include <cuda.h>
@@ -1055,75 +1057,71 @@ void Matrix::FillWithRandom(float min, float max)
 
 void Matrix::LoadFromJSON(const char* data, bool isFile)
 {
-	/*if (Values)
+	if (Values)
 		delete[] Values;
+
 	rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
 	else
 	{
-		std::ifstream r(data);
-		rapidjson::IStreamWrapper isw(r);
-		document.ParseStream(isw);
-	}
-	rapidjson::Value val;
-	val = document["matrix"]["rows"];
-	Rows = val.GetUint64();
-	val = document["matrix"]["cols"];
-	Columns = val.GetUint64();
-	size_t MaxValue = GetElementCount();
-	Values = new float[MaxValue];
-	val = document["matrix"]["values"];
-	size_t count = 0;
-	for (rapidjson::Value::ConstValueIterator itr = val.Begin(); itr != val.End(); itr++)
-	{
-		Values[count] = itr->GetFloat();
-		count++;
+		std::ifstream reader(data);
+		rapidjson::IStreamWrapper jsonReader(reader);
+		document.ParseStream(jsonReader);
 	}
 
-#if USE_GPU
-	cudaFree(GPUValues);
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
-	CopyToGPU();
-#endif*/
+	rapidjson::Value value;
+	value = document["matrix"]["rows"];
+	Rows = value.GetUint64();
+	value = document["matrix"]["cols"];
+	Columns = value.GetUint64();
+	Values = new float[Rows * Columns];
+	value = document["matrix"]["values"];
+	unsigned int counter = 0;
+	for (rapidjson::Value::ConstValueIterator itr = value.Begin(); itr != value.End(); itr++)
+	{
+		Values[counter] = itr->GetFloat();
+		counter++;
+	}
 }
 
 std::string Matrix::SaveToJSON(const char* fileName) const
 {
-	/*rapidjson::Document doc;
-	doc.SetObject();
+	rapidjson::Document document;
+	document.SetObject();
 
+	//create objects
 	rapidjson::Value rows, cols, values;
 	rapidjson::Value matrix(rapidjson::kObjectType);
 
+	//fill objects with values
 	rows.SetUint64(Rows);
 	cols.SetUint64(Columns);
 	values.SetArray();
-	for (size_t i = 0; i < Rows * Columns; i++)
-		values.PushBack(Values[i], doc.GetAllocator());
+	for (unsigned int i = 0; i < GetElementCount(); ++i)
+		values.PushBack(Values[i], document.GetAllocator());
 
-	matrix.AddMember("rows", rows, doc.GetAllocator());
-	matrix.AddMember("cols", cols, doc.GetAllocator());
-	matrix.AddMember("values", values, doc.GetAllocator());
+	//add inheritance
+	matrix.AddMember("rows", rows, document.GetAllocator());
+	matrix.AddMember("cols", cols, document.GetAllocator());
+	matrix.AddMember("values", values, document.GetAllocator());
 
-	doc.AddMember("matrix", matrix, doc.GetAllocator());
+	document.AddMember("matrix", matrix, document.GetAllocator());
 
-	if (fileName)
+	if (fileName) //save json to file
 	{
-		std::ofstream w(fileName);
-		rapidjson::OStreamWrapper osw(w);
-		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-		doc.Accept(writer);
-		w.close();
+		std::ofstream writer(fileName);
+		rapidjson::OStreamWrapper wrapper(writer);
+		rapidjson::Writer<rapidjson::OStreamWrapper> jsonWriter(wrapper);
+		document.Accept(jsonWriter);
+		writer.close();
 	}
 
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-	doc.Accept(writer);
+	document.Accept(writer);
 
-	return std::string(buffer.GetString());*/
-
-	return "";
+	return std::string(buffer.GetString());
 }
 
 void Matrix::CopyToGPU()
