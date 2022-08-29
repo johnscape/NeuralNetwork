@@ -111,11 +111,6 @@ public:
 	 * @return A vector containing the shape of the tensor
 	 */
 	std::vector<unsigned int> GetShape() const;
-	/**
-	 * @brief A function to convert the shape into a printable string
-	 * @return The tensor's shape in a string
-	 */
-	std::string GetShapeAsString() const;
 
 	/**
 	 * @brief Returns the size of the tensor at a defined dimension
@@ -156,7 +151,6 @@ public:
 	 * @return A row matrix of the wanted row
 	 */
 	Matrix GetRowMatrix(unsigned int matrix, unsigned int row) const;
-	//TempMatrix GetRowTempMatrix(unsigned int matrix, unsigned int row) const;
 
 	/**
 	 * @brief Returns the tensor as a temp matrix, with all of the matrices converted into new rows
@@ -205,6 +199,20 @@ public:
 	 * @param max The maximum random value
 	 */
 	void FillWithRandom(float min = -1, float max = 1);
+
+	/**
+	 * @brief Loads the tensor from JSON data.
+	 * @param data The JSON string or a file containing the JSON data.
+	 * @param isFile Set it true if the data is in a file.
+	*/
+	void LoadFromJSON(const char* data, bool isFile = false);
+
+	/**
+	 * @brief Saves the tensor into a JSON string.
+	 * @param fileName The file to save into. If don't want to save, leave it null.
+	 * @return A string containing the JSON data of the tensor.
+	*/
+	std::string SaveToJSON(const char* fileName = nullptr) const;
 
 	//matrix operators
 	Tensor operator+(const Matrix& other) const;

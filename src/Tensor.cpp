@@ -3,6 +3,13 @@
 #include "NeuralNetwork/Tensor.h"
 #include "NeuralNetwork/TensorException.hpp"
 #include "nmmintrin.h"
+#include <numeric>
+
+#include <fstream>
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/writer.h>
 
 std::ostream& operator<<(std::ostream& os, const Tensor& tensor)
 {
@@ -176,18 +183,6 @@ std::vector<unsigned int> Tensor::GetShape() const
 	return Shape;
 }
 
-std::string Tensor::GetShapeAsString() const
-{
-	std::string txt = "";
-	for (unsigned int i = 0; i < Shape.size(); i++)
-	{
-		txt += Shape[i];
-		if (i < Shape.size() - 1)
-			txt += "x";
-	}
-	return txt;
-}
-
 unsigned int Tensor::GetShapeAt(unsigned int i) const
 {
 	if (i >= Shape.size())
@@ -287,7 +282,7 @@ void Tensor::LoadMatrix(unsigned int n, Matrix* mat)
 
 unsigned int Tensor::GetElementCount() const
 {
-	return ElementCount;
+	return std::accumulate(std::begin(Shape), std::end(Shape), 1, std::multiplies<float>());
 }
 
 float Tensor::Sum() const
@@ -329,6 +324,71 @@ void Tensor::FillWithRandom(float min, float max)
 
 	for (size_t i = 0; i < GetElementCount(); i++)
 		Values[i] = static_cast<float>(dist(engine));
+}
+
+void Tensor::LoadFromJSON(const char *data, bool isFile)
+{
+	if (Values)
+		delete[] Values;
+	Shape.clear();
+
+	rapidjson::Document document;
+	if (!isFile)
+		document.Parse(data);
+	else
+	{
+		std::ifstream reader(data);
+		rapidjson::IStreamWrapper jsonReader(reader);
+		document.ParseStream(jsonReader);
+	}
+
+	rapidjson::Value value;
+	value = document["tensor"]["shape"];
+	for (rapidjson::Value::ConstValueIterator itr = value.Begin(); itr != value.End(); itr++)
+		Shape.push_back(itr->GetUint64());
+	value = document["tensor"]["values"];
+	Values = new float[GetElementCount()];
+	unsigned int counter = 0;
+	for (rapidjson::Value::ConstValueIterator itr = value.Begin(); itr != value.End(); itr++)
+	{
+		Values[counter] = itr->GetFloat();
+		counter++;
+	}
+}
+
+std::string Tensor::SaveToJSON(const char *fileName) const
+{
+	rapidjson::Document document;
+	document.SetObject();
+
+	rapidjson::Value shape, values;
+	rapidjson::Value tensor(rapidjson::kObjectType);
+
+	shape.SetArray();
+	values.SetArray();
+	for (unsigned int s = 0; s < Shape.size(); ++s)
+		shape.PushBack(Shape[s], document.GetAllocator());
+	for (unsigned int v = 0; v < GetElementCount(); v++)
+		values.PushBack(Values[v], document.GetAllocator());
+
+	tensor.AddMember("shape", shape, document.GetAllocator());
+	tensor.AddMember("values", values, document.GetAllocator());
+	document.AddMember("tensor", tensor, document.GetAllocator());
+
+	if (fileName) //save json to file
+	{
+		std::ofstream writer(fileName);
+		rapidjson::OStreamWrapper wrapper(writer);
+		rapidjson::Writer<rapidjson::OStreamWrapper> jsonWriter(wrapper);
+		document.Accept(jsonWriter);
+		writer.close();
+	}
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	document.Accept(writer);
+
+	return std::string(buffer.GetString());
 }
 
 unsigned int Tensor::GetMatrixCount() const
