@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <rapidjson/document.h>
 
 class Tensor;
 class TempMatrix;
@@ -173,11 +174,23 @@ public:
 	void LoadFromJSON(const char* data, bool isFile = false);
 
 	/**
+	 * @brief Loads the matrix from JSON data.
+	 * @param jsonValue rapidjson::Value type containing the data of the matrix
+	 */
+	void LoadFromJSON(rapidjson::Value& jsonValue);
+
+	/**
 	 * @brief Saves the matrix into a JSON string.
 	 * @param fileName The file to save into. If don't want to save, leave it null.
 	 * @return A string containing the JSON data of the matrix.
 	*/
 	std::string SaveToJSON(const char* fileName = nullptr) const;
+
+	/**
+	 * @brief Saves the matrix into a JSON type
+	 * @return The JSONified matrix
+	 */
+	rapidjson::Value SaveToJSONObject(rapidjson::Document& document) const;
 
 	/**
 	 * @brief If GPU is used, this function copies the values from the RAM to the GPU memory

@@ -1057,9 +1057,6 @@ void Matrix::FillWithRandom(float min, float max)
 
 void Matrix::LoadFromJSON(const char* data, bool isFile)
 {
-	if (Values)
-		delete[] Values;
-
 	rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
@@ -1071,14 +1068,23 @@ void Matrix::LoadFromJSON(const char* data, bool isFile)
 	}
 
 	rapidjson::Value value;
-	value = document["matrix"]["rows"];
-	Rows = value.GetUint64();
-	value = document["matrix"]["cols"];
-	Columns = value.GetUint64();
+	value = document["matrix"];
+	LoadFromJSON(value);
+}
+
+void Matrix::LoadFromJSON(rapidjson::Value& jsonValue)
+{
+	if (Values)
+		delete[] Values;
+	if (jsonValue.HasMember("matrix"))
+		jsonValue = jsonValue["matrix"];
+	Rows = jsonValue["rows"].GetUint64();
+	Columns = jsonValue["cols"].GetUint64();
+	rapidjson::Value arr;
+	arr = jsonValue["values"];
 	Values = new float[Rows * Columns];
-	value = document["matrix"]["values"];
 	unsigned int counter = 0;
-	for (rapidjson::Value::ConstValueIterator itr = value.Begin(); itr != value.End(); itr++)
+	for (rapidjson::Value::ConstValueIterator itr = arr.Begin(); itr != arr.End(); itr++)
 	{
 		Values[counter] = itr->GetFloat();
 		counter++;
@@ -1089,22 +1095,7 @@ std::string Matrix::SaveToJSON(const char* fileName) const
 {
 	rapidjson::Document document;
 	document.SetObject();
-
-	//create objects
-	rapidjson::Value rows, cols, values;
-	rapidjson::Value matrix(rapidjson::kObjectType);
-
-	//fill objects with values
-	rows.SetUint64(Rows);
-	cols.SetUint64(Columns);
-	values.SetArray();
-	for (unsigned int i = 0; i < GetElementCount(); ++i)
-		values.PushBack(Values[i], document.GetAllocator());
-
-	//add inheritance
-	matrix.AddMember("rows", rows, document.GetAllocator());
-	matrix.AddMember("cols", cols, document.GetAllocator());
-	matrix.AddMember("values", values, document.GetAllocator());
+	rapidjson::Value matrix = SaveToJSONObject(document);
 
 	document.AddMember("matrix", matrix, document.GetAllocator());
 
@@ -1122,6 +1113,27 @@ std::string Matrix::SaveToJSON(const char* fileName) const
 	document.Accept(writer);
 
 	return std::string(buffer.GetString());
+}
+
+rapidjson::Value Matrix::SaveToJSONObject(rapidjson::Document& document) const
+{
+	//create objects
+	rapidjson::Value rows, cols, values;
+	rapidjson::Value matrix(rapidjson::kObjectType);
+
+	//fill objects with values
+	rows.SetUint64(Rows);
+	cols.SetUint64(Columns);
+	values.SetArray();
+	for (unsigned int i = 0; i < GetElementCount(); ++i)
+		values.PushBack(Values[i], document.GetAllocator());
+
+	//add inheritance
+	matrix.AddMember("rows", rows, document.GetAllocator());
+	matrix.AddMember("cols", cols, document.GetAllocator());
+	matrix.AddMember("values", values, document.GetAllocator());
+
+	return matrix;
 }
 
 void Matrix::CopyToGPU()
