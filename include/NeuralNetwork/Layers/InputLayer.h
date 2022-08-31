@@ -69,7 +69,7 @@ public:
 	 * @param fileName If you want to save the JSON data into a file, enter the file name here.
 	 * @return A string containing the JSON describtion of the layer.
 	*/
-	virtual std::string SaveToJSON(const char* fileName = nullptr);
+	virtual std::string SaveToJSON(const char* fileName = nullptr) const;
 private:
 	std::vector<unsigned int> Size;
 };

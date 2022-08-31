@@ -59,7 +59,7 @@ void InputLayer::LoadFromJSON(const char* data, bool isFile)
 	Size = val.GetUint();*/
 }
 
-std::string InputLayer::SaveToJSON(const char* fileName)
+std::string InputLayer::SaveToJSON(const char* fileName) const
 {
 	/*rapidjson::Document doc;
 	doc.SetObject();

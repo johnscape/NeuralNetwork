@@ -1,6 +1,12 @@
 #include "NeuralNetwork/Layers/FeedForwardLayer.h"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
 
+#include <fstream>
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/writer.h>
+
 #if USE_GPU
 #include "MatrixGPUMath.cuh"
 #endif
@@ -179,7 +185,7 @@ void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
 	Bias.LoadFromJSON(buffer.GetString());*/
 }
 
-std::string FeedForwardLayer::SaveToJSON(const char* fileName)
+std::string FeedForwardLayer::SaveToJSON(const char* fileName) const
 {
 	/*rapidjson::Document doc;
 	doc.SetObject();

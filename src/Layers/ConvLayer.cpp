@@ -161,7 +161,7 @@ void ConvLayer::LoadFromJSON(const char *data, bool isFile)
 
 }
 
-std::string ConvLayer::SaveToJSON(const char *fileName)
+std::string ConvLayer::SaveToJSON(const char *fileName) const
 {
 	return std::string();
 }

@@ -142,7 +142,7 @@ public:
 	 * @param fileName If you want to save the string into a file, set the filename here.
 	 * @return The JSON string describing the layer.
 	*/
-	virtual std::string SaveToJSON(const char* fileName = nullptr) = 0;
+	virtual std::string SaveToJSON(const char* fileName = nullptr) const = 0;
 
 	/**
 	 * @brief Returns the layer unique id.

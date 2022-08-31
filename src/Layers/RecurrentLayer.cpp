@@ -225,7 +225,7 @@ void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 
 }
 
-std::string RecurrentLayer::SaveToJSON(const char* fileName)
+std::string RecurrentLayer::SaveToJSON(const char* fileName) const
 {
 	/*rapidjson::Document doc;
 	doc.SetObject();

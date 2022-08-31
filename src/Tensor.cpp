@@ -282,7 +282,10 @@ void Tensor::LoadMatrix(unsigned int n, Matrix* mat)
 
 unsigned int Tensor::GetElementCount() const
 {
-	return std::accumulate(std::begin(Shape), std::end(Shape), 1, std::multiplies<float>());
+	unsigned int sum = 1;
+	for (unsigned int i = 0; i < Shape.size(); ++i)
+		sum *= Shape[i];
+	return sum;
 }
 
 float Tensor::Sum() const
@@ -328,10 +331,6 @@ void Tensor::FillWithRandom(float min, float max)
 
 void Tensor::LoadFromJSON(const char *data, bool isFile)
 {
-	if (Values)
-		delete[] Values;
-	Shape.clear();
-
 	rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
@@ -341,12 +340,25 @@ void Tensor::LoadFromJSON(const char *data, bool isFile)
 		rapidjson::IStreamWrapper jsonReader(reader);
 		document.ParseStream(jsonReader);
 	}
+	rapidjson::Value value;
+	value = document["tensor"];
+	LoadFromJSON(value);
+
+}
+void Tensor::LoadFromJSON(rapidjson::Value& jsonValue)
+{
+	if (Values)
+		delete[] Values;
+	Shape.clear();
+
+	if (jsonValue.HasMember("tensor"))
+		jsonValue = jsonValue["tensor"];
 
 	rapidjson::Value value;
-	value = document["tensor"]["shape"];
+	value = jsonValue["shape"];
 	for (rapidjson::Value::ConstValueIterator itr = value.Begin(); itr != value.End(); itr++)
 		Shape.push_back(itr->GetUint64());
-	value = document["tensor"]["values"];
+	value = jsonValue["values"];
 	Values = new float[GetElementCount()];
 	unsigned int counter = 0;
 	for (rapidjson::Value::ConstValueIterator itr = value.Begin(); itr != value.End(); itr++)
@@ -356,23 +368,13 @@ void Tensor::LoadFromJSON(const char *data, bool isFile)
 	}
 }
 
+
 std::string Tensor::SaveToJSON(const char *fileName) const
 {
 	rapidjson::Document document;
 	document.SetObject();
+	rapidjson::Value tensor = SaveToJSONObject(document);
 
-	rapidjson::Value shape, values;
-	rapidjson::Value tensor(rapidjson::kObjectType);
-
-	shape.SetArray();
-	values.SetArray();
-	for (unsigned int s = 0; s < Shape.size(); ++s)
-		shape.PushBack(Shape[s], document.GetAllocator());
-	for (unsigned int v = 0; v < GetElementCount(); v++)
-		values.PushBack(Values[v], document.GetAllocator());
-
-	tensor.AddMember("shape", shape, document.GetAllocator());
-	tensor.AddMember("values", values, document.GetAllocator());
 	document.AddMember("tensor", tensor, document.GetAllocator());
 
 	if (fileName) //save json to file
@@ -389,6 +391,24 @@ std::string Tensor::SaveToJSON(const char *fileName) const
 	document.Accept(writer);
 
 	return std::string(buffer.GetString());
+}
+
+rapidjson::Value Tensor::SaveToJSONObject(rapidjson::Document& document) const
+{
+	rapidjson::Value shape, values;
+	rapidjson::Value tensor(rapidjson::kObjectType);
+
+	shape.SetArray();
+	values.SetArray();
+	for (unsigned int s = 0; s < Shape.size(); ++s)
+		shape.PushBack(Shape[s], document.GetAllocator());
+	for (unsigned int v = 0; v < GetElementCount(); v++)
+		values.PushBack(Values[v], document.GetAllocator());
+
+	tensor.AddMember("shape", shape, document.GetAllocator());
+	tensor.AddMember("values", values, document.GetAllocator());
+
+	return tensor;
 }
 
 unsigned int Tensor::GetMatrixCount() const

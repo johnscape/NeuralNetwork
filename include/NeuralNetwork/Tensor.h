@@ -208,11 +208,23 @@ public:
 	void LoadFromJSON(const char* data, bool isFile = false);
 
 	/**
+	 * @brief Loads the tensor from JSON data.
+	 * @param jsonValue rapidjson::Value type containing the data of the tensor
+	 */
+	void LoadFromJSON(rapidjson::Value& jsonValue);
+
+	/**
 	 * @brief Saves the tensor into a JSON string.
 	 * @param fileName The file to save into. If don't want to save, leave it null.
 	 * @return A string containing the JSON data of the tensor.
 	*/
 	std::string SaveToJSON(const char* fileName = nullptr) const;
+
+	/**
+	 * @brief Saves the tensor into a JSON type
+	 * @return The JSONified tensor
+	 */
+	rapidjson::Value SaveToJSONObject(rapidjson::Document& document) const;
 
 	//matrix operators
 	Tensor operator+(const Matrix& other) const;

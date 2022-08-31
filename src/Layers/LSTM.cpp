@@ -401,7 +401,7 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
     }*/
 }
 
-std::string LSTM::SaveToJSON(const char* fileName)
+std::string LSTM::SaveToJSON(const char* fileName) const
 {
     /*rapidjson::Document doc;
     doc.SetObject();

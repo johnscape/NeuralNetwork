@@ -17,7 +17,7 @@ public:
 	virtual void GetBackwardPass(const Tensor& error, bool recursive = false);
 	virtual void Train(Optimizer* optimizer);
 	virtual void LoadFromJSON(const char* data, bool isFile = false);
-	virtual std::string SaveToJSON(const char* fileName = nullptr);
+	virtual std::string SaveToJSON(const char* fileName = nullptr) const;
 
 	Tensor& GetKernel();
 	unsigned int GetPadSize();
