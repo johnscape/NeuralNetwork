@@ -80,8 +80,9 @@ void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
 	//TODO: Implement tensor elementwise multiply
 	//LayerError = weight * (error .* derivate)
+	TempMatrix errorMatrix = error.ToMatrixByRows();
 	Tensor derivate = function->CalculateDerivateTensor(Output);
-	LayerError.FillWith(0);
+	LayerError = Tensor({(unsigned int)errorMatrix.GetRowCount(), LayerInput->OutputSize()}, nullptr);
 #if USE_GPU
 	derivate->CopyFromGPU();
 #endif // USE_GPU
