@@ -65,11 +65,24 @@ public:
 	virtual void LoadFromJSON(const char* data, bool isFile = false);
 
 	/**
+	 * @brief Loads the layer from JSON
+	 * @param jsonData rapidjsson value type, containing the data for the layer
+	 */
+	virtual void LoadFromJSON(rapidjson::Value& jsonData);
+
+	/**
 	 * @brief Saves the layer into a JSON string.
 	 * @param fileName If you want to save the JSON data into a file, enter the file name here.
 	 * @return A string containing the JSON describtion of the layer.
 	*/
 	virtual std::string SaveToJSON(const char* fileName = nullptr) const;
+
+	/**
+	 * @brief Saves the layer into a JSON value object
+	 * @param document A reference for the top document object
+	 * @return A rapidjson value type containing the layer
+	 */
+	virtual rapidjson::Value SaveToJSONObject(rapidjson::Document& document) const;
 private:
 	std::vector<unsigned int> Size;
 };

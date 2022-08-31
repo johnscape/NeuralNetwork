@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Matrix.h"
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include "Constants.h"
 
@@ -22,6 +22,15 @@ public:
 	ActivationFunction() = default;
 	~ActivationFunction() = default;
 
+	enum class ActivationFunctionType
+	{
+		IDENTITY,
+		BINARYSTEP,
+		SIGMOID,
+		TANH,
+		RELU
+	};
+
 	virtual Matrix CalculateMatrix(const Matrix& input) = 0;
 	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra) = 0;
 	Matrix CalculateDerivateMatrix(const Matrix& output) {return CalculateDerivateMatrix(output, 0);}
@@ -37,6 +46,8 @@ public:
 	virtual void CalculateInto(const Tensor& input, Tensor& target) = 0;
 	virtual void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) = 0;
 	void CalculateDerivateInto(const Tensor& output, Tensor& target) {CalculateDerivateInto(output, target, 0);}
+
+	virtual ActivationFunctionType GetActivationFunctionType() = 0;
 };
 
 /**
@@ -97,6 +108,8 @@ public:
 	{
 		target.FillWith(1);
 	}
+
+	virtual ActivationFunctionType GetActivationFunctionType() {return ActivationFunctionType::IDENTITY;}
 
 private:
 	IdentityFunction() = default;
@@ -164,6 +177,8 @@ public:
 	{
 		target.FillWith(0);
 	}
+
+	virtual ActivationFunctionType GetActivationFunctionType() {return ActivationFunctionType::BINARYSTEP;}
 
 private:
 	BinaryStep() = default;
@@ -259,6 +274,8 @@ public:
 		for (unsigned int i = 0; i < output.GetElementCount(); ++i)
 			target.SetValue(i, CalculateDerivate(output.GetValue(i)));
 	}
+
+	virtual ActivationFunctionType GetActivationFunctionType() {return ActivationFunctionType::SIGMOID;}
 
 private:
 	static float Calculate(float a) { return  1.0f / (1.0f + exp(-a)); }
@@ -357,6 +374,8 @@ public:
 		for (unsigned int i = 0; i < output.GetElementCount(); ++i)
 			target.SetValue(i, CalculateDerivate(output.GetValue(i)));
 	}
+
+	virtual ActivationFunctionType GetActivationFunctionType() {return ActivationFunctionType::TANH;}
 
 private:
 	static float Calculate(float a) {
@@ -478,6 +497,8 @@ public:
 	void CalculateDerivateInto(const Tensor& output, Tensor& target) {
 		CalculateDerivateInto(output, target, 0);
 	}
+
+	virtual ActivationFunctionType GetActivationFunctionType() {return ActivationFunctionType::RELU;}
 
 private:
 	RELU() = default;

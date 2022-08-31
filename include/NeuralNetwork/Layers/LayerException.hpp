@@ -18,3 +18,11 @@ class LayerSizeException : public std::exception
 		return "Error code: 21 - Matrix does not match layer size";
 	}
 };
+
+class LayerTypeException : public std::exception
+{
+	const char* what() const throw()
+	{
+		return "Error code: 22 - Incorrect layer type";
+	}
+};
