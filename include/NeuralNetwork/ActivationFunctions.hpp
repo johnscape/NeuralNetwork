@@ -503,3 +503,17 @@ public:
 private:
 	RELU() = default;
 };
+
+ActivationFunction* GetActivationFunction(ActivationFunction::ActivationFunctionType type)
+{
+	if (type == ActivationFunction::ActivationFunctionType::IDENTITY)
+		return &IdentityFunction::GetInstance();
+	if (type == ActivationFunction::ActivationFunctionType::BINARYSTEP)
+		return &BinaryStep::GetInstance();
+	if (type == ActivationFunction::ActivationFunctionType::SIGMOID)
+		return &Sigmoid::GetInstance();
+	if (type == ActivationFunction::ActivationFunctionType::TANH)
+		return &Sigmoid::GetInstance();
+	if (type == ActivationFunction::ActivationFunctionType::RELU)
+		return &RELU::GetInstance();
+}

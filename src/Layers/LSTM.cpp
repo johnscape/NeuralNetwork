@@ -1,6 +1,11 @@
+#include <fstream>
 #include "NeuralNetwork/Layers/LSTM.h"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
 #include "NeuralNetwork/TempMatrix.h"
+#include "rapidjson/ostreamwrapper.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/istreamwrapper.h"
 
 //NOTE Gate order is the following: Forget, Input, Activation, Output
 
@@ -322,7 +327,7 @@ Matrix& LSTM::GetBias(LSTM::Gate gate)
 
 void LSTM::LoadFromJSON(const char* data, bool isFile)
 {
-    /*rapidjson::Document document;
+    rapidjson::Document document;
     if (!isFile)
         document.Parse(data);
     else
@@ -332,125 +337,50 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
         document.ParseStream(isw);
     }
     rapidjson::Value val;
+	val = document["layer"];
+	LoadFromJSON(val);
 
-    InputWeights.clear();
-    Biases.clear();
-    InputWeightOutputs.clear();
-    InputWeightErrors.clear();
-    BiasErrors.clear();
-    RecursiveWeights.clear();
-    RecursiveWeightErrors.clear();
-    RecursiveWeightOuputs.clear();
+}
 
-    unsigned int InputSize = 1;
-    val = document["layer"]["size"];
-    CellStateSize = val.GetUint();
-    val = document["layer"]["inputSize"];
+void LSTM::LoadFromJSON(rapidjson::Value& jsonData)
+{
+	if (jsonData.HasMember("layer"))
+		jsonData = jsonData["layer"];
+	if (jsonData["type"].GetUint64() != static_cast<unsigned int>(Layer::LayerType::LSTM))
+		throw LayerTypeException();
 
-    unsigned int inputSize = val.GetUint();
-    if (LayerInput)
-        inputSize = LayerInput->GetOutput().GetVectorSize();
-    for (unsigned char i = 0; i < 4; i++)
-    {
-        InputWeights.push_back(Matrix(inputSize, CellStateSize));
-        RecursiveWeights.push_back(Matrix(CellStateSize, CellStateSize));
-        Biases.push_back(Matrix(1, CellStateSize));
-        InputWeightOutputs.push_back(Matrix(1, CellStateSize));
-        RecursiveWeightOuputs.push_back(Matrix(1, CellStateSize));
+	CellStateSize = jsonData["size"].GetUint64();
+	Id = jsonData["id"].GetUint64();
+	rapidjson::Value weight, bias;
+	weight = jsonData["weights"];
+	bias = jsonData["biases"];
+	std::list<Matrix>::iterator weightIt, biasIt, weightErrIt, biasErrIt;
+	weightIt = Weights.begin();
+	biasIt = Biases.begin();
+	weightErrIt = WeightErrors.begin();
+	biasErrIt = BiasErrors.begin();
 
-        InputWeightErrors.push_back(Matrix(inputSize, CellStateSize));
-        RecursiveWeightErrors.push_back(Matrix(CellStateSize, CellStateSize));
-        BiasErrors.push_back(Matrix(1, CellStateSize));
-    }
+	for (unsigned char i = 0; i < 4; i++)
+	{
+		weightIt->LoadFromJSON(weight[i]);
+		biasIt->LoadFromJSON(bias[i]);
 
-    Output.Reset(1, CellStateSize);
-    cellTanh.Reset(1, CellStateSize);
-    DeltaOut.Reset(1, CellStateSize);
+		weightErrIt->Reset(weightIt->GetRowCount(), weightIt->GetColumnCount());
+		biasErrIt->Reset(biasIt->GetRowCount(), biasIt->GetColumnCount());
+		weightIt++;
+		biasIt++;
+		weightErrIt++;
+		biasErrIt++;
+	}
 
-    CellState.Reset(1, CellStateSize);
-    InnerState.Reset(1, CellStateSize);
-
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-
-    std::string varName;
-
-    for (unsigned char i = 0; i < 4; i++)
-    {
-
-        varName = "inputWeight" + std::to_string((i + 1));
-        document["layer"][varName.c_str()].Accept(writer);
-        InputWeights[i].LoadFromJSON(buffer.GetString());
-
-        buffer.Clear();
-        writer.Reset(buffer);
-
-        varName = "recursiveWeight" + std::to_string((i + 1));
-        document["layer"][varName.c_str()].Accept(writer);
-        RecursiveWeights[i].LoadFromJSON(buffer.GetString());
-
-        buffer.Clear();
-        writer.Reset(buffer);
-
-        varName = "bias" + std::to_string((i + 1));
-        document["layer"][varName.c_str()].Accept(writer);
-        Biases[i].LoadFromJSON(buffer.GetString());
-
-        buffer.Clear();
-        writer.Reset(buffer);
-    }*/
 }
 
 std::string LSTM::SaveToJSON(const char* fileName) const
 {
-    /*rapidjson::Document doc;
+    rapidjson::Document doc;
     doc.SetObject();
 
-    rapidjson::Value layerSize, id, type, inputSize;
-    layerSize.SetUint(CellStateSize);
-    id.SetUint(Id);
-    type.SetUint(3);
-    if (LayerInput)
-        inputSize.SetUint(LayerInput->GetOutput().GetVectorSize());
-    else
-        inputSize.SetUint(1);
-
-    rapidjson::Document inp1, inp2, inp3, inp4, rec1, rec2, rec3, rec4;
-    rapidjson::Document b1, b2, b3, b4;
-
-
-    inp1.Parse(InputWeights[0].SaveToJSON().c_str());
-    inp2.Parse(InputWeights[1].SaveToJSON().c_str());
-    inp3.Parse(InputWeights[2].SaveToJSON().c_str());
-    inp4.Parse(InputWeights[3].SaveToJSON().c_str());
-
-    rec1.Parse(RecursiveWeights[0].SaveToJSON().c_str());
-    rec2.Parse(RecursiveWeights[1].SaveToJSON().c_str());
-    rec3.Parse(RecursiveWeights[2].SaveToJSON().c_str());
-    rec4.Parse(RecursiveWeights[3].SaveToJSON().c_str());
-
-    b1.Parse(Biases[0].SaveToJSON().c_str());
-    b2.Parse(Biases[1].SaveToJSON().c_str());
-    b3.Parse(Biases[2].SaveToJSON().c_str());
-    b4.Parse(Biases[3].SaveToJSON().c_str());
-
-    rapidjson::Value root(rapidjson::kObjectType);
-    root.AddMember("id", id, doc.GetAllocator());
-    root.AddMember("type", type, doc.GetAllocator());
-    root.AddMember("size", layerSize, doc.GetAllocator());
-    root.AddMember("inputSize", inputSize, doc.GetAllocator());
-    root.AddMember("inputWeight1", inp1, doc.GetAllocator());
-    root.AddMember("inputWeight2", inp2, doc.GetAllocator());
-    root.AddMember("inputWeight3", inp3, doc.GetAllocator());
-    root.AddMember("inputWeight4", inp4, doc.GetAllocator());
-    root.AddMember("recursiveWeight1", rec1, doc.GetAllocator());
-    root.AddMember("recursiveWeight2", rec2, doc.GetAllocator());
-    root.AddMember("recursiveWeight3", rec3, doc.GetAllocator());
-    root.AddMember("recursiveWeight4", rec4, doc.GetAllocator());
-    root.AddMember("bias1", b1, doc.GetAllocator());
-    root.AddMember("bias2", b2, doc.GetAllocator());
-    root.AddMember("bias3", b3, doc.GetAllocator());
-    root.AddMember("bias4", b4, doc.GetAllocator());
+    rapidjson::Value root = SaveToJSONObject(doc);
 
     doc.AddMember("layer", root, doc.GetAllocator());
 
@@ -467,7 +397,41 @@ std::string LSTM::SaveToJSON(const char* fileName) const
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     doc.Accept(writer);
 
-    return std::string(buffer.GetString());*/
+    return std::string(buffer.GetString());
+}
 
-    return "";
+rapidjson::Value LSTM::SaveToJSONObject(rapidjson::Document& document) const
+{
+	rapidjson::Value layer(rapidjson::kObjectType);
+	rapidjson::Value type, id, size;
+
+	type.SetUint64(static_cast<unsigned int>(Layer::LayerType::LSTM));
+	id.SetUint64(Id);
+	size.SetUint64(CellStateSize);
+
+	rapidjson::Value weights, biases;
+	weights.SetArray();
+	biases.SetArray();
+
+	std::list<Matrix>::const_iterator weightIt, biasIt;
+	weightIt = Weights.begin();
+	biasIt = Biases.begin();
+	for (unsigned char i = 0; i < 4; ++i)
+	{
+		rapidjson::Value tmp;
+		tmp = weightIt->SaveToJSONObject(document);
+		weights.PushBack(tmp, document.GetAllocator());
+		tmp = biasIt->SaveToJSONObject(document);
+		biases.PushBack(tmp, document.GetAllocator());
+		weightIt++;
+		biasIt++;
+	}
+
+	layer.AddMember("id", id, document.GetAllocator());
+	layer.AddMember("type", type, document.GetAllocator());
+	layer.AddMember("size", size, document.GetAllocator());
+	layer.AddMember("weights", weights, document.GetAllocator());
+	layer.AddMember("biases", biases, document.GetAllocator());
+
+	return layer;
 }

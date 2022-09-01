@@ -100,19 +100,32 @@ public:
 	 */
 	Matrix& GetBias(Gate gate);
 
-    /**
-     * @brief Loads the layer from JSON.
-     * @param data The JSON data containing the layer's information or the JSON file's name.
-     * @param isFile If you want to load the data from a file, set it true.
-    */
-    virtual void LoadFromJSON(const char* data, bool isFile = false);
+	/**
+	 * @brief Loads the layer from a JSON string.
+	 * @param data The JSON data or file name to load from.
+	 * @param isFile If the data is from a file, set it to true.
+	*/
+	virtual void LoadFromJSON(const char* data, bool isFile = false);
 
-    /**
-     * @brief Saves the layer into a JSON string.
-     * @param fileName If you want to save the string into a file, set the filename here.
-     * @return The JSON string describing the layer.
-    */
-    virtual std::string SaveToJSON(const char* fileName = nullptr) const;
+	/**
+	 * @brief Loads the layer from JSON
+	 * @param jsonData rapidjsson value type, containing the data for the layer
+	 */
+	virtual void LoadFromJSON(rapidjson::Value& jsonData);
+
+	/**
+	 * @brief Saves the layer into a JSON string.
+	 * @param fileName If you want to save the JSON data into a file, enter the file name here.
+	 * @return A string containing the JSON describtion of the layer.
+	*/
+	virtual std::string SaveToJSON(const char* fileName = nullptr) const;
+
+	/**
+	 * @brief Saves the layer into a JSON value object
+	 * @param document A reference for the top document object
+	 * @return A rapidjson value type containing the layer
+	 */
+	virtual rapidjson::Value SaveToJSONObject(rapidjson::Document& document) const;
 
 private:
     std::list<Matrix> Weights;
