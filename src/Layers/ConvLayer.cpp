@@ -2,11 +2,7 @@
 #include "NeuralNetwork/ActivationFunctions.hpp"
 #include "NeuralNetwork/TensorException.hpp"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
-#include "rapidjson/ostreamwrapper.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/istreamwrapper.h"
 #include <cmath>
-#include <fstream>
 
 ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int stride, unsigned int nrFilters,
 	 unsigned int minimumPad, Matrix::PadType padType, float padFill) : Layer(inputLayer), Stride(stride),
@@ -160,22 +156,6 @@ void ConvLayer::Train(Optimizer *optimizer)
 	optimizer->ModifyWeights(Kernel, KernelError);
 }
 
-void ConvLayer::LoadFromJSON(const char *data, bool isFile)
-{
-	rapidjson::Document document;
-	if (!isFile)
-		document.Parse(data);
-	else
-	{
-		std::ifstream r(data);
-		rapidjson::IStreamWrapper isw(r);
-		document.ParseStream(isw);
-	}
-	rapidjson::Value val;
-	val = document["layer"];
-	LoadFromJSON(val);
-}
-
 void ConvLayer::LoadFromJSON(rapidjson::Value& jsonData)
 {
 	if (jsonData.HasMember("layer"))
@@ -187,8 +167,8 @@ void ConvLayer::LoadFromJSON(rapidjson::Value& jsonData)
 	Stride = jsonData["stride"].GetUint64();
 	PaddingType = static_cast<Matrix::PadType>(jsonData["paddingType"].GetUint64());
 	PadFill = jsonData["paddingFill"].GetFloat();
-	function = GetActivationFunction(
-			static_cast<ActivationFunction::ActivationFunctionType>(jsonData["activation"].GetUint64())
+	function = ActivationFunctionLibrary::GetActivationFunction(
+			static_cast<ActivationFunctionType>(jsonData["activation"].GetUint64())
 			);
 
 
@@ -196,31 +176,6 @@ void ConvLayer::LoadFromJSON(rapidjson::Value& jsonData)
 	tmp = jsonData["kernel"];
 	Kernel.LoadFromJSON(tmp);
 	KernelError = Tensor(Kernel.GetShape(), nullptr);
-}
-
-std::string ConvLayer::SaveToJSON(const char *fileName) const
-{
-	rapidjson::Document doc;
-	doc.SetObject();
-
-	rapidjson::Value root = SaveToJSONObject(doc);
-
-	doc.AddMember("layer", root, doc.GetAllocator());
-
-	if (fileName)
-	{
-		std::ofstream w(fileName);
-		rapidjson::OStreamWrapper osw(w);
-		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-		doc.Accept(writer);
-		w.close();
-	}
-
-	rapidjson::StringBuffer buffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-	doc.Accept(writer);
-
-	return std::string(buffer.GetString());
 }
 
 rapidjson::Value ConvLayer::SaveToJSONObject(rapidjson::Document& document) const

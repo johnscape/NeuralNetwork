@@ -1,12 +1,6 @@
 #include "NeuralNetwork/Layers/FeedForwardLayer.h"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
 
-#include <fstream>
-#include <rapidjson/document.h>
-#include <rapidjson/istreamwrapper.h>
-#include <rapidjson/ostreamwrapper.h>
-#include <rapidjson/writer.h>
-
 #if USE_GPU
 #include "MatrixGPUMath.cuh"
 #endif
@@ -143,22 +137,6 @@ Matrix& FeedForwardLayer::GetWeights()
 	return Weights;
 }
 
-void FeedForwardLayer::LoadFromJSON(const char* data, bool isFile)
-{
-	rapidjson::Document document;
-	if (!isFile)
-		document.Parse(data);
-	else
-	{
-		std::ifstream r(data);
-		rapidjson::IStreamWrapper isw(r);
-		document.ParseStream(isw);
-	}
-	rapidjson::Value val;
-	val = document["layer"];
-	LoadFromJSON(val);
-}
-
 void FeedForwardLayer::LoadFromJSON(rapidjson::Value& jsonData)
 {
 	if (jsonData.HasMember("layer"))
@@ -167,8 +145,8 @@ void FeedForwardLayer::LoadFromJSON(rapidjson::Value& jsonData)
 		throw LayerTypeException();
 	Id = jsonData["id"].GetUint64();
 	Size = jsonData["size"].GetUint64();
-	function = GetActivationFunction(
-			static_cast<ActivationFunction::ActivationFunctionType>(jsonData["activation"].GetUint64())
+	function = ActivationFunctionLibrary::GetActivationFunction(
+			static_cast<ActivationFunctionType>(jsonData["activation"].GetUint64())
 			);
 	rapidjson::Value tmpValue;
 	tmpValue = jsonData["weight"];
@@ -179,31 +157,6 @@ void FeedForwardLayer::LoadFromJSON(rapidjson::Value& jsonData)
 	Output = Tensor({1, Size}, nullptr);
 	WeightError.Reset(Weights.GetRowCount(), Weights.GetColumnCount());
 	BiasError.Reset(Bias.GetRowCount(), Bias.GetColumnCount());
-}
-
-std::string FeedForwardLayer::SaveToJSON(const char* fileName) const
-{
-	rapidjson::Document document;
-	document.SetObject();
-
-	rapidjson::Value layer = SaveToJSONObject(document);
-
-	document.AddMember("layer", layer, document.GetAllocator());
-
-	if (fileName)
-	{
-		std::ofstream w(fileName);
-		rapidjson::OStreamWrapper osw(w);
-		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-		document.Accept(writer);
-		w.close();
-	}
-
-	rapidjson::StringBuffer buffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-	document.Accept(writer);
-
-	return std::string(buffer.GetString());
 }
 
 rapidjson::Value FeedForwardLayer::SaveToJSONObject(rapidjson::Document &document) const

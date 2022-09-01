@@ -1,4 +1,5 @@
 #include <utility>
+#include <fstream>
 
 #include "NeuralNetwork/Layers/Layer.h"
 #include "NeuralNetwork/Layers/LayerException.hpp"
@@ -7,6 +8,10 @@
 #include "NeuralNetwork/Layers/RecurrentLayer.h"
 #include "NeuralNetwork/Layers/LSTM.h"
 #include "NeuralNetwork/Layers/ConvLayer.h"
+#include "rapidjson/istreamwrapper.h"
+#include "rapidjson/ostreamwrapper.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 unsigned int Layer::LayerCount = 0;
 
@@ -116,4 +121,45 @@ unsigned int Layer::GetId()
 void Layer::SetId(unsigned int id)
 {
 	Id = id;
+}
+
+void Layer::LoadFromJSON(const char *data, bool isFile)
+{
+	rapidjson::Document document;
+	if (!isFile)
+		document.Parse(data);
+	else
+	{
+		std::ifstream r(data);
+		rapidjson::IStreamWrapper isw(r);
+		document.ParseStream(isw);
+	}
+	rapidjson::Value val;
+	val = document["layer"];
+	LoadFromJSON(val);
+}
+
+std::string Layer::SaveToJSON(const char *fileName) const
+{
+	rapidjson::Document document;
+	document.SetObject();
+
+	rapidjson::Value layer = SaveToJSONObject(document);
+
+	document.AddMember("layer", layer, document.GetAllocator());
+
+	if (fileName)
+	{
+		std::ofstream w(fileName);
+		rapidjson::OStreamWrapper osw(w);
+		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+		document.Accept(writer);
+		w.close();
+	}
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	document.Accept(writer);
+
+	return std::string(buffer.GetString());
 }

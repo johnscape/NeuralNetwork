@@ -1,11 +1,6 @@
-#include <fstream>
 #include "NeuralNetwork/Layers/LSTM.h"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
 #include "NeuralNetwork/TempMatrix.h"
-#include "rapidjson/ostreamwrapper.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/istreamwrapper.h"
 
 //NOTE Gate order is the following: Forget, Input, Activation, Output
 
@@ -325,22 +320,6 @@ Matrix& LSTM::GetBias(LSTM::Gate gate)
 	return GetBias(3);
 }
 
-void LSTM::LoadFromJSON(const char* data, bool isFile)
-{
-    rapidjson::Document document;
-    if (!isFile)
-        document.Parse(data);
-    else
-    {
-        std::ifstream r(data);
-        rapidjson::IStreamWrapper isw(r);
-        document.ParseStream(isw);
-    }
-    rapidjson::Value val;
-	val = document["layer"];
-	LoadFromJSON(val);
-}
-
 void LSTM::LoadFromJSON(rapidjson::Value& jsonData)
 {
 	if (jsonData.HasMember("layer"))
@@ -372,31 +351,6 @@ void LSTM::LoadFromJSON(rapidjson::Value& jsonData)
 		biasErrIt++;
 	}
 
-}
-
-std::string LSTM::SaveToJSON(const char* fileName) const
-{
-    rapidjson::Document doc;
-    doc.SetObject();
-
-    rapidjson::Value root = SaveToJSONObject(doc);
-
-    doc.AddMember("layer", root, doc.GetAllocator());
-
-    if (fileName)
-    {
-        std::ofstream w(fileName);
-        rapidjson::OStreamWrapper osw(w);
-        rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-        doc.Accept(writer);
-        w.close();
-    }
-
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    doc.Accept(writer);
-
-    return std::string(buffer.GetString());
 }
 
 rapidjson::Value LSTM::SaveToJSONObject(rapidjson::Document& document) const

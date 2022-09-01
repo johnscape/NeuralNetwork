@@ -13,6 +13,15 @@
 #include "GPUActivation.cuh"
 #endif // USE_GPU
 
+enum class ActivationFunctionType
+{
+	IDENTITY,
+	BINARYSTEP,
+	SIGMOID,
+	TANH,
+	RELU
+};
+
 /**
  * @brief Abstract class for handling activation functions
 */
@@ -21,15 +30,6 @@ class ActivationFunction
 public:
 	ActivationFunction() = default;
 	~ActivationFunction() = default;
-
-	enum class ActivationFunctionType
-	{
-		IDENTITY,
-		BINARYSTEP,
-		SIGMOID,
-		TANH,
-		RELU
-	};
 
 	virtual Matrix CalculateMatrix(const Matrix& input) = 0;
 	virtual Matrix CalculateDerivateMatrix(const Matrix& output, float extra) = 0;
@@ -504,16 +504,21 @@ private:
 	RELU() = default;
 };
 
-ActivationFunction* GetActivationFunction(ActivationFunction::ActivationFunctionType type)
+class ActivationFunctionLibrary
 {
-	if (type == ActivationFunction::ActivationFunctionType::IDENTITY)
-		return &IdentityFunction::GetInstance();
-	if (type == ActivationFunction::ActivationFunctionType::BINARYSTEP)
-		return &BinaryStep::GetInstance();
-	if (type == ActivationFunction::ActivationFunctionType::SIGMOID)
-		return &Sigmoid::GetInstance();
-	if (type == ActivationFunction::ActivationFunctionType::TANH)
-		return &Sigmoid::GetInstance();
-	if (type == ActivationFunction::ActivationFunctionType::RELU)
-		return &RELU::GetInstance();
-}
+public:
+
+	static ActivationFunction* GetActivationFunction(ActivationFunctionType type)
+	{
+		if (type == ActivationFunctionType::IDENTITY)
+			return &IdentityFunction::GetInstance();
+		if (type == ActivationFunctionType::BINARYSTEP)
+			return &BinaryStep::GetInstance();
+		if (type == ActivationFunctionType::SIGMOID)
+			return &Sigmoid::GetInstance();
+		if (type == ActivationFunctionType::TANH)
+			return &Sigmoid::GetInstance();
+		if (type == ActivationFunctionType::RELU)
+			return &RELU::GetInstance();
+	}
+};

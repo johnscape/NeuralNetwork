@@ -135,7 +135,7 @@ public:
 	 * @param data The JSON data containing the layer's information or the JSON file's name.
 	 * @param isFile If you want to load the data from a file, set it true.
 	*/
-	virtual void LoadFromJSON(const char* data, bool isFile = false) = 0;
+	virtual void LoadFromJSON(const char* data, bool isFile = false);
 
 	/**
 	 * @brief Loads the layer from JSON
@@ -148,7 +148,7 @@ public:
 	 * @param fileName If you want to save the string into a file, set the filename here.
 	 * @return The JSON string describing the layer.
 	*/
-	virtual std::string SaveToJSON(const char* fileName = nullptr) const = 0;
+	virtual std::string SaveToJSON(const char* fileName = nullptr) const;
 
 	/**
 	 * @brief Saves the layer into a JSON value object

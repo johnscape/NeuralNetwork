@@ -2,10 +2,6 @@
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/TensorException.hpp"
-#include "rapidjson/ostreamwrapper.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/istreamwrapper.h"
 
 InputLayer::InputLayer(unsigned int size) : Layer(), Size(1, size)
 {
@@ -46,21 +42,6 @@ void InputLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
 }
 
-void InputLayer::LoadFromJSON(const char* data, bool isFile)
-{
-	rapidjson::Document document;
-	if (!isFile)
-		document.Parse(data);
-	else
-	{
-		std::ifstream r(data);
-		rapidjson::IStreamWrapper isw(r);
-		document.ParseStream(isw);
-	}
-
-	LoadFromJSON(document);
-}
-
 void InputLayer::LoadFromJSON(rapidjson::Value& jsonData)
 {
 	Size.clear();
@@ -72,31 +53,6 @@ void InputLayer::LoadFromJSON(rapidjson::Value& jsonData)
 	jsonData = jsonData["size"];
 	for (rapidjson::Value::ConstValueIterator itr = jsonData.Begin(); itr != jsonData.End(); itr++)
 		Size.push_back(itr->GetUint64());
-}
-
-std::string InputLayer::SaveToJSON(const char* fileName) const
-{
-	rapidjson::Document doc;
-	doc.SetObject();
-
-	rapidjson::Value root = SaveToJSONObject(doc);
-
-	doc.AddMember("layer", root, doc.GetAllocator());
-
-	if (fileName)
-	{
-		std::ofstream w(fileName);
-		rapidjson::OStreamWrapper osw(w);
-		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-		doc.Accept(writer);
-		w.close();
-	}
-
-	rapidjson::StringBuffer buffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-	doc.Accept(writer);
-
-	return std::string(buffer.GetString());
 }
 
 rapidjson::Value InputLayer::SaveToJSONObject(rapidjson::Document& document) const

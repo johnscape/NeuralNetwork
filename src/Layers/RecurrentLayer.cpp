@@ -177,22 +177,6 @@ Matrix& RecurrentLayer::GetRecurrentWeights()
 	return RecursiveWeight;
 }
 
-void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
-{
-	rapidjson::Document document;
-	if (!isFile)
-		document.Parse(data);
-	else
-	{
-		std::ifstream r(data);
-		rapidjson::IStreamWrapper isw(r);
-		document.ParseStream(isw);
-	}
-	rapidjson::Value val;
-	val = document["layer"];
-	LoadFromJSON(val);
-}
-
 void RecurrentLayer::LoadFromJSON(rapidjson::Value& jsonData)
 {
 	if (jsonData.HasMember("layer"))
@@ -202,8 +186,8 @@ void RecurrentLayer::LoadFromJSON(rapidjson::Value& jsonData)
 
 	Id = jsonData["id"].GetUint64();
 	Size = jsonData["size"].GetUint64();
-	function = GetActivationFunction(
-			static_cast<ActivationFunction::ActivationFunctionType>(jsonData["activation"].GetUint64())
+	function = ActivationFunctionLibrary::GetActivationFunction(
+			static_cast<ActivationFunctionType>(jsonData["activation"].GetUint64())
 			);
 
 	rapidjson::Value tmpValue;
@@ -217,31 +201,6 @@ void RecurrentLayer::LoadFromJSON(rapidjson::Value& jsonData)
 	WeightError.Reset(Weights.GetRowCount(), Weights.GetColumnCount());
 	RecursiveWeightError.Reset(Size, Size);
 	BiasError.Reset(Bias.GetRowCount(), Bias.GetColumnCount());
-}
-
-std::string RecurrentLayer::SaveToJSON(const char* fileName) const
-{
-	rapidjson::Document doc;
-	doc.SetObject();
-
-	rapidjson::Value root = SaveToJSONObject(doc);
-
-	doc.AddMember("layer", root, doc.GetAllocator());
-
-	if (fileName)
-	{
-		std::ofstream w(fileName);
-		rapidjson::OStreamWrapper osw(w);
-		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-		doc.Accept(writer);
-		w.close();
-	}
-
-	rapidjson::StringBuffer buffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-	doc.Accept(writer);
-
-	return std::string(buffer.GetString());
 }
 
 rapidjson::Value RecurrentLayer::SaveToJSONObject(rapidjson::Document& document) const
