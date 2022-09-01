@@ -1,4 +1,8 @@
+#include <fstream>
 #include "NeuralNetwork/Layers/RecurrentLayer.h"
+#include "rapidjson/ostreamwrapper.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/istreamwrapper.h"
 
 #if USE_GPU
 #include "MatrixGPUMath.cuh"
@@ -175,7 +179,7 @@ Matrix& RecurrentLayer::GetRecurrentWeights()
 
 void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 {
-	/*rapidjson::Document document;
+	rapidjson::Document document;
 	if (!isFile)
 		document.Parse(data);
 	else
@@ -185,74 +189,42 @@ void RecurrentLayer::LoadFromJSON(const char* data, bool isFile)
 		document.ParseStream(isw);
 	}
 	rapidjson::Value val;
+	val = document["layer"];
+	LoadFromJSON(val);
+}
 
+void RecurrentLayer::LoadFromJSON(rapidjson::Value& jsonData)
+{
+	if (jsonData.HasMember("layer"))
+		jsonData = jsonData["layer"];
+	if (jsonData["type"].GetUint64() != static_cast<unsigned int>(Layer::LayerType::RECURRENT))
+		throw LayerTypeException();
 
-	unsigned int InputSize = 1;
-	val = document["layer"]["size"];
-	Size = val.GetUint();
-	val = document["layer"]["inputSize"];
+	Id = jsonData["id"].GetUint64();
+	Size = jsonData["size"].GetUint64();
+	function = GetActivationFunction(
+			static_cast<ActivationFunction::ActivationFunctionType>(jsonData["activation"].GetUint64())
+			);
 
-	unsigned int inputSize = val.GetUint();
-	if (LayerInput)
-		inputSize = LayerInput->GetOutput().GetVectorSize();
-	Weights.Reset(inputSize, Size);
-	Output.Reset(1, Size);
-	Bias.Reset(1, Size);
-	InnerState.Reset(1, Size);
-	WeightError.Reset(inputSize, Size);
-	LayerError.Reset(1, inputSize);
-	BiasError.Reset(1, Size);
-	RecursiveWeight.Reset(Size, Size);
+	rapidjson::Value tmpValue;
+	tmpValue = jsonData["weight"];
+	Weights.LoadFromJSON(tmpValue);
+	tmpValue = jsonData["recurrent"];
+	RecursiveWeight.LoadFromJSON(tmpValue);
+	tmpValue = jsonData["bias"];
+	Bias.LoadFromJSON(tmpValue);
+
+	WeightError.Reset(Weights.GetRowCount(), Weights.GetColumnCount());
 	RecursiveWeightError.Reset(Size, Size);
-
-	rapidjson::StringBuffer buffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-
-	document["layer"]["weights"].Accept(writer);
-	Weights.LoadFromJSON(buffer.GetString());
-
-	buffer.Clear();
-	writer.Reset(buffer);
-
-	document["layer"]["bias"].Accept(writer);
-	Bias.LoadFromJSON(buffer.GetString());
-
-	buffer.Clear();
-	writer.Reset(buffer);
-
-	document["layer"]["recurrent"].Accept(writer);
-	RecursiveWeight.LoadFromJSON(buffer.GetString());*/
-
+	BiasError.Reset(Bias.GetRowCount(), Bias.GetColumnCount());
 }
 
 std::string RecurrentLayer::SaveToJSON(const char* fileName) const
 {
-	/*rapidjson::Document doc;
+	rapidjson::Document doc;
 	doc.SetObject();
 
-	rapidjson::Value layerSize, id, type, inputSize;
-	layerSize.SetUint(Size);
-	id.SetUint(Id);
-	type.SetUint(2);
-	if (LayerInput)
-		inputSize.SetUint(LayerInput->GetOutput().GetVectorSize());
-	else
-		inputSize.SetUint(1);
-
-	rapidjson::Document weight, bias, recurrent;
-
-	weight.Parse(Weights.SaveToJSON().c_str());
-	bias.Parse(Bias.SaveToJSON().c_str());
-	recurrent.Parse(RecursiveWeight.SaveToJSON().c_str());
-
-	rapidjson::Value root(rapidjson::kObjectType);
-	root.AddMember("id", id, doc.GetAllocator());
-	root.AddMember("type", type, doc.GetAllocator());
-	root.AddMember("size", layerSize, doc.GetAllocator());
-	root.AddMember("inputSize", inputSize, doc.GetAllocator());
-	root.AddMember("weights", weight, doc.GetAllocator());
-	root.AddMember("bias", bias, doc.GetAllocator());
-	root.AddMember("recurrent", recurrent, doc.GetAllocator());
+	rapidjson::Value root = SaveToJSONObject(doc);
 
 	doc.AddMember("layer", root, doc.GetAllocator());
 
@@ -269,8 +241,34 @@ std::string RecurrentLayer::SaveToJSON(const char* fileName) const
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	return std::string(buffer.GetString());*/
+	return std::string(buffer.GetString());
+}
 
-	return "";
+rapidjson::Value RecurrentLayer::SaveToJSONObject(rapidjson::Document& document) const
+{
+	rapidjson::Value layer(rapidjson::kObjectType);
+	rapidjson::Value type, id, size, activation;
+
+	type.SetUint64(static_cast<unsigned int>(Layer::LayerType::RECURRENT));
+	id.SetUint64(Id);
+	size.SetUint64(Size);
+	activation.SetUint64(static_cast<unsigned int>(function->GetActivationFunctionType()));
+
+	rapidjson::Value weights(rapidjson::kObjectType);
+	weights.AddMember("matrix", Weights.SaveToJSONObject(document), document.GetAllocator());
+	rapidjson::Value bias(rapidjson::kObjectType);
+	bias.AddMember("matrix", Bias.SaveToJSONObject(document), document.GetAllocator());
+	rapidjson::Value recurrentWeights(rapidjson::kObjectType);
+	recurrentWeights.AddMember("matrix", RecursiveWeight.SaveToJSONObject(document), document.GetAllocator());
+
+	layer.AddMember("id", id, document.GetAllocator());
+	layer.AddMember("type", type, document.GetAllocator());
+	layer.AddMember("size", size, document.GetAllocator());
+	layer.AddMember("activation", activation, document.GetAllocator());
+	layer.AddMember("weight", weights, document.GetAllocator());
+	layer.AddMember("recurrent", recurrentWeights, document.GetAllocator());
+	layer.AddMember("bias", bias, document.GetAllocator());
+
+	return layer;
 }
 
