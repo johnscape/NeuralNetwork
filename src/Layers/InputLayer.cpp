@@ -1,6 +1,5 @@
 #include <fstream>
 #include "NeuralNetwork/Layers/InputLayer.h"
-#include "NeuralNetwork/Layers/LayerException.hpp"
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/TensorException.hpp"
 #include "rapidjson/ostreamwrapper.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "NeuralNetwork/Tensor.h"
-#include <memory>
+#include "NeuralNetwork/Layers/LayerException.hpp"
 
 class Optimizer;
 
