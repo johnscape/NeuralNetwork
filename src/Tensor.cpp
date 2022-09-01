@@ -124,7 +124,7 @@ bool Tensor::IsSameShape(const Matrix &other) const
 	return rows == other.GetRowCount() && cols == other.GetColumnCount();
 }
 
-void Tensor::Reshape(std::vector<unsigned int> newShape)
+void Tensor::Reshape(const std::vector<unsigned int>& newShape)
 {
 	unsigned int sum1 = Shape[0];
 	unsigned int sum2 = newShape[0];

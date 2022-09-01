@@ -339,7 +339,6 @@ void LSTM::LoadFromJSON(const char* data, bool isFile)
     rapidjson::Value val;
 	val = document["layer"];
 	LoadFromJSON(val);
-
 }
 
 void LSTM::LoadFromJSON(rapidjson::Value& jsonData)

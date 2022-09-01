@@ -2,7 +2,11 @@
 #include "NeuralNetwork/ActivationFunctions.hpp"
 #include "NeuralNetwork/TensorException.hpp"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
+#include "rapidjson/ostreamwrapper.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/istreamwrapper.h"
 #include <cmath>
+#include <fstream>
 
 ConvLayer::ConvLayer(Layer* inputLayer, unsigned int kernelSize, unsigned int stride, unsigned int nrFilters,
 	 unsigned int minimumPad, Matrix::PadType padType, float padFill) : Layer(inputLayer), Stride(stride),
@@ -158,12 +162,92 @@ void ConvLayer::Train(Optimizer *optimizer)
 
 void ConvLayer::LoadFromJSON(const char *data, bool isFile)
 {
+	rapidjson::Document document;
+	if (!isFile)
+		document.Parse(data);
+	else
+	{
+		std::ifstream r(data);
+		rapidjson::IStreamWrapper isw(r);
+		document.ParseStream(isw);
+	}
+	rapidjson::Value val;
+	val = document["layer"];
+	LoadFromJSON(val);
+}
 
+void ConvLayer::LoadFromJSON(rapidjson::Value& jsonData)
+{
+	if (jsonData.HasMember("layer"))
+		jsonData = jsonData["layer"];
+	if (jsonData["type"] != static_cast<unsigned int>(Layer::LayerType::CONV))
+		throw LayerTypeException();
+
+	Id = jsonData["id"].GetUint64();
+	Stride = jsonData["stride"].GetUint64();
+	PaddingType = static_cast<Matrix::PadType>(jsonData["paddingType"].GetUint64());
+	PadFill = jsonData["paddingFill"].GetFloat();
+	function = GetActivationFunction(
+			static_cast<ActivationFunction::ActivationFunctionType>(jsonData["activation"].GetUint64())
+			);
+
+
+	rapidjson::Value tmp;
+	tmp = jsonData["kernel"];
+	Kernel.LoadFromJSON(tmp);
+	KernelError = Tensor(Kernel.GetShape(), nullptr);
 }
 
 std::string ConvLayer::SaveToJSON(const char *fileName) const
 {
-	return std::string();
+	rapidjson::Document doc;
+	doc.SetObject();
+
+	rapidjson::Value root = SaveToJSONObject(doc);
+
+	doc.AddMember("layer", root, doc.GetAllocator());
+
+	if (fileName)
+	{
+		std::ofstream w(fileName);
+		rapidjson::OStreamWrapper osw(w);
+		rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+		doc.Accept(writer);
+		w.close();
+	}
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	return std::string(buffer.GetString());
+}
+
+rapidjson::Value ConvLayer::SaveToJSONObject(rapidjson::Document& document) const
+{
+	rapidjson::Value layer;
+	rapidjson::Value id, type, padSize, paddingType, stride, padFill, activationFunction;
+	id.SetUint64(Id);
+	type.SetUint64(static_cast<unsigned int>(Layer::LayerType::CONV));
+	padSize.SetUint64(PadSize);
+	paddingType.SetUint64(static_cast<unsigned int>(PaddingType));
+	stride.SetUint64(Stride);
+	padFill.SetFloat(PadFill);
+	activationFunction.SetUint64(static_cast<unsigned int>(function->GetActivationFunctionType()));
+
+	rapidjson::Value kernel(rapidjson::kObjectType);
+	rapidjson::Value tmp = Kernel.SaveToJSONObject(document);
+	kernel.AddMember("tensor", tmp, document.GetAllocator());
+
+	layer.AddMember("id", id, document.GetAllocator());
+	layer.AddMember("type", type, document.GetAllocator());
+	layer.AddMember("stride", stride, document.GetAllocator());
+	layer.AddMember("paddingType", paddingType, document.GetAllocator());
+	layer.AddMember("paddingFill", padFill, document.GetAllocator());
+	layer.AddMember("activation", activationFunction, document.GetAllocator());
+	layer.AddMember("kernel", kernel, document.GetAllocator());
+
+	return layer;
 }
 
 Tensor &ConvLayer::GetKernel()

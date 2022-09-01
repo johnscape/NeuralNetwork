@@ -69,7 +69,7 @@ public:
 	 * @brief Reshapes the tensor to a new shape. The number of elements must remain the same!
 	 * @param newShape A vector containing the new shape of the tensor
 	 */
-	void Reshape(std::vector<unsigned int> newShape);
+	void Reshape(const std::vector<unsigned int>& newShape);
 	void Reshape(unsigned int* newDimensions, unsigned int dimensionCount = 0);
 
 	/**
