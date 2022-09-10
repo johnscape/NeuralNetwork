@@ -11,7 +11,8 @@ add_executable(	NeuralNetworkTest
 				"FeedForwardLayerTests.cpp"
 				"RecurrentLayerTests.cpp"
 				"LSTMTests.cpp"
-				"ConvLayerTests.cpp")
+				"ConvLayerTests.cpp"
+				"ModelTests.cpp")
 
 target_link_libraries(NeuralNetworkTest PRIVATE NeuralNetwork Catch2::Catch2)
 
