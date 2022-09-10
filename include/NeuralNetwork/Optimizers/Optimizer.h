@@ -6,7 +6,7 @@
 
 #include <vector>
 
-//TODO: Use model class
+class Model;
 
 /**
  * @brief This class is used to train the neural network.
@@ -19,6 +19,12 @@ public:
 	 * @param output The model's output layer
 	*/
 	Optimizer(Layer* output);
+
+	/**
+	 * @brief Creates an optimizer for the set model
+	 * @param model The model to train
+	 */
+	Optimizer(Model* model);
 	virtual ~Optimizer();
 
 	/**

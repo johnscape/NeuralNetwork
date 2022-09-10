@@ -2,9 +2,14 @@
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Constants.h"
 
-//TODO: Replace pointer
 GradientDescent::GradientDescent(LossFunction* lossFunction, Layer* output, float learningRate) :
 	Optimizer(output), LearningRate(learningRate)
+{
+	errorFunction = lossFunction;
+}
+
+GradientDescent::GradientDescent(LossFunction* lossFunction, Model* model, float learningRate) :
+	Optimizer(model), LearningRate(learningRate)
 {
 	errorFunction = lossFunction;
 }

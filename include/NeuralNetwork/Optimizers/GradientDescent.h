@@ -12,11 +12,18 @@ public:
     /**
      * @brief Creates a gradient descent optimizer.
      * @param loss The function which calculates the loss.
-     * @param derivate The loss function's derivate.
      * @param output The output layer of the model.
      * @param learningRate The learning rate (alpha) of the optimizer.
     */
     GradientDescent(LossFunction* lossFunction, Layer* output, float learningRate);
+
+	/**
+	 * @brief Creates a gradient descent optimizer.
+	 * @param lossFunction The function which calculates the loss.
+	 * @param model The model to train
+	 * @param learningRate The learning rate (alpha) of the optimizer.
+	 */
+	GradientDescent(LossFunction* lossFunction, Model* model, float learningRate);
     virtual ~GradientDescent();
 
     /**

@@ -1,10 +1,21 @@
 #include "NeuralNetwork/Optimizers/Optimizer.h"
+#include "NeuralNetwork/Model.h"
+#include "NeuralNetwork/Layers/LayerException.hpp"
 
 Optimizer::Optimizer(Layer* output) : currentBatch(1), lastError(0)
 {
 	outputLayer = output;
 	//inputLayer = nullptr;
 	FindInputLayer();
+}
+
+Optimizer::Optimizer(Model* model) : currentBatch(1), lastError(0)
+{
+	outputLayer = model->GetOutput();
+	inputLayer = model->GetInput();
+
+	if (outputLayer == nullptr || inputLayer == nullptr)
+		throw NullLayerException();
 }
 
 Optimizer::~Optimizer()
