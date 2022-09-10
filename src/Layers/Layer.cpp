@@ -69,7 +69,7 @@ unsigned int Layer::OutputSize()
 	return Output.GetShapeAt(1);
 }
 
-Layer* Layer::GetInputLayer()
+Layer* Layer::GetInputLayer() const
 {
 	return LayerInput;
 }

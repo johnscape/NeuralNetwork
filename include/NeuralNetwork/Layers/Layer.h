@@ -94,7 +94,7 @@ public:
 	 * @brief Returns the layer where the input values are coming from.
 	 * @return nullptr if there is no input layer, the pointer of the input layer otherwise.
 	*/
-	virtual Layer* GetInputLayer();
+	virtual Layer* GetInputLayer() const;
 
 	/**
 	 * @brief Calculates the error inside of the layer based on the last output, the input and the error.

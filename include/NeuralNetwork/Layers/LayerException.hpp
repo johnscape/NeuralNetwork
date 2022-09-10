@@ -26,3 +26,11 @@ class LayerTypeException : public std::exception
 		return "Error code: 22 - Incorrect layer type";
 	}
 };
+
+class NullLayerException : public std::exception
+{
+	const char* what() const throw()
+	{
+		return "Error code: 23 - Required layer is null";
+	}
+};
