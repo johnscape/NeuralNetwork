@@ -15,7 +15,7 @@ FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) :
 	Output = Tensor({1, count}, nullptr);
 	Weights.Reset(inputSize, count);
 	WeightError.Reset(inputSize, count);
-	function = &TanhFunction::GetInstance();
+	function = &Sigmoid::GetInstance();
 
 	Bias.FillWith(1);
 	Weights.FillWithRandom();
@@ -71,6 +71,7 @@ void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 
 void FeedForwardLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
+	//TODO: Revise this
 	Tensor derivate = function->CalculateDerivateTensor(Output);
 	std::vector<unsigned int> newShape = error.GetShape();
 	newShape[1] = LayerInput->OutputSize();
