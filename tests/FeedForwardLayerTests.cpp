@@ -54,9 +54,10 @@ SCENARIO("Getting the output from the Feed Forward Layer", "[layer][computation]
 			{
 				Tensor inner = tensor * feedForwardLayer.GetWeights();
 				inner += feedForwardLayer.GetBias();
-				Tensor result = TanhFunction::GetInstance().CalculateTensor(inner);
+				Tensor result = Sigmoid::GetInstance().CalculateTensor(inner);
 				Tensor output = feedForwardLayer.ComputeAndGetOutput();
-				REQUIRE(result == output);
+				Tensor diff = result - output;
+				REQUIRE(abs(diff.Sum()) < 0.0001);
 			}
 		}
 	}
