@@ -40,9 +40,18 @@ ConvLayer::~ConvLayer()
 
 }
 
-Layer *ConvLayer::Clone()
+Layer* ConvLayer::Clone()
 {
-	return nullptr;
+	ConvLayer* convLayer = new ConvLayer(
+			LayerInput, 1, Stride, 1, PadSize, PaddingType, PadFill
+			);
+	convLayer->GetKernel().ReloadFromOther(Kernel);
+	convLayer->GetOutput().ReloadFromOther(Output);
+	convLayer->function = ActivationFunctionLibrary::GetActivationFunction(function->GetActivationFunctionType());
+	convLayer->LayerError.ReloadFromOther(LayerError);
+	convLayer->KernelError.ReloadFromOther(KernelError);
+
+	return convLayer;
 }
 
 void ConvLayer::Compute()

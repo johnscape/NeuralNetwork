@@ -44,7 +44,7 @@ public:
 	/**
 	 * @brief Updates the layer's error for training purposes
 	 * @param error The error of the next layer
-	 * @param recursive Set to true if you want to train all previous layers
+	 * @param recursive Set to true if you want to train all previous Layers
 	 */
 	virtual void GetBackwardPass(const Tensor& error, bool recursive = false);
 
