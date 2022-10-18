@@ -16,7 +16,6 @@ GradientDescent::GradientDescent(LossFunction* lossFunction, Model* model, float
 
 GradientDescent::~GradientDescent()
 {
-	delete errorFunction;
 }
 
 Tensor GradientDescent::CalculateOutputError(const Tensor& output, const Tensor& expected)

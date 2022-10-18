@@ -10,10 +10,11 @@ GeneticAlgorithm::GeneticAlgorithm(Layer* output, unsigned int generations, unsi
 {
 	Layer* currentLayer = output;
 	originalModel = new Model();
+
 	while (currentLayer->GetInputLayer())
 	{
 		//originalLayers.push_back(currentLayer);
-		originalModel->InsertFirstLayer(currentLayer);
+		//originalModel->InsertFirstLayer(currentLayer); //TODO: Add model constructor from output layer
 		currentLayer = currentLayer->GetInputLayer();
 	}
 	InitializeRandom();
@@ -98,8 +99,8 @@ void GeneticAlgorithm::InitializeRandom()
 
 void GeneticAlgorithm::Mutate(Individual& individual)
 {
-	/*for (size_t i = 0; i < individual->layers.size(); i++)
-		individual->layers[i]->Train(this);*/
+	/*for (size_t i = 0; i < individual->Layers.size(); i++)
+		individual->Layers[i]->Train(this);*/
 	for (unsigned int i = 0; i < individual.model.LayerCount(); i++)
 		individual.model.GetLayerAt(i)->Train(this);
 }
