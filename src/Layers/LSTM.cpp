@@ -59,28 +59,33 @@ void LSTM::Compute()
 		std::list<Matrix>::iterator weight, bias;
 		weight = Weights.begin();
 		bias = Biases.begin();
+
 		//Gate 1
 		gate1 = InnerState * *weight;
 		gate1 += *bias;
 		gate1 = Sig->CalculateMatrix(gate1);
+
 		//Gate 2
 		weight++;
 		bias++;
 		gate2 = InnerState * *weight;
 		gate2 += *bias;
 		gate2 = Sig->CalculateMatrix(gate2);
+
 		//Gate 3
 		weight++;
 		bias++;
 		gate3 = InnerState * *weight;
 		gate3 += *bias;
 		gate3 = Tanh->CalculateMatrix(gate3);
+
 		//Gate 4
 		weight++;
 		bias++;
 		gate4 = InnerState * *weight;
 		gate4 += *bias;
 		gate4 = Sig->CalculateMatrix(gate4);
+
 		if (TrainingMode)
 		{
 			Gate1.push_back(gate1);
