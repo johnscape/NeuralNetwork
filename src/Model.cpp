@@ -1,92 +1,56 @@
 #include "NeuralNetwork/Model.h"
-
 #include "NeuralNetwork/Layers/Layer.h"
-#include "NeuralNetwork/Matrix.h"
+#include "NeuralNetwork/Layers/InputLayer.h"
 #include <map>
-#include "NeuralNetwork/Constants.h"
-
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/ostreamwrapper.h"
 #include <fstream>
-#include <string>
+#include <sstream>
 
 Model::Model() : inputLayer(nullptr), outputLayer(nullptr)
 {
 }
 
-Model::Model(const Model& m)
+Model::Model(const Model& m) : inputLayer(nullptr), outputLayer(nullptr)
 {
-	Layer* currentLayer = m.outputLayer->Clone();
-	AddLayer(currentLayer);
-	while (currentLayer->GetInputLayer())
-	{
-		currentLayer = currentLayer->GetInputLayer()->Clone();
-		layers[0]->SetInput(currentLayer);
-		InsertFirstLayer(currentLayer);
-	}
+	CopyFromModel(m);
 }
 
-Model& Model::operator=(Model& other)
+Model& Model::operator=(const Model& other)
 {
-	if (layers.size() > 0)
-	{
-		for (unsigned int i = 0; i < layers.size(); i++)
-			delete layers[i];
-		layers.clear();
-	}
+	Layers.clear();
 
-	Layer* currentLayer = other.outputLayer->Clone();
-	AddLayer(currentLayer);
-	while (currentLayer->GetInputLayer())
-	{
-		currentLayer = currentLayer->GetInputLayer()->Clone();
-		layers[0]->SetInput(currentLayer);
-		InsertFirstLayer(currentLayer);
-	}
-
-	return *this;
-}
-
-Model& Model::operator=(Model* other)
-{
-	if (layers.size() > 0)
-	{
-		for (unsigned int i = 0; i < layers.size(); i++)
-			delete layers[i];
-		layers.clear();
-	}
-
-	Layer* currentLayer = other->outputLayer->Clone();
-	AddLayer(currentLayer);
-	while (currentLayer->GetInputLayer())
-	{
-		currentLayer = currentLayer->GetInputLayer()->Clone();
-		layers[0]->SetInput(currentLayer);
-		InsertFirstLayer(currentLayer);
-	}
+	CopyFromModel(other);
 
 	return *this;
 }
 
 Model::~Model()
 {
-	for (unsigned int i = 0; i < layers.size(); i++)
-		delete layers[i];
+	std::list<Layer*>::const_iterator layerIterator;
+	std::list<bool>::const_iterator deleteIterator;
+
+	layerIterator = Layers.begin();
+	deleteIterator = ToDelete.begin();
+
+	while (layerIterator != Layers.end())
+	{
+		if (*deleteIterator)
+			delete *layerIterator;
+		deleteIterator++;
+		layerIterator++;
+	}
+
+	Layers.clear();
 }
 
-void Model::AddLayer(Layer* layer)
+void Model::AddLayer(Layer* layer, bool toDelete)
 {
-	layers.push_back(layer);
-	if (layers.size() >= 2)
-		layers[layers.size() - 1]->SetInput(layers[layers.size() - 2]);
-	if (!inputLayer)
-		inputLayer = layer;
-	FindOutput();
-}
-
-void Model::InsertFirstLayer(Layer* layer)
-{
-	layers.insert(layers.begin(), layer);
-	inputLayer = layer;
-	FindOutput();
+	Layers.push_back(layer);
+	ToDelete.push_back(toDelete);
+	UpdateInputOutput();
 }
 
 Layer* Model::GetLayer(unsigned int id)
@@ -94,180 +58,228 @@ Layer* Model::GetLayer(unsigned int id)
 	return FindLayerWithId(id);
 }
 
-void Model::SaveModel(const char* fileName)
+unsigned int Model::GetLayerCount() const
 {
-	/*rapidjson::Document document;
-	document.SetObject();
+	return Layers.size();
+}
 
-	rapidjson::Value modelData(rapidjson::kObjectType);
-	rapidjson::Value layerList(rapidjson::kArrayType);
-	rapidjson::Value inputId, layerCount, inpLayer, outLayer;
-	rapidjson::Document layerInfo;
-	for (unsigned int i = 0; i < layers.size(); i++)
-	{
-		rapidjson::Value layerData(rapidjson::kObjectType);
-		if (layers[i]->GetInputLayer())
-			inputId.SetInt(layers[i]->GetInputLayer()->GetId());
-		else
-			inputId.SetInt(-1);
-		layerInfo.Parse(layers[i]->SaveToJSON().c_str());
-		layerData.AddMember("inputLayerId", inputId, document.GetAllocator());
-		layerData.AddMember("layerData", layerInfo, document.GetAllocator());
-		layerList.PushBack(layerData, document.GetAllocator());
-	}
-
-	layerCount.SetUint(layers.size());
-	inpLayer.SetUint(inputLayer->GetId());
-	outLayer.SetUint(outputLayer->GetId());
-
-	modelData.AddMember("layers", layerList, document.GetAllocator());
-	modelData.AddMember("layerCount", layerCount, document.GetAllocator());
-	modelData.AddMember("inputLayerId", inpLayer, document.GetAllocator());
-	modelData.AddMember("outputLayerId", outLayer, document.GetAllocator());
-	document.AddMember("model", modelData, document.GetAllocator());
+void Model::SaveModel(const char* fileName) const
+{
+	rapidjson::Document document = SaveToDocument();
 
 	std::ofstream w(fileName);
 	rapidjson::OStreamWrapper osw(w);
-	rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+	rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
 	document.Accept(writer);
-	w.close();*/
+	w.close();
 }
 
 void Model::LoadModel(const char* fileName)
 {
-	/*rapidjson::Document document;
-	std::ifstream r(fileName);
-	rapidjson::IStreamWrapper isw(r);
-	document.ParseStream(isw);
+	std::ifstream reader(fileName);
+	if (!reader.good())
+		return; //TODO: Throw exception
+	std::stringstream buffer;
+	buffer << reader.rdbuf();
+	LoadFromString(buffer.str());
+}
 
-	if (layers.size() > 0)
-	{
-		for (unsigned int i = 0; i < layers.size(); i++)
-			delete layers[i];
-		layers.clear();
-	}
+std::string Model::SaveToString() const
+{
 
-	rapidjson::Value layerList, layerCount;
-	layerList = document["model"]["layers"];
-	layerCount = document["model"]["layerCount"];
-
+	rapidjson::Document document = SaveToDocument();
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	document.Accept(writer);
 
-	std::map<int, int> layerPairs;
-
-	for (unsigned int i = 0; i < layerCount.GetUint(); i++)
-	{
-		Layer* input = FindLayerWithId(layerList[i]["inputLayerId"].GetInt());
-		Layer* layer = Layer::Create(layerList[i]["layerData"]["layer"]["type"].GetUint(),
-			layerList[i]["layerData"]["layer"]["size"].GetUint(), input);
-
-		layerList[i]["layerData"].Accept(writer);
-		std::string layerString = buffer.GetString();
-		layer->LoadFromJSON(layerString.c_str());
-
-		buffer.Clear();
-		writer.Reset(buffer);
-
-		layerPairs.insert(std::make_pair<int, int>(layerList[i]["layerData"]["layer"]["id"].GetInt(), layerList[i]["inputLayerId"].GetInt()));
-		layer->SetId(layerList[i]["layerData"]["layer"]["id"].GetUint());
-		layers.push_back(layer);
-	}
-
-	for (std::map<int, int>::iterator it = layerPairs.begin(); it != layerPairs.end(); it++)
-	{
-		if (it->second < 0)
-			continue;
-		Layer* currentLayer = FindLayerWithId(it->first);
-		if (currentLayer->GetInputLayer())
-			continue;
-		currentLayer->SetInput(FindLayerWithId(it->second));
-	}
-
-	inputLayer = FindLayerWithId(document["model"]["inputLayerId"].GetUint());
-	outputLayer = FindLayerWithId(document["model"]["outputLayerId"].GetUint());*/
+	return std::string(buffer.GetString());
 }
 
-Matrix Model::Compute(const Matrix& input)
+void Model::LoadFromString(const std::string& json)
 {
+	LoadFromString(json.c_str());
+}
+
+void Model::LoadFromString(const char* json)
+{
+	rapidjson::Document document;
+	document.Parse(json);
+
+	if (document.MemberBegin() == document.MemberEnd() || !document.HasMember("model"))
+		return; //TODO: Throw error
+
+	rapidjson::Value value;
+	value = document["model"]["layers"];
+	for (rapidjson::Value::ValueIterator itr = value.Begin(); itr != value.End(); itr++)
+	{
+		rapidjson::Value& layer = *itr;
+		if (!layer.HasMember("layer"))
+			return; //TODO: Throw error
+		layer = layer["layer"];
+		Layer::LayerType type = static_cast<Layer::LayerType>(layer["type"].GetUint64());
+		Layer* newLayer = Layer::Create(type, {0}, nullptr);
+		newLayer->LoadFromJSON(layer);
+		Layers.push_back(newLayer);
+		ToDelete.push_back(true);
+	}
+}
+
+Tensor Model::Compute(const Tensor& input) const
+{
+	if (inputLayer == nullptr || outputLayer == nullptr)
+		throw LayerTypeException();
 	inputLayer->SetInput(input);
-	outputLayer->Compute();
-#if USE_GPU
-	outputLayer->GetOutput()->CopyFromGPU();
-#endif // USE_GPU
-
-	return outputLayer->GetOutput();
+	Tensor result = outputLayer->ComputeAndGetOutput();
+	return result;
 }
 
-Layer* Model::GetLastLayer()
+Layer* Model::GetLastLayer() const
 {
-	if (layers.size() > 0)
-		return layers[layers.size() - 1];
-	return nullptr;
+	return Layers.back();
 }
 
-Layer* Model::GetOutput()
+Layer* Model::GetOutput() const
 {
 	return outputLayer;
 }
 
-Layer* Model::GetInput()
+Layer* Model::GetInput() const
 {
 	return inputLayer;
 }
 
 unsigned int Model::LayerCount() const
 {
-	return layers.size();
+	return Layers.size();
 }
 
-Layer* Model::GetLayerAt(unsigned int n)
+Layer* Model::GetLayerAt(unsigned int n) const
 {
-	if (n >= layers.size())
+	if (n >= Layers.size())
 		return nullptr;
-	return layers[n];
+	std::list<Layer*>::const_iterator layer;
+	layer = Layers.begin();
+	for (unsigned int i = 0; i < n; i++)
+		layer++;
+	return *layer;
 }
 
 void Model::FindOutput()
 {
-	for (unsigned int i = 0; i < layers.size(); i++)
+	//the output is, which is not used by any other layer as input
+	std::list<Layer*>::iterator first, second;
+
+	for (first = Layers.begin(); first != Layers.end(); first++)
 	{
-		bool found = true;
-		for (unsigned int ii = 0; ii < layers.size(); ii++)
+		bool braked = false;
+		for (second = Layers.begin(); second != Layers.end(); second++)
 		{
-			if (i == ii)
+			if (first == second)
 				continue;
-			if (layers[ii]->GetInputLayer() && layers[ii]->GetInputLayer()->GetId() == layers[i]->GetId())
+			if ((*second)->GetInputLayer() == (*first))
 			{
-				found = false;
+				braked = true;
 				break;
 			}
 		}
 
-		if (found)
+		if (!braked)
 		{
-			outputLayer = layers[i];
-			break;
+			outputLayer = *first;
+			return;
 		}
 	}
 }
 
 void Model::FindInput()
 {
-	for (unsigned int i = 0; i < layers.size(); i++)
+	std::list<Layer*>::iterator it = Layers.begin();
+	while (it != Layers.end())
 	{
-		if (!layers[i]->GetInputLayer())
+		Layer* currentLayer = *it;
+		if (dynamic_cast<InputLayer*>(currentLayer) != nullptr)
 		{
-			inputLayer = layers[i];
+			inputLayer = currentLayer;
 			return;
 		}
+		it++;
 	}
+	inputLayer = nullptr;
 }
 
 Layer* Model::FindLayerWithId(unsigned int id)
 {
-	for (unsigned int i = 0; i < layers.size(); i++)
-		if (layers[i]->GetId() == id)
-			return layers[i];
+	for (std::list<Layer*>::iterator it = Layers.begin(); it != Layers.end(); it++)
+		if ((*it)->GetId() == id)
+			return (*it);
 	return nullptr;
+}
+
+void Model::CopyFromModel(const Model &model)
+{
+	std::map<unsigned int, unsigned int> idMap;
+
+	//copy Layers
+	for (unsigned int i = 0; i < model.GetLayerCount(); ++i)
+	{
+		Layer* original = model.GetLayerAt(i);
+		Layer* copy = original->Clone();
+		AddLayer(copy, true);
+		idMap.insert(std::pair<unsigned int, unsigned int>(original->GetId(), copy->GetId()));
+	}
+
+	//find parents
+	for (unsigned int i = 0; i < GetLayerCount(); ++i)
+	{
+		Layer* findLayer = GetLayerAt(i);
+		if (findLayer->GetInputLayer() == nullptr)
+			continue;
+		unsigned int idToFind = findLayer->GetInputLayer()->GetId();
+		idToFind = idMap[idToFind];
+		for (unsigned int j = 0; j < GetLayerCount(); ++j)
+		{
+			Layer* currentLayer = GetLayerAt(j);
+			if (currentLayer->GetId() == idToFind)
+			{
+				findLayer->SetInput(currentLayer);
+				break;
+			}
+		}
+	}
+}
+
+void Model::Train(Optimizer *optimizer)
+{
+	if (inputLayer == nullptr || outputLayer == nullptr)
+		throw LayerTypeException();
+}
+
+void Model::UpdateInputOutput()
+{
+	FindInput();
+	FindOutput();
+}
+
+rapidjson::Document Model::SaveToDocument() const
+{
+	rapidjson::Document document;
+	rapidjson::Value model(rapidjson::kObjectType);
+	document.SetObject();
+
+	rapidjson::Value layerList;
+	layerList.SetArray();
+	std::list<Layer*>::const_iterator iterator;
+
+	for (iterator = Layers.begin(); iterator != Layers.end(); iterator++)
+	{
+		rapidjson::Value layerOut(rapidjson::kObjectType);
+		rapidjson::Value layerValue = (*iterator)->SaveToJSONObject(document);
+		layerOut.AddMember("layer", layerValue, document.GetAllocator());
+		layerList.PushBack(layerOut, document.GetAllocator());
+	}
+
+	model.AddMember("layers", layerList, document.GetAllocator());
+	document.AddMember("model", model, document.GetAllocator());
+
+	return document;
 }

@@ -23,7 +23,7 @@ SCENARIO("Creating a model", "[model][init]")
 
 		WHEN("checking properties")
 		{
-			THEN("the model has 0 layers")
+			THEN("the model has 0 Layers")
 			{
 				REQUIRE(model.GetLayerCount() == 0);
 			}
@@ -41,7 +41,7 @@ SCENARIO("Creating a model", "[model][init]")
 				REQUIRE_THROWS(model.Train(nullptr));
 			}
 		}
-		WHEN("adding a few layers to the model")
+		WHEN("adding a few Layers to the model")
 		{
 			InputLayer* inputLayer = new InputLayer(5);
 			FeedForwardLayer* outputLayer = new FeedForwardLayer(inputLayer, 8);
@@ -49,7 +49,7 @@ SCENARIO("Creating a model", "[model][init]")
 			model.AddLayer(inputLayer);
 			model.AddLayer(outputLayer);
 
-			THEN("the model has 2 layers")
+			THEN("the model has 2 Layers")
 			{
 				REQUIRE(model.GetLayerCount() == 2);
 			}
@@ -103,11 +103,11 @@ SCENARIO("Running the model", "[model][computation]")
 			THEN("the result should be the following")
 			{
 				float s1 = 0.7310586;
-				float outputValue[3] = {s1, s1, 0};
+				float outputValue[3] = {s1, s1, 0.5};
 				Tensor expected({1, 3}, outputValue);
 				Tensor diff = output - expected;
 
-				REQUIRE(abs(diff.Sum()) < 0.01);
+				REQUIRE(abs(diff.Sum()) < 0.0001);
 			}
 		}
 	}
@@ -154,6 +154,34 @@ SCENARIO("Training the model", "[model][training]")
 			Tensor output2 = model.Compute(input);
 			float error2 = errorFunc.Loss(output2, expectedOutput);
 			REQUIRE(error2 < error1);
+		}
+	}
+}
+
+SCENARIO("Saving and loading the model", "[model][io]")
+{
+	GIVEN("a 3 layer model")
+	{
+		InputLayer inputLayer(5);
+		FeedForwardLayer hiddenLayer(&inputLayer, 8);
+		FeedForwardLayer outputLayer(&hiddenLayer, 3);
+
+		Model model;
+		model.AddLayer(&inputLayer);
+		model.AddLayer(&hiddenLayer);
+		model.AddLayer(&outputLayer);
+
+		WHEN("saving the model and loading it into another")
+		{
+			std::string jsonText = model.SaveToString();
+			Model model2;
+			model2.LoadFromString(jsonText);
+
+			THEN("the two model has to be the same")
+			{
+				REQUIRE(model2.GetLayerCount() == model.GetLayerCount());
+				//TODO: Add more requirements
+			}
 		}
 	}
 }
