@@ -14,7 +14,7 @@
 #include <rapidjson/writer.h>
 #include <fstream>
 
-#if USE_GPU
+#if USE_GPU==CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
 #endif // USE_GPU
@@ -43,7 +43,7 @@ Matrix::Matrix() : GPUValues(nullptr)
 	Values = new float[1];
 	Values[0] = 0;
 
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaMalloc((void**)&GPUValues, sizeof(float));
 	CopyToGPU();
 #endif // USE_GPU
@@ -70,7 +70,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 		std::fill(Values, Values + count, 0);
 	}
 
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
 	CopyToGPU();
 #endif // USE_GPU
@@ -85,7 +85,7 @@ Matrix::Matrix(const Matrix& other) : GPUValues(nullptr)
 
 	std::copy(other.Values, other.Values + count, Values);
 
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
 	CopyToGPU();
 #endif // USE_GPU
@@ -118,7 +118,7 @@ Matrix::~Matrix()
 {
 	if (Values)
 		delete[] Values;
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaFree(GPUValues);
 #endif
 }
@@ -596,7 +596,7 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
 	if (!a.IsSameSize(b))
 		throw MatrixException();
 	Matrix c(a);
-#if USE_GPU
+#if USE_GPU==CUDA
 
 #else
 	float floatRes[4];
@@ -1006,7 +1006,7 @@ void Matrix::ReloadFromOther(const Matrix& m)
 	Rows = m.GetRowCount();
 	std::copy(m.Values, m.Values + count, Values);
 
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaFree(GPUValues);
 	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
 	CopyToGPU();
@@ -1138,21 +1138,21 @@ rapidjson::Value Matrix::SaveToJSONObject(rapidjson::Document& document) const
 
 void Matrix::CopyToGPU()
 {
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * Rows * Columns, cudaMemcpyHostToDevice);
 #endif
 }
 
 void Matrix::CopyFromGPU()
 {
-#if USE_GPU
+#if USE_GPU==CUDA
 	cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * Rows * Columns, cudaMemcpyDeviceToHost);
 #endif
 }
 
 float* Matrix::GetGPUValues()
 {
-#if USE_GPU
+#if USE_GPU==CUDA
 	return GPUValues;
 #else
 	return nullptr;
