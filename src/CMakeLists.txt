@@ -13,21 +13,39 @@ endif()
 FetchContent_MakeAvailable(rapidjson)
 find_package(RapidJSON)
 
-add_library(NeuralNetwork
-	Matrix.cpp
-	TempMatrix.cpp
-	Tensor.cpp
-	Model.cpp
-	Optimizers/GradientDescent.cpp
-	Optimizers/Optimizer.cpp
-	GeneticAlgorithm.cpp
-	Layers/FeedForwardLayer.cpp
-	Layers/Layer.cpp
-	Layers/InputLayer.cpp
-	Layers/RecurrentLayer.cpp
-	Layers/LSTM.cpp
-	Layers/ConvLayer.cpp
-	${HEADER_LIST})
+include_directories("/usr/local/cuda/include")
+set(CPP_FILES
+    Matrix.cpp
+    TempMatrix.cpp
+    Tensor.cpp
+    Model.cpp
+    Optimizers/GradientDescent.cpp
+    Optimizers/Optimizer.cpp
+    GeneticAlgorithm.cpp
+    Layers/FeedForwardLayer.cpp
+    Layers/Layer.cpp
+    Layers/InputLayer.cpp
+    Layers/RecurrentLayer.cpp
+    Layers/LSTM.cpp
+    Layers/ConvLayer.cpp
+    ${HEADER_LIST})
+
+set(CUDA_FILES
+    Matrix.cpp
+ )
+
+if (${GPU_SETTING} STREQUAL "None")
+    add_library(NeuralNetwork STATIC
+        ${CPP_FILES}
+    )
+elseif (${GPU_SETTING} STREQUAL "CUDA")
+    cuda_add_library(NeuralNetwork STATIC
+        ${CPP_FILES}
+    )
+else()
+    set (GPU_TYPE 0)
+    message ("OpenCL support is not implemented yet, defaulting to CPU build")
+endif()
 
 target_include_directories(NeuralNetwork PUBLIC ../include ${rapidjson_SOURCE_DIR}/include)
 target_compile_features(NeuralNetwork PUBLIC cxx_std_11)
