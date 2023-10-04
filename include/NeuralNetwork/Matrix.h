@@ -206,6 +206,12 @@ public:
 	 * @brief Returns the pointer for the GPU calculations
 	 * @return The pointer of the GPU
 	*/
+	float* GetConstGPUValues() const;
+        
+        /**
+	 * @brief Returns the pointer for the GPU calculations
+	 * @return The pointer of the GPU
+	*/
 	float* GetGPUValues();
 	
 	/**

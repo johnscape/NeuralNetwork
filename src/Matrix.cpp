@@ -17,6 +17,7 @@
 #if USE_GPU==CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include "NeuralNetwork/MatrixGPUMath.cuh"
 #endif // USE_GPU
 
 #define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))
@@ -598,7 +599,7 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
 		throw MatrixException();
 	Matrix c(a);
 #if USE_GPU==CUDA
-
+        GPUMath::ElementviseMultiply(c, b);
 #else
 	float floatRes[4];
 	for (size_t i = 0; i < a.GetRowCount() * a.GetColumnCount(); i+=4)
@@ -1151,6 +1152,15 @@ void Matrix::CopyFromGPU()
 }
 
 float* Matrix::GetGPUValues()
+{
+#if USE_GPU==CUDA
+	return GPUValues;
+#else
+	return nullptr;
+#endif // 0
+}
+
+float* Matrix::GetConstGPUValues() const
 {
 #if USE_GPU==CUDA
 	return GPUValues;

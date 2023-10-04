@@ -29,9 +29,11 @@ set(CPP_FILES
     Layers/LSTM.cpp
     Layers/ConvLayer.cpp
     ${HEADER_LIST})
+    
 
 set(CUDA_FILES
-    Matrix.cpp
+    MatrixGPUMath.cu
+    ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/MatrixGPUMath.cuh
  )
 
 if (${GPU_SETTING} STREQUAL "None")
@@ -41,6 +43,7 @@ if (${GPU_SETTING} STREQUAL "None")
 elseif (${GPU_SETTING} STREQUAL "CUDA")
     cuda_add_library(NeuralNetwork STATIC
         ${CPP_FILES}
+        ${CUDA_FILES}
     )
 else()
     set (GPU_TYPE 0)

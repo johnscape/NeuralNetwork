@@ -540,6 +540,10 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 
 		a.FillWith(3);
 		b.FillWith(2);
+                #if USE_GPU==CUDA
+                a.CopyToGPU();
+                b.CopyToGPU();
+                #endif
 
 		WHEN("creating a new matrix with elementwise multiplaction")
 		{
@@ -552,6 +556,9 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 			}
 			THEN("every value in the new matrix is 6")
 			{
+                            #if USE_GPU==CUDA
+                            c.CopyFromGPU();
+                            #endif
 				for (unsigned int i = 0; i < 9; i++)
 					REQUIRE(c[i] == 6);
 			}
