@@ -20,6 +20,7 @@
 #endif // USE_GPU
 
 #define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))
+#define MATRIX_SIZE Rows * Columns
 
 std::ostream& operator<<(std::ostream& os, const Matrix& m)
 {
@@ -71,7 +72,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 	}
 
 #if USE_GPU==CUDA
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
 	CopyToGPU();
 #endif // USE_GPU
 }
@@ -86,7 +87,7 @@ Matrix::Matrix(const Matrix& other) : GPUValues(nullptr)
 	std::copy(other.Values, other.Values + count, Values);
 
 #if USE_GPU==CUDA
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
 	CopyToGPU();
 #endif // USE_GPU
 }
@@ -657,8 +658,7 @@ Matrix Matrix::Concat(const Matrix& a, const Matrix& b, Matrix::ConcatType type)
 {
 	if (type == Matrix::ConcatType::BY_ROW)
 		return Matrix::Concat(a, b, 0);
-	else if (type == Matrix::ConcatType::BY_COLUMN)
-		return Matrix::Concat(a, b, 1);
+        return Matrix::Concat(a, b, 1);
 }
 
 void Matrix::ElementwiseMultiply(const Matrix& other)
@@ -1008,7 +1008,7 @@ void Matrix::ReloadFromOther(const Matrix& m)
 
 #if USE_GPU==CUDA
 	cudaFree(GPUValues);
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MaxValue);
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
 	CopyToGPU();
 #endif // USE_GPU
 

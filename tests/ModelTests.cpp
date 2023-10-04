@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include "NeuralNetwork/Model.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Layers/FeedForwardLayer.h"

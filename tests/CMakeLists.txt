@@ -19,32 +19,25 @@ set(CPP_FILES
     "ModelTests.cpp"
 )
 
-add_executable(	NeuralNetworkTest 
-				"MatrixTests.cpp"
-                                "TensorTests.cpp"
-				"InputLayerTests.cpp"
-				"FeedForwardLayerTests.cpp"
-				"RecurrentLayerTests.cpp"
-				"LSTMTests.cpp"
-				"ConvLayerTests.cpp"
-				"ModelTests.cpp")
-
 if (${GPU_SETTING} STREQUAL "None")
-    add_executable(NeuralNetworkTest 
+    add_executable( NeuralNetworkTest 
         ${CPP_FILES}
     )
 elseif (${GPU_SETTING} STREQUAL "CUDA")
-    cuda_add_executable(
+    add_executable( NeuralNetworkTest
         ${CPP_FILES}
     )
 else()
     set (GPU_TYPE 0)
     message ("OpenCL support is not implemented yet, defaulting to CPU build")
+    add_executable(NeuralNetworkTest 
+            ${CPP_FILES}
+    )
 endif()
 
+include_directories(${CATCH2_INCLUDE_DIRS})
 target_link_libraries(NeuralNetworkTest PUBLIC NeuralNetwork Catch2::Catch2WithMain)
 
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 catch_discover_tests(NeuralNetworkTest)

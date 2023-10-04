@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include "NeuralNetwork/Layers/ConvLayer.h"
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Optimizers/GradientDescent.h"
