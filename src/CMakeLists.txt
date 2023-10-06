@@ -11,7 +11,6 @@ if(NOT rapidjson_POPULATED)
 	FetchContent_Populate(rapidjson)
 endif()
 FetchContent_MakeAvailable(rapidjson)
-find_package(RapidJSON)
 
 include_directories("/usr/local/cuda/include")
 set(CPP_FILES
