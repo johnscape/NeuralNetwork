@@ -2,13 +2,37 @@
 
 #define BLOCK_SIZE 16
 
+/**
+ * @brief A namespace containing CUDA functions for matrix and tensor operations
+ * 
+ */
 namespace GPUMath
 {
-	Matrix& Multiplication(const Matrix& a, const Matrix& b);
-	void Multiplication(const Matrix& a, const Matrix& b, Matrix& c);
-	void ElementviseMultiply(Matrix& a, const Matrix& b);
-	void SubstractIn(Matrix& a, const Matrix& b);
+	//Addition
+	Matrix& Add(const Matrix& a, const Matrix& b);
+	void Add(const Matrix& a, const Matrix& b, Matrix& c);
 	void AddIn(Matrix& a, const Matrix& b);
 
+	//Subtraction
+	Matrix& Subtract(const Matrix& a, const Matrix& b);
+	void Subtract(const Matrix& a, const Matrix& b, Matrix& c);
+	void SubtractIn(Matrix& a, const Matrix& b);
+
+	//Multiplication
+	Matrix& Multiplication(const Matrix& a, const Matrix& b);
+	void Multiplication(const Matrix& a, const Matrix& b, Matrix& c);
+
+	void ElementviseMultiply(Matrix& a, const Matrix& b);
+
+	//Misc
+
+	/**
+	 * @brief Fills a matrix CUDA values with a fixed value.
+	 * 
+	 * @param a The matrix to fill
+	 * @param value The value to fill with
+	 */
 	void FillWith(Matrix& a, float value);
+
+	
 }

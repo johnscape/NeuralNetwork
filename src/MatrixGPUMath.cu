@@ -3,6 +3,7 @@
 #include <device_launch_parameters.h>
 #include "NeuralNetwork/MatrixGPUMath.cuh"
 
+// Kernels
 
 __global__ void MatMulKernel(float* A, float* B, float* C, int m, int n, int k)
 {
@@ -26,11 +27,25 @@ __global__ void MatAddInKernel(float* A, float* B, unsigned int maxNum)
 		A[i] += B[i];
 }
 
+__global__ void MatAddKerlen(float* A, float* B, float* C, unsigned int maxNum)
+{
+	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	if (i < maxNum)
+		C[i] = A[i] + B[i];
+}
+
 __global__ void MatSubInKernel(float* A, float* B, unsigned int maxNum)
 {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] -= B[i];
+}
+
+__global__ void MatSubKernel(float* A, float* B, float* C, unsigned int maxNum)
+{
+	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	if (i < maxNum)
+		C[i] = A[i] - B[i];
 }
 
 __global__ void InnerProductKernel(float* A, float* B, unsigned int maxNum)
@@ -46,6 +61,69 @@ __global__ void FillKernel(float* a, float val, unsigned int maxNum)
 	if (i < maxNum)
 		a[i] = val;
 }
+
+// Addition
+
+Matrix& GPUMath::Add(const Matrix& a, const Matrix& b)
+{
+	Matrix c(a);
+
+	unsigned int max = a.GetColumnCount() * a.GetRowCount();
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+	MatAddInKernel <<<grid, threads >>> (c.GetGPUValues(), b.GetConstGPUValues(), max);
+
+	return c;
+}
+
+void GPUMath::Add(const Matrix& a, const Matrix& b, Matrix& c)
+{
+	unsigned int max = a.GetColumnCount() * a.GetRowCount();
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+	MatAddKerlen <<<grid, threads >>> (a.GetConstGPUValues(), b.GetConstGPUValues(), c.GetGPUValues(), max);
+}
+
+
+void GPUMath::AddIn(Matrix& a, const Matrix& b)
+{
+	unsigned int max = a.GetColumnCount() * a.GetRowCount();
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+	MatAddInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
+}
+
+// Subtraction
+
+Matrix& GPUMath::Subtract(const Matrix& a, const Matrix& b)
+{
+	Matrix c(a);
+
+	unsigned int max = a.GetColumnCount() * a.GetRowCount();
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+	MatSubInKernel << <grid, threads >> > (c.GetGPUValues(), b.GetConstGPUValues(), max);
+
+	return c;
+}
+
+void GPUMath::Subtract(const Matrix& a, const Matrix& b, Matrix& c)
+{
+	unsigned int max = a.GetColumnCount() * a.GetRowCount();
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+	MatSubKernel <<<grid, threads >>> (a.GetConstGPUValues(), b.GetConstGPUValues(), c.GetGPUValues(), max);
+}
+
+void GPUMath::SubtractIn(Matrix& a, const Matrix& b)
+{
+	unsigned int max = a.GetColumnCount() * a.GetRowCount();
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+	MatSubInKernel << <grid, threads >> > (a.GetGPUValues(), b.GetConstGPUValues(), max);
+}
+
+//Multiplication
 
 Matrix& GPUMath::Multiplication(const Matrix& a, const Matrix& b)
 {
@@ -78,21 +156,7 @@ void GPUMath::ElementviseMultiply(Matrix& a, const Matrix& b)
 	InnerProductKernel << <grid, threads >> > (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-void GPUMath::SubstractIn(Matrix& a, const Matrix& b)
-{
-	unsigned int max = a.GetColumnCount() * a.GetRowCount();
-	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	MatSubInKernel << <grid, threads >> > (a.GetGPUValues(), b.GetConstGPUValues(), max);
-}
-
-void GPUMath::AddIn(Matrix& a, const Matrix& b)
-{
-	unsigned int max = a.GetColumnCount() * a.GetRowCount();
-	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	MatAddInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
-}
+// Misc
 
 void GPUMath::FillWith(Matrix& a, float value)
 {
