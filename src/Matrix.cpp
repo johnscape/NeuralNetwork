@@ -98,6 +98,7 @@ Matrix::Matrix(Matrix&& other) noexcept : GPUValues(other.GPUValues)
 	Columns = other.Columns;
 	Rows = other.Rows;
 	Values = other.Values;
+	GPUValues = other.GPUValues;
 
 	other.Rows = 0;
 	other.Columns = 0;
@@ -113,7 +114,11 @@ Matrix::Matrix(const Tensor& from)
 	Columns = from.GetShapeAt(1);
 	Values = new float[Rows * Columns];
 	for (unsigned int i = 0; i < Rows * Columns; ++i)
-		Values[i] = from.GetValue(i);
+		Values[i] = from.GetValue(i); //TODO: Make it faster somehow, maybe make a const function, where we can use memcpy to copy values into a raw pointer e.g. Tensor::CopyValuesInto(float* values) {std::copy(v, v+size, values);}
+	#if USE_GPU==CUDA
+	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+	CopyToGPU();
+	#endif
 }
 
 Matrix::~Matrix()
@@ -237,7 +242,9 @@ Matrix& Matrix::operator+=(const Matrix& other)
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
-
+#if USE_GPU==CUDA
+	GPUMath::AddIn(*this, other);
+#else
 	float floatRes[4];
 	float currentValues[4];
 	float otherValues[4];
@@ -274,7 +281,7 @@ Matrix& Matrix::operator+=(const Matrix& other)
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
 	}
-
+#endif
 	return *this;
 }
 
@@ -282,7 +289,9 @@ Matrix& Matrix::operator-=(const Matrix& other)
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
-
+#if USE_GPU==CUDA
+	GPUMath::SubtractIn(*this, other);
+#else
 	float floatRes[4];
 	float currentValues[4];
 	float otherValues[4];
@@ -318,7 +327,7 @@ Matrix& Matrix::operator-=(const Matrix& other)
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
 	}
-
+#endif
 	return *this;
 }
 
@@ -326,7 +335,9 @@ Matrix& Matrix::operator*=(const Matrix& other)
 {
 	if (Columns != other.Rows)
 		throw MatrixException();
-
+#if USE_GPU==CUDA
+	Matrix result = GPUMath::Multiplication(*this, other);
+#else
 	Matrix result(Rows, other.GetColumnCount());
 	//CacheVector col, row;
 	float col[4];
@@ -357,7 +368,7 @@ Matrix& Matrix::operator*=(const Matrix& other)
 			br += 4;
 		}
 	}
-
+#endif
 	ReloadFromOther(result);
 
 	return *this;
@@ -368,6 +379,9 @@ Matrix Matrix::operator+(const Matrix& other) const
 	if (!IsSameSize(other))
 		throw MatrixException();
 
+#if USE_GPU==CUDA
+	return GPUMath::Add(*this, other);
+#else
 	Matrix result(Rows, Columns);
 
 	float floatRes[4];
@@ -407,13 +421,17 @@ Matrix Matrix::operator+(const Matrix& other) const
 	}
 
 	return result;
+#endif
+
 }
 
 Matrix Matrix::operator-(const Matrix& other) const
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
-
+#if USE_GPU==CUDA
+	return GPUMath::Subtract(*this, other);
+#else
 	Matrix result(Rows, Columns);
 
 	float floatRes[4];
@@ -453,13 +471,16 @@ Matrix Matrix::operator-(const Matrix& other) const
 	}
 
 	return result;
+#endif
 }
 
 Matrix Matrix::operator*(const Matrix& other) const
 {
 	if (Columns != other.Rows)
 		throw MatrixException();
-
+#if USE_GPU==CUDA
+	return GPUMath::Multiplication(*this, other);
+#else
 	Matrix result(Rows, other.GetColumnCount());
 	//CacheVector col, row;
 	float col[4];
@@ -492,6 +513,7 @@ Matrix Matrix::operator*(const Matrix& other) const
 	}
 
 	return result;
+#endif
 }
 
 bool Matrix::operator==(const Matrix& other) const
@@ -1008,8 +1030,11 @@ void Matrix::ReloadFromOther(const Matrix& m)
 	std::copy(m.Values, m.Values + count, Values);
 
 #if USE_GPU==CUDA
-	cudaFree(GPUValues);
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+	if (count != GetElementCount())
+	{
+		cudaFree(GPUValues);
+		cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+	}
 	CopyToGPU();
 #endif // USE_GPU
 
@@ -1037,6 +1062,9 @@ void Matrix::Copy(const Matrix& from)
 void Matrix::FillWith(float value)
 {
 	std::fill(Values, Values + Rows * Columns, value);
+	#if USE_GPU==CUDA
+	GPUMath::FillWith(*this, value);
+	#endif
 }
 
 void Matrix::FillWithRandom(float min, float max)
@@ -1054,6 +1082,9 @@ void Matrix::FillWithRandom(float min, float max)
 
 	for (size_t i = 0; i < Rows * Columns; i++)
 		Values[i] = dist(engine);
+	#if USE_GPU==CUDA
+	CopyToGPU();
+	#endif
 }
 
 void Matrix::LoadFromJSON(const char* data, bool isFile)
