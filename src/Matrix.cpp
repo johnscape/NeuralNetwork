@@ -540,18 +540,24 @@ bool Matrix::operator!=(const Matrix& other) const
 
 Matrix& Matrix::operator*=(float other)
 {
+#if USE_GPU==CUDA
+	GPUMath::MultiplyConstant(*this, other);
+#else
 	for (size_t i = 0; i < GetElementCount(); i++)
 		Values[i] *= other;
+#endif
 	return *this;
 }
 
 Matrix Matrix::operator*(float other)
 {
 	Matrix res(*this);
-
+#if USE_GPU==CUDA
+	GPUMath::MultiplyConstant(res, other);
+#else
 	for (size_t i = 0; i < GetElementCount(); i++)
 		res.SetValue(i, res[i] * other);
-
+#endif
 	return res;
 }
 
