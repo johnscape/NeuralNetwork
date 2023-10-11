@@ -9,28 +9,72 @@
 namespace GPUMath
 {
 	//Addition
-	Matrix Add(const Matrix& a, const Matrix& b);
+    /**
+     * Adds two matrices together, stores the result in the third (c = a + b)
+     * @param a The first matrix to add
+     * @param b The second matrix to add
+     * @param c The matrix to store the results in
+     */
 	void Add(const Matrix& a, const Matrix& b, Matrix& c);
+
+    /**
+     * Adds the second matrix to the first one (a += b)
+     * @param a The matrix to add to
+     * @param b The matrix to add
+     */
 	void AddIn(Matrix& a, const Matrix& b);
 
-	Matrix AddConstant(const Matrix& a, float v);
+    /**
+     * Adds a constant value to each element of the matrix
+     * @param a The matrix to increment
+     * @param v The value to add
+     */
 	void AddConstant(Matrix& a, float v);
 
 	//Subtraction
-	Matrix Subtract(const Matrix& a, const Matrix& b);
+    /**
+     * Subtract two matrices from each other, stores the result in the third one (c = a - b)
+     * @param a The matrix to subtract from
+     * @param b The matrix to subtract
+     * @param c The matrix with the results
+     */
 	void Subtract(const Matrix& a, const Matrix& b, Matrix& c);
+
+    /**
+     * Subtracts the second matrix from the first one (a -= b)
+     * @param a The matrix to subtract from
+     * @param b The matrix to subtract
+     */
 	void SubtractIn(Matrix& a, const Matrix& b);
 
-	Matrix SubtractConstant(const Matrix& a, float v);
+    /**
+     * Subtract a value from each element of the matrix
+     * @param a The matrix to subtract from
+     * @param v The value to subtract
+     */
 	void SubtractConstant(Matrix& a, float v);
 
 	//Multiplication
-	Matrix Multiplication(const Matrix& a, const Matrix& b);
+    /**
+     * Multiplies two matrices together, stores the result in the third one (c = a * b)
+     * @param a The first matrix to multiply
+     * @param b The second matrix to multiply
+     * @param c The result matrix
+     */
 	void Multiplication(const Matrix& a, const Matrix& b, Matrix& c);
 
-	void ElementviseMultiply(Matrix& a, const Matrix& b);
+    /**
+     * Multiplies two matrices elementwise. Stores the result in the first one
+     * @param a The first matrix to multiply, stores the result
+     * @param b The second matrix to multiply
+     */
+	void ElementwiseMultiply(Matrix& a, const Matrix& b);
 
-	Matrix MultiplyConstant(const Matrix& a, float v);
+    /**
+     * Multiplies a matrix with a single value, elementwise.
+     * @param a The matrix to multiply
+     * @param v The value to multiply with
+     */
 	void MultiplyConstant(Matrix& a, float v);
 
 	//Misc
