@@ -402,6 +402,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("adding them together")
 		{
 			Matrix c = a + b;
+            c.CopyFromGPU();
 
 			THEN("the new matrix is filled with 2s")
 			{
@@ -412,6 +413,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("adding b to a")
 		{
 			a += b;
+            a.CopyFromGPU();
 			THEN("the a matrix is filled with 2s")
 			{
 				for (unsigned int i = 0; i < 2; i++)
@@ -421,6 +423,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("substracting b from a")
 		{
 			Matrix c = a - b;
+            c.CopyFromGPU();
 
 			THEN("the new matrix is filled with 0s")
 			{
@@ -431,6 +434,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("substracting b from a (-=)")
 		{
 			a -= b;
+            a.CopyFromGPU();
 
 			THEN("the a matrix is filled with 0s")
 			{
@@ -441,6 +445,8 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("raising one of the matrices to the power of 3")
 		{
 			Matrix res = a.Power(3);
+            res.CopyFromGPU();
+
 			THEN("the matrix is still 2x2")
 			{
 				REQUIRE(res.GetRowCount() == 2);
@@ -455,6 +461,8 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("raising one of the matrices to the power of 3 in itself (PowerSelf)")
 		{
 			a.PowerSelf(3);
+            a.CopyFromGPU();
+
 			THEN("the matrix is still 2x2")
 			{
 				REQUIRE(a.GetRowCount() == 2);
@@ -477,6 +485,8 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("multiplying them together")
 		{
 			Matrix c = a * b;
+            c.CopyFromGPU();
+
 			THEN("all values in the new matrix are 10")
 			{
 				for (unsigned int i = 0; i < 9; i++)
@@ -486,6 +496,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("multiplying the matrix")
 		{
 			a *= b;
+            a.CopyFromGPU();
 
 			THEN("all values are 10")
 			{
@@ -505,6 +516,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("multiplying them together")
 		{
 			Matrix c = a * b;
+            c.CopyFromGPU();
 
 			THEN("the new matrix is 3x4")
 			{
@@ -520,6 +532,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("multiplying a with b")
 		{
 			a *= b;
+            a.CopyFromGPU();
 
 			THEN("the a matrix is 3x4")
 			{

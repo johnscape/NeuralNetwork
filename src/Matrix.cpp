@@ -60,17 +60,9 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 	Values = new float[count];
 
 	if (elements)
-	{
-		/*for (size_t i = 0; i < MaxValue; i++)
-			Values[i] = elements[i];*/
 		std::copy(elements, elements + count, Values);
-	}
 	else
-	{
-		/*for (size_t i = 0; i < MaxValue; i++)
-			Values[i] = 0;*/
 		std::fill(Values, Values + count, 0);
-	}
 
 #if USE_GPU==CUDA
 	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
@@ -335,10 +327,11 @@ Matrix& Matrix::operator*=(const Matrix& other)
 {
 	if (Columns != other.Rows)
 		throw MatrixException();
+    Matrix result(Rows, other.GetColumnCount());
 #if USE_GPU==CUDA
-	Matrix result = GPUMath::Multiplication(*this, other);
+
+	GPUMath::Multiplication(*this, other, result);
 #else
-	Matrix result(Rows, other.GetColumnCount());
 	//CacheVector col, row;
 	float col[4];
 	float row[4];
@@ -478,10 +471,10 @@ Matrix Matrix::operator*(const Matrix& other) const
 {
 	if (Columns != other.Rows)
 		throw MatrixException();
+    Matrix result(Rows, other.GetColumnCount());
 #if USE_GPU==CUDA
-	return GPUMath::Multiplication(*this, other);
+    GPUMath::Multiplication(*this, other, result);
 #else
-	Matrix result(Rows, other.GetColumnCount());
 	//CacheVector col, row;
 	float col[4];
 	float row[4];
@@ -511,9 +504,8 @@ Matrix Matrix::operator*(const Matrix& other) const
 			br += 4;
 		}
 	}
-
-	return result;
 #endif
+    return result;
 }
 
 bool Matrix::operator==(const Matrix& other) const

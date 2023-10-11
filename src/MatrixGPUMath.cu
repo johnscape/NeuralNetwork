@@ -85,7 +85,7 @@ __global__ void MulConstKernel(float* A, float v, unsigned int maxNum)
 
 // Addition
 
-Matrix& GPUMath::Add(const Matrix& a, const Matrix& b)
+Matrix GPUMath::Add(const Matrix& a, const Matrix& b)
 {
 	Matrix c(a);
 
@@ -114,7 +114,7 @@ void GPUMath::AddIn(Matrix& a, const Matrix& b)
 	MatAddInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-Matrix& GPUMath::AddConstant(const Matrix& a, float v)
+Matrix GPUMath::AddConstant(const Matrix& a, float v)
 {
 	Matrix b(a);
 	AddConstant(b, v);
@@ -131,14 +131,14 @@ void GPUMath::AddConstant(Matrix& a, float v)
 
 // Subtraction
 
-Matrix& GPUMath::Subtract(const Matrix& a, const Matrix& b)
+Matrix GPUMath::Subtract(const Matrix& a, const Matrix& b)
 {
 	Matrix c(a);
 
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	MatSubInKernel << <grid, threads >> > (c.GetGPUValues(), b.GetConstGPUValues(), max);
+	MatSubInKernel <<<grid, threads >>> (c.GetGPUValues(), b.GetConstGPUValues(), max);
 
 	return c;
 }
@@ -156,10 +156,10 @@ void GPUMath::SubtractIn(Matrix& a, const Matrix& b)
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	MatSubInKernel << <grid, threads >> > (a.GetGPUValues(), b.GetConstGPUValues(), max);
+	MatSubInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-Matrix& GPUMath::SubtractConstant(const Matrix& a, float v)
+Matrix GPUMath::SubtractConstant(const Matrix& a, float v)
 {
 	Matrix b(a);
 	SubtractConstant(b, v);
@@ -176,7 +176,7 @@ void GPUMath::SubtractConstant(Matrix& a, float v)
 
 //Multiplication
 
-Matrix& GPUMath::Multiplication(const Matrix& a, const Matrix& b)
+Matrix GPUMath::Multiplication(const Matrix& a, const Matrix& b)
 {
 	Matrix c(a.GetRowCount(), b.GetColumnCount());
 
@@ -196,7 +196,7 @@ void GPUMath::Multiplication(const Matrix& a, const Matrix& b, Matrix& c)
 
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 blocks(cols, rows);
-	MatMulKernel << <blocks, threads >> > (a.GetConstGPUValues(), b.GetConstGPUValues(), c.GetGPUValues(), a.GetRowCount(), a.GetColumnCount(), b.GetColumnCount());
+	MatMulKernel <<<blocks, threads >>> (a.GetConstGPUValues(), b.GetConstGPUValues(), c.GetGPUValues(), a.GetRowCount(), a.GetColumnCount(), b.GetColumnCount());
 }
 
 void GPUMath::ElementviseMultiply(Matrix& a, const Matrix& b)
@@ -204,10 +204,10 @@ void GPUMath::ElementviseMultiply(Matrix& a, const Matrix& b)
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-	InnerProductKernel << <grid, threads >> > (a.GetGPUValues(), b.GetConstGPUValues(), max);
+	InnerProductKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-Matrix& GPUMath::MultiplyConstant(const Matrix& a, float v)
+Matrix GPUMath::MultiplyConstant(const Matrix& a, float v)
 {
 	Matrix b(a);
 	MultiplyConstant(b, v);

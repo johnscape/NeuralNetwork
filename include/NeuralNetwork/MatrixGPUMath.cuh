@@ -9,28 +9,28 @@
 namespace GPUMath
 {
 	//Addition
-	Matrix& Add(const Matrix& a, const Matrix& b);
+	Matrix Add(const Matrix& a, const Matrix& b);
 	void Add(const Matrix& a, const Matrix& b, Matrix& c);
 	void AddIn(Matrix& a, const Matrix& b);
 
-	Matrix& AddConstant(const Matrix& a, float v);
+	Matrix AddConstant(const Matrix& a, float v);
 	void AddConstant(Matrix& a, float v);
 
 	//Subtraction
-	Matrix& Subtract(const Matrix& a, const Matrix& b);
+	Matrix Subtract(const Matrix& a, const Matrix& b);
 	void Subtract(const Matrix& a, const Matrix& b, Matrix& c);
 	void SubtractIn(Matrix& a, const Matrix& b);
 
-	Matrix& SubtractConstant(const Matrix& a, float v);
+	Matrix SubtractConstant(const Matrix& a, float v);
 	void SubtractConstant(Matrix& a, float v);
 
 	//Multiplication
-	Matrix& Multiplication(const Matrix& a, const Matrix& b);
+	Matrix Multiplication(const Matrix& a, const Matrix& b);
 	void Multiplication(const Matrix& a, const Matrix& b, Matrix& c);
 
 	void ElementviseMultiply(Matrix& a, const Matrix& b);
 
-	Matrix& MultiplyConstant(const Matrix& a, float v);
+	Matrix MultiplyConstant(const Matrix& a, float v);
 	void MultiplyConstant(Matrix& a, float v);
 
 	//Misc
