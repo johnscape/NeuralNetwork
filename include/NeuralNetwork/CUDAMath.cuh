@@ -1,4 +1,6 @@
+#pragma once
 #include "Matrix.h"
+#include "Tensor.h"
 
 #define BLOCK_SIZE 16
 
@@ -86,6 +88,86 @@ namespace MatrixCUDAMath
 	 * @param value The value to fill with
 	 */
 	void FillWith(Matrix& a, float value);
+}
 
-	
+namespace TensorMath
+{
+    //Addition
+    /**
+     * Adds two tensors together, stores the result in the third (c = a + b)
+     * @param a The first tensor to add
+     * @param b The second tensor to add
+     * @param c The tensor to store the results in
+     */
+    void Add(const Tensor& a, const Tensor& b, Tensor& c);
+
+    /**
+     * Adds the second tensor to the first one (a += b)
+     * @param a The tensor to add to
+     * @param b The tensor to add
+     */
+    void AddIn(Tensor& a, const Tensor& b);
+
+    /**
+     * Adds a constant value to each element of the tensor
+     * @param a The tensor to increment
+     * @param v The value to add
+     */
+    void AddConstant(Tensor& a, float v);
+
+    //Subtraction
+    /**
+     * Subtract two tensors from each other, stores the result in the third one (c = a - b)
+     * @param a The tensor to subtract from
+     * @param b The tensor to subtract
+     * @param c The tensor with the results
+     */
+    void Subtract(const Tensor& a, const Tensor& b, Tensor& c);
+
+    /**
+     * Subtracts the second tensor from the first one (a -= b)
+     * @param a The tensor to subtract from
+     * @param b The tensor to subtract
+     */
+    void SubtractIn(Tensor& a, const Tensor& b);
+
+    /**
+     * Subtract a value from each element of the tensor
+     * @param a The tensor to subtract from
+     * @param v The value to subtract
+     */
+    void SubtractConstant(Tensor& a, float v);
+
+    //Multiplication
+    /**
+     * Multiplies two tensors together, stores the result in the third one (c = a * b)
+     * @param a The first tensor to multiply
+     * @param b The second tensor to multiply
+     * @param c The result tensor
+     */
+    void Multiplication(const Tensor& a, const Tensor& b, Tensor& c);
+
+    /**
+     * Multiplies two tensors elementwise. Stores the result in the first one
+     * @param a The first tensor to multiply, stores the result
+     * @param b The second tensor to multiply
+     */
+    void ElementwiseMultiply(Tensor& a, const Tensor& b);
+
+    /**
+     * Multiplies a tensor with a single value, elementwise.
+     * @param a The tensor to multiply
+     * @param v The value to multiply with
+     */
+    void MultiplyConstant(Tensor& a, float v);
+
+    //Misc
+
+    /**
+     * @brief Fills a tensor CUDA values with a fixed value.
+     *
+     * @param a The tensor to fill
+     * @param value The value to fill with
+     */
+    void FillWith(Tensor& a, float value);
 }

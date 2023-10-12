@@ -19,13 +19,23 @@ set(CPP_FILES
     "ModelTests.cpp"
 )
 
+set(BENCHMARK_FILES
+    "MatrixBenchmark.cpp"
+)
+
 if (${GPU_SETTING} STREQUAL "None")
     add_executable( NeuralNetworkTest 
         ${CPP_FILES}
     )
+    add_executable( NeuralNetworkBenchmark
+        ${BENCHMARK_FILES}
+    )
 elseif (${GPU_SETTING} STREQUAL "CUDA")
     add_executable( NeuralNetworkTest
         ${CPP_FILES}
+    )
+    add_executable( NeuralNetworkBenchmark
+            ${BENCHMARK_FILES}
     )
 else()
     set (GPU_TYPE 0)
@@ -37,6 +47,7 @@ endif()
 
 include_directories(${CATCH2_INCLUDE_DIRS})
 target_link_libraries(NeuralNetworkTest PUBLIC NeuralNetwork Catch2::Catch2WithMain)
+target_link_libraries(NeuralNetworkBenchmark PUBLIC NeuralNetwork Catch2::Catch2WithMain)
 
 include(CTest)
 include(Catch)

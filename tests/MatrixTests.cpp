@@ -631,6 +631,36 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 	}
 }
 
+SCENARIO("using non square matrices", "[matrix][math]")
+{
+    GIVEN("two matrix: 2x3 and 3x4")
+    {
+        Matrix a(2, 3);
+        Matrix b(3, 38);
+
+        a.FillWith(1);
+        b.FillWith(2);
+
+        WHEN("multiplying them together")
+        {
+            Matrix c = a * b;
+            c.CopyFromGPU();
+
+            THEN("the result is 2x38 in size")
+            {
+                REQUIRE(c.GetRowCount() == 2);
+                REQUIRE(c.GetColumnCount() == 38);
+            }
+
+            THEN("every value is 6")
+            {
+                for (int i = 0; i < c.GetElementCount(); ++i)
+                    REQUIRE(c[i] == 6);
+            }
+        }
+    }
+}
+
 SCENARIO("getting sub-matrices", "[matrix]")
 {
 	GIVEN("a 5x5 randomly initialized matrix")
