@@ -138,6 +138,7 @@ public:
 	 * @brief Copies the values from another matrix.
 	 * @param m The other matrix.
 	*/
+	[[deprecated("Use move or copy instead")]]
 	void ReloadFromOther(const Matrix& other);
 
 	/**

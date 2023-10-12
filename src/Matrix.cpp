@@ -115,10 +115,11 @@ Matrix::Matrix(const Tensor& from)
 
 Matrix::~Matrix()
 {
-	if (Values)
-		delete[] Values;
+
+    delete[] Values;
 #if USE_GPU==CUDA
-	cudaFree(GPUValues);
+    if (GPUValues)
+	    cudaFree(GPUValues);
 #endif
 }
 
@@ -329,7 +330,6 @@ Matrix& Matrix::operator*=(const Matrix& other)
 		throw MatrixException();
     Matrix result(Rows, other.GetColumnCount());
 #if USE_GPU==CUDA
-
 	GPUMath::Multiplication(*this, other, result);
 #else
 	//CacheVector col, row;
@@ -362,7 +362,11 @@ Matrix& Matrix::operator*=(const Matrix& other)
 		}
 	}
 #endif
-	ReloadFromOther(result);
+    Rows = result.Rows;
+    Columns = result.Columns;
+
+    std::swap(Values, result.Values);
+    std::swap(GPUValues, result.GPUValues);
 
 	return *this;
 }
@@ -371,11 +375,11 @@ Matrix Matrix::operator+(const Matrix& other) const
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
-
+    Matrix result(Rows, Columns);
 #if USE_GPU==CUDA
-	return GPUMath::Add(*this, other);
+	GPUMath::Add(*this, other, result);
 #else
-	Matrix result(Rows, Columns);
+
 
 	float floatRes[4];
 	float currentValues[4];
@@ -412,20 +416,19 @@ Matrix Matrix::operator+(const Matrix& other) const
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, result.Values + i);
 	}
-
-	return result;
 #endif
-
+    return result;
 }
 
 Matrix Matrix::operator-(const Matrix& other) const
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
+    Matrix result(Rows, Columns);
 #if USE_GPU==CUDA
-	return GPUMath::Subtract(*this, other);
+	GPUMath::Subtract(*this, other, result);
 #else
-	Matrix result(Rows, Columns);
+
 
 	float floatRes[4];
 	float currentValues[4];
@@ -462,9 +465,8 @@ Matrix Matrix::operator-(const Matrix& other) const
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, result.Values + i);
 	}
-
-	return result;
 #endif
+    return result;
 }
 
 Matrix Matrix::operator*(const Matrix& other) const
@@ -619,7 +621,7 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
 		throw MatrixException();
 	Matrix c(a);
 #if USE_GPU==CUDA
-        GPUMath::ElementviseMultiply(c, b);
+    GPUMath::ElementwiseMultiply(c, b);
 #else
 	float floatRes[4];
 	for (size_t i = 0; i < a.GetRowCount() * a.GetColumnCount(); i+=4)
@@ -955,11 +957,11 @@ Matrix Matrix::Power(unsigned int p) const
 		throw MatrixException();
 	if (p == 0)
 		return Eye(Rows);
-
-	Matrix res(*this);
+	Matrix res(Rows, Columns, Values);
 
 	for (unsigned int v = 0; v < p - 1; v++)
-		res *= (*this);
+        res *= (*this);
+
 
 	return res;
 }
@@ -976,7 +978,11 @@ void Matrix::PowerSelf(unsigned int p)
 	for (unsigned int v = 0; v < p - 1; v++)
 		orig *= (*this);
 
-	ReloadFromOther(orig);
+	// ReloadFromOther(orig);
+    Rows = orig.Rows;
+    Columns = orig.Columns;
+    std::swap(Values, orig.Values);
+    std::swap(GPUValues, orig.GPUValues);
 
 }
 
