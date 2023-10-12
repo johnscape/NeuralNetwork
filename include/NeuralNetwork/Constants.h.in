@@ -3,3 +3,4 @@
 #define DEBUG true
 #define USE_GPU @GPU_SETTING@
 #define TESTING true
+#define USE_CUBLAS @CUBLAS_ENABLED@

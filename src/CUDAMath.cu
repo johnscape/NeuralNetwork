@@ -1,84 +1,89 @@
-#include <cuda.h>
 #include <cuda_runtime.h>
-#include <device_launch_parameters.h>
-#include "NeuralNetwork/MatrixCUDAMath.cuh"
+#include "NeuralNetwork/CUDAMath.cuh"
+#if USE_CUBLAS
+#include <cublas_v2.h>
+#endif
 
 // Kernels
 
-__global__ void MatMulKernel(float* A, float* B, float* C, int m, int n, int k)
+// A: aRows x aCols -
+// B: aCols x bCols - x m
+// C: aRows x bCols -
+__global__ void MatMulKernel(const float* A, const float* B, float* C, int aRows, int aCols, int bCols)
 {
-	int row = blockIdx.y * blockDim.y + threadIdx.y;
-	int col = blockIdx.x * blockDim.x + threadIdx.x;
-	float sum = 0;
-	if (col < k && row < m)
+	const unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
+	const unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (col < bCols && row < aRows)
 	{
-		for (int i = 0; i < n; i++)
+        float sum = 0;
+		for (int i = 0; i < aCols; i++)
 		{
-			sum += A[row * n + i] * B[i * k + col];
+			sum += A[row * aCols + i] * B[i * bCols + col];
 		}
-		C[row * k + col] = sum;
+		C[row * bCols + col] = sum;
 	}
 }
 
 __global__ void MatAddInKernel(float* A, float* B, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] += B[i];
 }
 
 __global__ void MatAddKerlen(float* A, float* B, float* C, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		C[i] = A[i] + B[i];
 }
 
 __global__ void MatSubInKernel(float* A, float* B, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] -= B[i];
 }
 
 __global__ void MatSubKernel(float* A, float* B, float* C, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		C[i] = A[i] - B[i];
 }
 
 __global__ void InnerProductKernel(float* A, float* B, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] *= B[i];
 }
 
 __global__ void FillKernel(float* a, float val, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		a[i] = val;
 }
 
 __global__ void AddConstKernel(float* A, float v, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] += v;
 }
 
 __global__ void SubConstKernel(float* A, float v, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] -= v;
 }
 
 __global__ void MulConstKernel(float* A, float v, unsigned int maxNum)
 {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] *= v;
 }

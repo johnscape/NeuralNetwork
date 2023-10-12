@@ -17,7 +17,7 @@
 #if USE_GPU==CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include "NeuralNetwork/MatrixCUDAMath.cuh"
+#include "NeuralNetwork/CUDAMath.cuh"
 #endif // USE_GPU
 
 #define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))

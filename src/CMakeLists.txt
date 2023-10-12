@@ -31,9 +31,9 @@ set(CPP_FILES
     
 
 set(CUDA_FILES
-        MatrixCUDAMath.cu
-        ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/MatrixCUDAMath.cuh
- )
+        CUDAMath.cu
+        ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/CUDAMath.cuh
+)
 
 if (${GPU_SETTING} STREQUAL "None")
     add_library(NeuralNetwork STATIC
