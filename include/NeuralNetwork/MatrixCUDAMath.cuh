@@ -6,7 +6,7 @@
  * @brief A namespace containing CUDA functions for matrix and tensor operations
  * 
  */
-namespace GPUMath
+namespace MatrixCUDAMath
 {
 	//Addition
     /**

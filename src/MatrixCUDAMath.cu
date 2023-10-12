@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "NeuralNetwork/MatrixGPUMath.cuh"
+#include "NeuralNetwork/MatrixCUDAMath.cuh"
 
 // Kernels
 
@@ -84,7 +84,7 @@ __global__ void MulConstKernel(float* A, float v, unsigned int maxNum)
 }
 
 // Addition
-void GPUMath::Add(const Matrix& a, const Matrix& b, Matrix& c)
+void MatrixCUDAMath::Add(const Matrix& a, const Matrix& b, Matrix& c)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -93,7 +93,7 @@ void GPUMath::Add(const Matrix& a, const Matrix& b, Matrix& c)
 }
 
 
-void GPUMath::AddIn(Matrix& a, const Matrix& b)
+void MatrixCUDAMath::AddIn(Matrix& a, const Matrix& b)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -101,7 +101,7 @@ void GPUMath::AddIn(Matrix& a, const Matrix& b)
 	MatAddInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-void GPUMath::AddConstant(Matrix& a, float v)
+void MatrixCUDAMath::AddConstant(Matrix& a, float v)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -110,7 +110,7 @@ void GPUMath::AddConstant(Matrix& a, float v)
 }
 
 // Subtraction
-void GPUMath::Subtract(const Matrix& a, const Matrix& b, Matrix& c)
+void MatrixCUDAMath::Subtract(const Matrix& a, const Matrix& b, Matrix& c)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -118,7 +118,7 @@ void GPUMath::Subtract(const Matrix& a, const Matrix& b, Matrix& c)
 	MatSubKernel <<<grid, threads >>> (a.GetConstGPUValues(), b.GetConstGPUValues(), c.GetGPUValues(), max);
 }
 
-void GPUMath::SubtractIn(Matrix& a, const Matrix& b)
+void MatrixCUDAMath::SubtractIn(Matrix& a, const Matrix& b)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -126,7 +126,7 @@ void GPUMath::SubtractIn(Matrix& a, const Matrix& b)
 	MatSubInKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-void GPUMath::SubtractConstant(Matrix& a, float v)
+void MatrixCUDAMath::SubtractConstant(Matrix& a, float v)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -135,7 +135,7 @@ void GPUMath::SubtractConstant(Matrix& a, float v)
 }
 
 //Multiplication
-void GPUMath::Multiplication(const Matrix& a, const Matrix& b, Matrix& c)
+void MatrixCUDAMath::Multiplication(const Matrix& a, const Matrix& b, Matrix& c)
 {
 	unsigned int rows = ceil((double)(a.GetRowCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
 	unsigned int cols = ceil((double)(b.GetColumnCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
@@ -145,7 +145,7 @@ void GPUMath::Multiplication(const Matrix& a, const Matrix& b, Matrix& c)
 	MatMulKernel <<<blocks, threads >>> (a.GetConstGPUValues(), b.GetConstGPUValues(), c.GetGPUValues(), a.GetRowCount(), a.GetColumnCount(), b.GetColumnCount());
 }
 
-void GPUMath::ElementwiseMultiply(Matrix& a, const Matrix& b)
+void MatrixCUDAMath::ElementwiseMultiply(Matrix& a, const Matrix& b)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -153,7 +153,7 @@ void GPUMath::ElementwiseMultiply(Matrix& a, const Matrix& b)
 	InnerProductKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
-void GPUMath::MultiplyConstant(Matrix& a, float v)
+void MatrixCUDAMath::MultiplyConstant(Matrix& a, float v)
 {
 	unsigned int max = a.GetColumnCount() * a.GetRowCount();
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -163,7 +163,7 @@ void GPUMath::MultiplyConstant(Matrix& a, float v)
 
 // Misc
 
-void GPUMath::FillWith(Matrix& a, float value)
+void MatrixCUDAMath::FillWith(Matrix& a, float value)
 {
 	//cudaMemset(a.GetGPUValues(), value, a.GetRowCount() * a.GetColumnCount() * sizeof(float));
 	unsigned int blockSize = 1;//CalculateMaxBlockSize(a, nullptr, 16);

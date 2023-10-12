@@ -79,7 +79,7 @@ void FeedForwardLayer::GetBackwardPass(const Tensor& error, bool recursive)
 	unsigned int matrixSize = error.GetShapeAt(0) * error.GetShapeAt(1);
 
 #if USE_GPU
-	//GPUMath::FillWith(LayerError, 0); //do i even need this?
+	//MatrixCUDAMath::FillWith(LayerError, 0); //do i even need this?
 	derivate.CopyFromGPU();
 #endif
 

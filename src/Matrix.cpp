@@ -17,7 +17,7 @@
 #if USE_GPU==CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include "NeuralNetwork/MatrixGPUMath.cuh"
+#include "NeuralNetwork/MatrixCUDAMath.cuh"
 #endif // USE_GPU
 
 #define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))
@@ -236,7 +236,7 @@ Matrix& Matrix::operator+=(const Matrix& other)
 	if (!IsSameSize(other))
 		throw MatrixException();
 #if USE_GPU==CUDA
-	GPUMath::AddIn(*this, other);
+	MatrixCUDAMath::AddIn(*this, other);
 #else
 	float floatRes[4];
 	float currentValues[4];
@@ -283,7 +283,7 @@ Matrix& Matrix::operator-=(const Matrix& other)
 	if (!IsSameSize(other))
 		throw MatrixException();
 #if USE_GPU==CUDA
-	GPUMath::SubtractIn(*this, other);
+	MatrixCUDAMath::SubtractIn(*this, other);
 #else
 	float floatRes[4];
 	float currentValues[4];
@@ -330,7 +330,7 @@ Matrix& Matrix::operator*=(const Matrix& other)
 		throw MatrixException();
     Matrix result(Rows, other.GetColumnCount());
 #if USE_GPU==CUDA
-	GPUMath::Multiplication(*this, other, result);
+	MatrixCUDAMath::Multiplication(*this, other, result);
 #else
 	//CacheVector col, row;
 	float col[4];
@@ -377,7 +377,7 @@ Matrix Matrix::operator+(const Matrix& other) const
 		throw MatrixException();
     Matrix result(Rows, Columns);
 #if USE_GPU==CUDA
-	GPUMath::Add(*this, other, result);
+	MatrixCUDAMath::Add(*this, other, result);
 #else
 
 
@@ -426,7 +426,7 @@ Matrix Matrix::operator-(const Matrix& other) const
 		throw MatrixException();
     Matrix result(Rows, Columns);
 #if USE_GPU==CUDA
-	GPUMath::Subtract(*this, other, result);
+	MatrixCUDAMath::Subtract(*this, other, result);
 #else
 
 
@@ -475,7 +475,7 @@ Matrix Matrix::operator*(const Matrix& other) const
 		throw MatrixException();
     Matrix result(Rows, other.GetColumnCount());
 #if USE_GPU==CUDA
-    GPUMath::Multiplication(*this, other, result);
+    MatrixCUDAMath::Multiplication(*this, other, result);
 #else
 	//CacheVector col, row;
 	float col[4];
@@ -535,7 +535,7 @@ bool Matrix::operator!=(const Matrix& other) const
 Matrix& Matrix::operator*=(float other)
 {
 #if USE_GPU==CUDA
-	GPUMath::MultiplyConstant(*this, other);
+	MatrixCUDAMath::MultiplyConstant(*this, other);
 #else
 	for (size_t i = 0; i < GetElementCount(); i++)
 		Values[i] *= other;
@@ -547,7 +547,7 @@ Matrix Matrix::operator*(float other)
 {
 	Matrix res(*this);
 #if USE_GPU==CUDA
-	GPUMath::MultiplyConstant(res, other);
+	MatrixCUDAMath::MultiplyConstant(res, other);
 #else
 	for (size_t i = 0; i < GetElementCount(); i++)
 		res.SetValue(i, res[i] * other);
@@ -621,7 +621,7 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
 		throw MatrixException();
 	Matrix c(a);
 #if USE_GPU==CUDA
-    GPUMath::ElementwiseMultiply(c, b);
+    MatrixCUDAMath::ElementwiseMultiply(c, b);
 #else
 	float floatRes[4];
 	for (size_t i = 0; i < a.GetRowCount() * a.GetColumnCount(); i+=4)
@@ -1067,7 +1067,7 @@ void Matrix::FillWith(float value)
 {
 	std::fill(Values, Values + Rows * Columns, value);
 	#if USE_GPU==CUDA
-	GPUMath::FillWith(*this, value);
+	MatrixCUDAMath::FillWith(*this, value);
 	#endif
 }
 

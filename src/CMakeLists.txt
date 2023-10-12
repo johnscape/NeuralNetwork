@@ -31,8 +31,8 @@ set(CPP_FILES
     
 
 set(CUDA_FILES
-    MatrixGPUMath.cu
-    ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/MatrixGPUMath.cuh
+        MatrixCUDAMath.cu
+        ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/MatrixCUDAMath.cuh
  )
 
 if (${GPU_SETTING} STREQUAL "None")
