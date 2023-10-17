@@ -255,9 +255,16 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
 
+    void CopyToGPU();
+    void CopyFromGPU();
+
+    float* GetGPUValue();
+    float* GetConstGPUValue() const;
+
 private:
 	std::vector<unsigned int> Shape;
 	float* Values;
+    float* GPUValues{};
 	size_t ElementCount;
 
 	unsigned int CoordinateToPos(unsigned int* coord) const;

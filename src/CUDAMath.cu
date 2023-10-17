@@ -88,6 +88,8 @@ __global__ void MulConstKernel(float* A, float v, unsigned int maxNum)
 		A[i] *= v;
 }
 
+//// Matrix math
+
 // Addition
 void MatrixCUDAMath::Add(const Matrix& a, const Matrix& b, Matrix& c)
 {
@@ -176,4 +178,61 @@ void MatrixCUDAMath::FillWith(Matrix& a, float value)
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
 	FillKernel <<<grid, threads >>> (a.GetGPUValues(),value, max);
+}
+
+//// Tensor math
+
+// Addition
+void TensorMath::Add(const Tensor &a, const Tensor &b, Tensor &c)
+{
+
+}
+
+void TensorMath::AddIn(Tensor &a, const Tensor &b)
+{
+
+}
+
+void TensorMath::AddConstant(Tensor &a, float v)
+{
+
+}
+
+// Subtraction
+void TensorMath::Subtract(const Tensor &a, const Tensor &b, Tensor &c)
+{
+
+}
+
+void TensorMath::SubtractIn(Tensor &a, const Tensor &b)
+{
+
+}
+
+void TensorMath::SubtractConstant(Tensor &a, float v)
+{
+
+}
+
+// Multiplication
+void TensorMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
+{
+
+}
+
+void TensorMath::MultiplyConstant(Tensor &a, float v)
+{
+
+}
+
+void TensorMath::ElementwiseMultiply(Tensor &a, const Tensor &b)
+{
+
+}
+
+// Misc
+
+void TensorMath::FillWith(Tensor &a, float value)
+{
+
 }

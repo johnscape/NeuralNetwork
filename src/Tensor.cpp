@@ -3,13 +3,19 @@
 #include "NeuralNetwork/Tensor.h"
 #include "NeuralNetwork/TensorException.hpp"
 #include "nmmintrin.h"
-#include <numeric>
+#include "NeuralNetwork/Constants.h"
 
 #include <fstream>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
+
+#if USE_GPU==CUDA
+#include <cuda_runtime.h>
+#include "NeuralNetwork/CUDAMath.cuh"
+#define CUDA_MALLOC(s) cudaMalloc((void**)&GPUValues, sizeof(float) * s)
+#endif // USE_GPU
 
 std::ostream& operator<<(std::ostream& os, const Tensor& tensor)
 {
@@ -32,11 +38,11 @@ std::ostream& operator<<(std::ostream& os, const Tensor& tensor)
 	return os;
 }
 
-Tensor::Tensor() : Values(nullptr), ElementCount(0)
+Tensor::Tensor() : Values(nullptr), ElementCount(0), GPUValues(nullptr)
 {
 }
 
-Tensor::Tensor(unsigned int* shape, unsigned int shapeCount, float* values) : ElementCount(1)
+Tensor::Tensor(unsigned int* shape, unsigned int shapeCount, float* values) : ElementCount(1), GPUValues(nullptr)
 {
 	if (shapeCount == 0)
 		shapeCount = *(&shape + 1) - shape;
@@ -53,9 +59,14 @@ Tensor::Tensor(unsigned int* shape, unsigned int shapeCount, float* values) : El
 		std::copy(values, values + ElementCount, Values);
 	else
 		std::fill(Values, Values + ElementCount, 0);
+
+#if USE_GPU==CUDA
+    CUDA_MALLOC(ElementCount);
+    CopyToGPU();
+#endif
 }
 
-Tensor::Tensor(std::vector<unsigned int> shape, float* values) : ElementCount(1)
+Tensor::Tensor(std::vector<unsigned int> shape, float* values) : ElementCount(1), GPUValues(nullptr)
 {
 	Shape = std::move(shape);
 	for (unsigned int i : Shape)
@@ -67,9 +78,14 @@ Tensor::Tensor(std::vector<unsigned int> shape, float* values) : ElementCount(1)
 		std::copy(values, values + ElementCount, Values);
 	else
 		std::fill(Values, Values + ElementCount, 0);
+
+#if USE_GPU==CUDA
+    CUDA_MALLOC(ElementCount);
+    CopyToGPU();
+#endif
 }
 
-Tensor::Tensor(const Matrix& mat)
+Tensor::Tensor(const Matrix& mat) : GPUValues(nullptr)
 {
 	ElementCount = mat.GetElementCount();
 	Shape.push_back(mat.GetRowCount());
@@ -77,35 +93,50 @@ Tensor::Tensor(const Matrix& mat)
 
 	Values = new float[ElementCount];
 	std::copy(mat.Values, mat.Values + ElementCount, Values);
+
+#if USE_GPU==CUDA
+    CUDA_MALLOC(ElementCount);
+    CopyToGPU();
+#endif
 }
 
-Tensor::Tensor (Matrix&& mat) : Values(nullptr)
+Tensor::Tensor (Matrix&& mat) : Values(nullptr), GPUValues(nullptr)
 {
 	Shape = {(unsigned int)mat.Rows, (unsigned int)mat.Columns};
 	Values = mat.Values;
 	mat.Values = nullptr;
+#if USE_GPU==CUDA
+    std::swap(GPUValues, mat.GPUValues);
+#endif
 }
 
-Tensor::Tensor(const Tensor &other)
+Tensor::Tensor(const Tensor &other) : GPUValues(nullptr)
 {
 	ElementCount = other.ElementCount;
 	Shape = other.Shape;
 	Values = new float[ElementCount];
 	std::copy(other.Values, other.Values + ElementCount, Values);
+#if USE_GPU==CUDA
+    CUDA_MALLOC(ElementCount);
+    CopyToGPU();
+#endif
 }
 
 
 Tensor::Tensor(Tensor &&other) noexcept :
 ElementCount(std::exchange(other.ElementCount, 0)), Values(std::exchange(other.Values,nullptr)),
-Shape(std::move(other.Shape))
+Shape(std::move(other.Shape)), GPUValues(std::exchange(other.GPUValues, nullptr))
 {
 }
 
 
 Tensor::~Tensor()
 {
-	if (Values)
-		delete[] Values;
+    delete[] Values;
+#if USE_GPU==CUDA
+    if (GPUValues)
+        cudaFree(GPUValues);
+#endif
 }
 
 bool Tensor::IsSameShape(const Tensor& other) const
@@ -194,14 +225,12 @@ Matrix Tensor::FirstMatrix() const
 {
 	if (Shape.size() >= 2)
 	{
-		Matrix mat(Shape[0], Shape[1]);
-		std::copy(Values, Values + (Shape[0] * Shape[1]), mat.Values);
+		Matrix mat(Shape[0], Shape[1], Values);
 		return mat;
 	}
 	else if (Shape.size() == 1)
 	{
-		Matrix mat(Shape[0], 1);
-		std::copy(Values, Values + Shape[0], mat.Values);
+		Matrix mat(Shape[0], 1, Values);
 		return mat;
 	}
 	else
@@ -223,8 +252,7 @@ std::list<Matrix> Tensor::ToMatrixList() const
 		
 		for (size_t i = 0; i < itemCount; i++)
 		{
-			Matrix m(Shape[0], Shape[1]);
-			std::copy(Values + i * elementCount, Values + (i + 1) * elementCount, m.Values);
+			Matrix m(Shape[0], Shape[1], Values + i * elementCount);
 			items.push_back(m);
 		}
 	}
@@ -1223,4 +1251,28 @@ Tensor& Tensor::RowBasedAddition(const Matrix &mat, bool local)
 	}
 	else
 		return result;
+}
+
+void Tensor::CopyToGPU()
+{
+#if USE_GPU==CUDA
+    cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * ElementCount, cudaMemcpyHostToDevice);
+#endif
+}
+
+void Tensor::CopyFromGPU()
+{
+#if USE_GPU==CUDA
+    cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * ElementCount, cudaMemcpyDeviceToHost);
+#endif
+}
+
+float* Tensor::GetGPUValue()
+{
+    return GPUValues;
+}
+
+float* Tensor::GetConstGPUValue() const
+{
+    return GPUValues;
 }

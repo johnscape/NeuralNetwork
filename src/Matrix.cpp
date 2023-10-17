@@ -15,9 +15,9 @@
 #include <fstream>
 
 #if USE_GPU==CUDA
-#include <cuda.h>
 #include <cuda_runtime.h>
 #include "NeuralNetwork/CUDAMath.cuh"
+#define CUDA_MALLOC(s) cudaMalloc((void**)&GPUValues, sizeof(float) * s)
 #endif // USE_GPU
 
 #define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))
@@ -46,7 +46,7 @@ Matrix::Matrix() : GPUValues(nullptr)
 	Values[0] = 0;
 
 #if USE_GPU==CUDA
-	cudaMalloc((void**)&GPUValues, sizeof(float));
+    CUDA_MALLOC(1);
 	CopyToGPU();
 #endif // USE_GPU
 
@@ -65,7 +65,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 		std::fill(Values, Values + count, 0);
 
 #if USE_GPU==CUDA
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+    CUDA_MALLOC(MATRIX_SIZE);
 	CopyToGPU();
 #endif // USE_GPU
 }
@@ -80,7 +80,7 @@ Matrix::Matrix(const Matrix& other) : GPUValues(nullptr)
 	std::copy(other.Values, other.Values + count, Values);
 
 #if USE_GPU==CUDA
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+    CUDA_MALLOC(MATRIX_SIZE);
 	CopyToGPU();
 #endif // USE_GPU
 }
@@ -108,7 +108,7 @@ Matrix::Matrix(const Tensor& from)
 	for (unsigned int i = 0; i < Rows * Columns; ++i)
 		Values[i] = from.GetValue(i); //TODO: Make it faster somehow, maybe make a const function, where we can use memcpy to copy values into a raw pointer e.g. Tensor::CopyValuesInto(float* values) {std::copy(v, v+size, values);}
 	#if USE_GPU==CUDA
-	cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+    CUDA_MALLOC(MATRIX_SIZE);
 	CopyToGPU();
 	#endif
 }
@@ -1037,7 +1037,7 @@ void Matrix::ReloadFromOther(const Matrix& m)
 	if (count != GetElementCount())
 	{
 		cudaFree(GPUValues);
-		cudaMalloc((void**)&GPUValues, sizeof(float) * MATRIX_SIZE);
+        CUDA_MALLOC(MATRIX_SIZE);
 	}
 	CopyToGPU();
 #endif // USE_GPU
