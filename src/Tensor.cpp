@@ -484,7 +484,9 @@ Tensor Tensor::operator+(const Matrix &other) const
 		throw TensorShapeException();
 
 	Tensor t(*this);
-
+#if USE_GPU==CUDA
+    TensorMath::AddIn(t, other);
+#else
 	unsigned matrixCount = other.GetElementCount();
 
 	unsigned int n4 = matrixCount - (matrixCount % 4);
@@ -521,6 +523,7 @@ Tensor Tensor::operator+(const Matrix &other) const
 			t.Values[val + mat * matrixCount] = other.GetValue(val) + GetValue(val + mat * matrixCount);
 		}
 	}
+#endif
 
 	return t;
 }
@@ -531,7 +534,9 @@ Tensor Tensor::operator-(const Matrix &other) const
 		throw TensorShapeException();
 
 	Tensor t(*this);
-
+#if USE_GPU==CUDA
+    TensorMath::SubtractIn(t, other);
+#else
 	unsigned matrixCount = other.GetElementCount();
 
 	unsigned int n4 = matrixCount - (matrixCount % 4);
@@ -568,7 +573,7 @@ Tensor Tensor::operator-(const Matrix &other) const
 			t.SetValue(val + mat * matrixCount, GetValue(val + mat * matrixCount) - other.GetValue(val));
 		}
 	}
-
+#endif
 	return t;
 }
 
@@ -586,7 +591,9 @@ Tensor Tensor::operator*(const Matrix &other) const
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
-
+#if USE_GPU==CUDA
+    TensorMath::Multiplication(*this, other, result);
+#else
 	__m128 fastCol, fastRow, fastRes;
 
 	for (int m = 0; m < GetMatrixCount(); ++m)
@@ -626,7 +633,7 @@ Tensor Tensor::operator*(const Matrix &other) const
 			}
 		}
 	}
-
+#endif
 	return result;
 }
 
@@ -640,7 +647,9 @@ Tensor &Tensor::operator+=(const Matrix &other)
 	}
 
 	Tensor t(*this);
-
+#if USE_GPU==CUDA
+    TensorMath::AddIn(t, other);
+#else
 	unsigned matrixCount = other.GetElementCount();
 
 	unsigned int n4 = matrixCount - (matrixCount % 4);
@@ -678,7 +687,11 @@ Tensor &Tensor::operator+=(const Matrix &other)
 		}
 	}
 
-	ReloadFromOther(t);
+#endif
+    std::swap(Shape, t.Shape);
+    std::swap(Values, t.Values);
+    std::swap(GPUValues, t.GPUValues);
+    std::swap(ElementCount, t.ElementCount);
 
 	return *this;
 }
@@ -689,7 +702,9 @@ Tensor &Tensor::operator-=(const Matrix &other)
 		throw TensorShapeException();
 
 	Tensor t(*this);
-
+#if USE_GPU==CUDA
+    TensorMath::SubtractIn(t, other);
+#else
 	unsigned matrixCount = other.GetElementCount();
 
 	unsigned int n4 = matrixCount - (matrixCount % 4);
@@ -727,7 +742,12 @@ Tensor &Tensor::operator-=(const Matrix &other)
 		}
 	}
 
-	ReloadFromOther(t);
+#endif
+    std::swap(Shape, t.Shape);
+    std::swap(Values, t.Values);
+    std::swap(GPUValues, t.GPUValues);
+    std::swap(ElementCount, t.ElementCount);
+
 	return *this;
 }
 
@@ -745,7 +765,9 @@ Tensor &Tensor::operator*=(const Matrix &other)
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
-
+#if USE_GPU==CUDA
+    TensorMath::Multiplication(*this, other, result);
+#else
 	__m128 fastCol, fastRow, fastRes;
 
 	for (int m = 0; m < GetMatrixCount(); ++m)
@@ -786,7 +808,12 @@ Tensor &Tensor::operator*=(const Matrix &other)
 		}
 	}
 
-	ReloadFromOther(result);
+#endif
+    std::swap(Shape, result.Shape);
+    std::swap(Values, result.Values);
+    std::swap(GPUValues, result.GPUValues);
+    std::swap(ElementCount, result.ElementCount);
+
 	return *this;
 }
 
@@ -796,6 +823,7 @@ bool Tensor::operator==(const Matrix& other) const
 		return false;
 	if (Shape[0] != other.GetRowCount() || Shape[1] != other.GetColumnCount())
 		return false;
+    // TODO: Check equality on GPU
 	for (int i = 0; i < other.GetElementCount(); ++i)
 	{
 		if (Values[i] != other.Values[i])
@@ -811,6 +839,7 @@ bool Tensor::operator!=(const Matrix& other) const
 		return true;
 	if (Shape[0] != other.GetRowCount() || Shape[1] != other.GetColumnCount())
 		return true;
+    // TODO: Check inequality on GPU
 	for (int i = 0; i < other.GetElementCount(); ++i)
 	{
 		if (Values[i] != other.Values[i])
@@ -826,7 +855,9 @@ Tensor Tensor::operator+(const Tensor &other) const
 		throw TensorShapeException();
 
 	Tensor result(Shape);
-
+#if USE_GPU==CUDA
+    TensorMath::Add(*this, other, result);
+#else
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
 	unsigned int matrixCount = rows * cols;
@@ -867,7 +898,7 @@ Tensor Tensor::operator+(const Tensor &other) const
 			result.SetValue(pos, res);
 		}
 	}
-
+#endif
 	return result;
 }
 
@@ -877,7 +908,9 @@ Tensor Tensor::operator-(const Tensor &other) const
 		throw TensorShapeException();
 
 	Tensor result(Shape);
-
+#if USE_GPU==CUDA
+    TensorMath::Subtract(*this, other, result);
+#else
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
 	unsigned int matrixCount = rows * cols;
@@ -918,6 +951,7 @@ Tensor Tensor::operator-(const Tensor &other) const
 			result.SetValue(pos, res);
 		}
 	}
+#endif
 
 	return result;
 }
@@ -945,6 +979,9 @@ Tensor Tensor::operator*(const Tensor &other) const
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
+#if USE_GPU==CUDA
+    TensorMath::Multiplication(*this, other, result);
+#else
 
 	__m128 fastCol, fastRow, fastRes;
 
@@ -985,6 +1022,7 @@ Tensor Tensor::operator*(const Tensor &other) const
 			}
 		}
 	}
+#endif
 
 	return result;
 }
@@ -995,6 +1033,9 @@ Tensor &Tensor::operator+=(const Tensor &other)
 		throw TensorShapeException();
 
 	Tensor result(Shape);
+#if USE_GPU==CUDA
+    TensorMath::Add(*this, other, result);
+#else
 
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
@@ -1037,7 +1078,12 @@ Tensor &Tensor::operator+=(const Tensor &other)
 		}
 	}
 
-	ReloadFromOther(result);
+#endif
+    std::swap(Shape, result.Shape);
+    std::swap(Values, result.Values);
+    std::swap(GPUValues, result.GPUValues);
+    std::swap(ElementCount, result.ElementCount);
+
 	return *this;
 }
 
@@ -1047,6 +1093,9 @@ Tensor &Tensor::operator-=(const Tensor &other)
 		throw TensorShapeException();
 
 	Tensor result(Shape);
+#if USE_GPU==CUDA
+    TensorMath::Add(*this, other, result);
+#else
 
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
@@ -1089,7 +1138,12 @@ Tensor &Tensor::operator-=(const Tensor &other)
 		}
 	}
 
-	ReloadFromOther(result);
+#endif
+    std::swap(Shape, result.Shape);
+    std::swap(Values, result.Values);
+    std::swap(GPUValues, result.GPUValues);
+    std::swap(ElementCount, result.ElementCount);
+
 	return *this;
 }
 
@@ -1116,6 +1170,9 @@ Tensor &Tensor::operator*=(const Tensor &other)
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
+#if USE_GPU==CUDA
+    TensorMath::Multiplication(*this, other, result);
+#else
 
 	__m128 fastCol, fastRow, fastRes;
 
@@ -1157,8 +1214,13 @@ Tensor &Tensor::operator*=(const Tensor &other)
 		}
 	}
 
-	ReloadFromOther(result);
-	return *this;
+#endif
+    std::swap(Shape, result.Shape);
+    std::swap(Values, result.Values);
+    std::swap(GPUValues, result.GPUValues);
+    std::swap(ElementCount, result.ElementCount);
+
+    return *this;
 }
 
 Tensor &Tensor::operator=(const Tensor &other)
@@ -1197,25 +1259,35 @@ bool Tensor::operator!=(const Tensor &other) const
 
 void Tensor::ReloadFromOther(const Tensor &other)
 {
-	delete [] Values;
-	Shape = other.Shape;
-	if (Shape.empty())
-	{
-		ElementCount = 0;
-		Values = nullptr;
-	}
-	else
-	{
-		ElementCount = 1;
-		for (unsigned int i : Shape)
-		{
-			ElementCount *= i;
-		}
+    if (Shape == other.Shape)
+    {
+        std::copy(other.Values, other.Values + other.GetElementCount(), Values);
+        CopyToGPU();
+    }
+    else
+    {
+        delete [] Values;
+        Shape = other.Shape;
+        if (Shape.empty())
+        {
+            ElementCount = 0;
+            Values = nullptr;
+        }
+        else
+        {
+            ElementCount = 1;
+            for (unsigned int i : Shape)
+            {
+                ElementCount *= i;
+            }
 
-		Values = new float[ElementCount];
-		std::copy(other.Values, other.Values + other.GetElementCount(), Values);
-	}
-
+            Values = new float[ElementCount];
+            std::copy(other.Values, other.Values + other.GetElementCount(), Values);
+            cudaFree(GPUValues);
+            CUDA_MALLOC(ElementCount);
+            CopyToGPU();
+        }
+    }
 }
 
 void Tensor::Copy(const Tensor& other)
@@ -1225,6 +1297,7 @@ void Tensor::Copy(const Tensor& other)
 		throw TensorShapeException();
 #endif
 	std::copy(other.Values, other.Values + GetElementCount(), Values);
+    CopyToGPU();
 }
 
 void Tensor::ReloadFromOther(const Matrix &other)

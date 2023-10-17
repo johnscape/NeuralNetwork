@@ -204,6 +204,17 @@ void TensorMath::AddIn(Tensor &a, const Tensor &b)
             max);
 }
 
+void TensorMath::AddIn(Tensor& a, const Matrix& b)
+{
+    unsigned int max = a.GetShapeAt(0) * a.GetShapeAt(1);
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+    MatAddInKernel<<<grid, threads>>>(
+            a.GetGPUValue(),
+            b.GetConstGPUValues(),
+            max);
+}
+
 void TensorMath::AddConstant(Tensor &a, float v)
 {
     unsigned int max = a.GetShapeAt(0) * a.GetShapeAt(1);
@@ -240,6 +251,17 @@ void TensorMath::SubtractIn(Tensor &a, const Tensor &b)
             max);
 }
 
+void TensorMath::SubtractIn(Tensor& a, const Matrix& b)
+{
+    unsigned int max = a.GetElementCount();
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
+    MatSubInKernel<<<grid, threads>>>(
+            a.GetGPUValue(),
+            b.GetConstGPUValues(),
+            max);
+}
+
 void TensorMath::SubtractConstant(Tensor &a, float v)
 {
     unsigned int max = a.GetElementCount();
@@ -266,6 +288,26 @@ void TensorMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
                 a.GetShapeAt(1),
                 b.GetShapeAt(1)
                 );
+    }
+}
+
+void TensorMath::Multiplication(const Tensor& a, const Matrix& b, Tensor& c)
+{
+    unsigned int rows = ceil((double)(a.GetShapeAt(0) + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
+    unsigned int cols = ceil((double)(b.GetColumnCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
+
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 blocks(cols, rows);
+    for (unsigned int m = 0; m < a.GetMatrixCount(); m++)
+    {
+        MatMulKernel<<<blocks, threads>>>(
+                a.GetConstGPUValue() + m * rows * cols,
+                b.GetConstGPUValues(),
+                c.GetGPUValue() + m * rows * cols,
+                a.GetShapeAt(0),
+                a.GetShapeAt(1),
+                b.GetColumnCount()
+        );
     }
 }
 

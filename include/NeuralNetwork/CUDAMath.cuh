@@ -109,6 +109,13 @@ namespace TensorMath
     void AddIn(Tensor& a, const Tensor& b);
 
     /**
+     * Adds a matrix to the tensor
+     * @param a The tensor to add to
+     * @param b The matrix to add
+     */
+    void AddIn(Tensor& a, const Matrix& b);
+
+    /**
      * Adds a constant value to each element of the tensor
      * @param a The tensor to increment
      * @param v The value to add
@@ -132,6 +139,13 @@ namespace TensorMath
     void SubtractIn(Tensor& a, const Tensor& b);
 
     /**
+     * Subtracts a matrix from the tensor
+     * @param a The tensor
+     * @param b The matrix
+     */
+    void SubtractIn(Tensor& a, const Matrix& b);
+
+    /**
      * Subtract a value from each element of the tensor
      * @param a The tensor to subtract from
      * @param v The value to subtract
@@ -146,6 +160,14 @@ namespace TensorMath
      * @param c The result tensor
      */
     void Multiplication(const Tensor& a, const Tensor& b, Tensor& c);
+
+    /**
+     * Multiplies a tensor and a matrix together.
+     * @param a The tensor to multiply
+     * @param b The matrix to multiply
+     * @param c The result tensor
+     */
+    void Multiplication(const Tensor& a, const Matrix& b, Tensor& c);
 
     /**
      * Multiplies two tensors elementwise. Stores the result in the first one
