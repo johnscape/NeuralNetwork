@@ -1207,9 +1207,9 @@ void Tensor::ReloadFromOther(const Tensor &other)
 	else
 	{
 		ElementCount = 1;
-		for (int i = 0; i < Shape.size(); ++i)
+		for (unsigned int i : Shape)
 		{
-			ElementCount *= Shape[i];
+			ElementCount *= i;
 		}
 
 		Values = new float[ElementCount];
