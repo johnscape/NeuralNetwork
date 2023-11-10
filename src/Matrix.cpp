@@ -20,7 +20,6 @@
 #define CUDA_MALLOC(s) cudaMalloc((void**)&GPUValues, sizeof(float) * s)
 #endif // USE_GPU
 
-#define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))
 #define MATRIX_SIZE Rows * Columns
 
 std::ostream& operator<<(std::ostream& os, const Matrix& m)
@@ -38,18 +37,10 @@ std::ostream& operator<<(std::ostream& os, const Matrix& m)
 	return os;
 }
 
-Matrix::Matrix() : GPUValues(nullptr)
+Matrix::Matrix() : GPUValues(nullptr), Values(nullptr)
 {
 	Columns = 1;
 	Rows = 1;
-	Values = new float[1];
-	Values[0] = 0;
-
-#if USE_GPU==CUDA
-    CUDA_MALLOC(1);
-	CopyToGPU();
-#endif // USE_GPU
-
 }
 
 Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr)
@@ -65,7 +56,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 		std::fill(Values, Values + count, 0);
 
 #if USE_GPU==CUDA
-    CUDA_MALLOC(MATRIX_SIZE);
+    MallocGPU();
 	CopyToGPU();
 #endif // USE_GPU
 }
@@ -80,7 +71,7 @@ Matrix::Matrix(const Matrix& other) : GPUValues(nullptr)
 	std::copy(other.Values, other.Values + count, Values);
 
 #if USE_GPU==CUDA
-    CUDA_MALLOC(MATRIX_SIZE);
+    MallocGPU();
 	CopyToGPU();
 #endif // USE_GPU
 }
@@ -107,20 +98,16 @@ Matrix::Matrix(const Tensor& from)
 	Values = new float[Rows * Columns];
 	for (unsigned int i = 0; i < Rows * Columns; ++i)
 		Values[i] = from.GetValue(i); //TODO: Make it faster somehow, maybe make a const function, where we can use memcpy to copy values into a raw pointer e.g. Tensor::CopyValuesInto(float* values) {std::copy(v, v+size, values);}
-	#if USE_GPU==CUDA
-    CUDA_MALLOC(MATRIX_SIZE);
+    MallocGPU();
 	CopyToGPU();
-	#endif
 }
 
 Matrix::~Matrix()
 {
 
     delete[] Values;
-#if USE_GPU==CUDA
     if (GPUValues)
-	    cudaFree(GPUValues);
-#endif
+	    FreeGPU();
 }
 
 TempMatrix Matrix::ToTempMatrix()
@@ -228,6 +215,7 @@ Matrix& Matrix::operator=(Matrix&& other) noexcept
 	Rows = std::exchange(other.Rows, 0);
 	Columns = std::exchange(other.Columns, 0);
 	Values = std::exchange(other.Values, nullptr);
+    GPUValues = std::exchange(other.GPUValues, nullptr);
 	return *this;
 }
 
@@ -1036,8 +1024,9 @@ void Matrix::ReloadFromOther(const Matrix& m)
 #if USE_GPU==CUDA
 	if (count != GetElementCount())
 	{
-		cudaFree(GPUValues);
-        CUDA_MALLOC(MATRIX_SIZE);
+		FreeGPU();
+        GPUValues = nullptr;
+        MallocGPU();
 	}
 	CopyToGPU();
 #endif // USE_GPU
@@ -1052,8 +1041,13 @@ void Matrix::Reset(size_t rows, size_t columns)
 		Rows = rows;
 		Columns = columns;
 		Values = new float[Rows * Columns];
+#if USE_GPU==CUDA
+        FreeGPU();
+        MallocGPU();
+#endif
 	}
 	std::fill(Values, Values + (rows * columns), 0);
+    CopyToGPU();
 }
 
 void Matrix::Copy(const Matrix& from)
@@ -1175,14 +1169,18 @@ rapidjson::Value Matrix::SaveToJSONObject(rapidjson::Document& document) const
 void Matrix::CopyToGPU()
 {
 #if USE_GPU==CUDA
-	cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * Rows * Columns, cudaMemcpyHostToDevice);
+    cudaError_t err = cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * MATRIX_SIZE, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess)
+        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
 #endif
 }
 
 void Matrix::CopyFromGPU()
 {
 #if USE_GPU==CUDA
-	cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * Rows * Columns, cudaMemcpyDeviceToHost);
+    cudaError_t err = cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * MATRIX_SIZE, cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess)
+        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
 #endif
 }
 
@@ -1207,4 +1205,25 @@ float* Matrix::GetConstGPUValues() const
 inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
 {
 	return row * Columns + col;
+}
+
+void Matrix::MallocGPU()
+{
+#if USE_GPU==CUDA
+    if (GPUValues)
+        std::cerr << "GPU address is not null, possible memory leak!" << std::endl;
+    cudaError_t err = cudaMalloc(&GPUValues, sizeof(float) * MATRIX_SIZE);
+    if (err != cudaSuccess)
+        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
+#endif
+}
+
+void Matrix::FreeGPU()
+{
+#if USE_GPU==CUDA
+    cudaError_t err = cudaFree(GPUValues);
+    if (err != cudaSuccess)
+        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
+    GPUValues = nullptr;
+#endif
 }

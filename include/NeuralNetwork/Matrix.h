@@ -442,4 +442,7 @@ protected:
 
 	float* GPUValues;
 
+    void MallocGPU();
+    void FreeGPU();
+
 };
