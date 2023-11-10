@@ -258,17 +258,20 @@ public:
     void CopyToGPU();
     void CopyFromGPU();
 
-    float* GetGPUValue();
-    float* GetConstGPUValue() const;
+    float* GetGPUValues();
+    float* GetConstGPUValues() const;
 
 private:
 	std::vector<unsigned int> Shape;
 	float* Values;
-    float* GPUValues{};
+    float* GPUValues;
 	size_t ElementCount;
 
 	unsigned int CoordinateToPos(unsigned int* coord) const;
 	unsigned int CoordinateToPos(std::vector<unsigned int> coord) const;
 
 	Tensor& RowBasedAddition(const Matrix& mat, bool local);
+
+    void MallocGPU();
+    void FreeGPU();
 };
