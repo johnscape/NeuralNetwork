@@ -25,35 +25,35 @@ __global__ void MatMulKernel(const float* A, const float* B, float* C, int aRows
 	}
 }
 
-__global__ void MatAddInKernel(float* A, float* B, unsigned int maxNum)
+__global__ void MatAddInKernel(float* A, const float* B, unsigned int maxNum)
 {
 	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] += B[i];
 }
 
-__global__ void MatAddKernel(float* A, float* B, float* C, unsigned int maxNum)
+__global__ void MatAddKernel(const float* A, const float* B, float* C, unsigned int maxNum)
 {
 	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		C[i] = A[i] + B[i];
 }
 
-__global__ void MatSubInKernel(float* A, float* B, unsigned int maxNum)
+__global__ void MatSubInKernel(float* A, const float* B, unsigned int maxNum)
 {
 	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		A[i] -= B[i];
 }
 
-__global__ void MatSubKernel(float* A, float* B, float* C, unsigned int maxNum)
+__global__ void MatSubKernel(const float* A, const float* B, float* C, unsigned int maxNum)
 {
 	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
 		C[i] = A[i] - B[i];
 }
 
-__global__ void InnerProductKernel(float* A, float* B, unsigned int maxNum)
+__global__ void InnerProductKernel(float* A, const float* B, unsigned int maxNum)
 {
 	const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if (i < maxNum)
@@ -183,13 +183,13 @@ void MatrixCUDAMath::FillWith(Matrix& a, float value)
 // Addition
 void TensorMath::Add(const Tensor &a, const Tensor &b, Tensor &c)
 {
-    unsigned int max = a.GetShapeAt(0) * a.GetShapeAt(1);
+    unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MatAddKernel<<<grid, threads>>>(
-            a.GetConstGPUValue(),
-            b.GetConstGPUValue(),
-            c.GetGPUValue(),
+            a.GetConstGPUValues(),
+            b.GetConstGPUValues(),
+            c.GetGPUValues(),
             max);
 }
 
@@ -199,8 +199,8 @@ void TensorMath::AddIn(Tensor &a, const Tensor &b)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MatAddInKernel<<<grid, threads>>>(
-            a.GetGPUValue(),
-            b.GetConstGPUValue(),
+            a.GetGPUValues(),
+            b.GetConstGPUValues(),
             max);
 }
 
@@ -210,7 +210,7 @@ void TensorMath::AddIn(Tensor& a, const Matrix& b)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MatAddInKernel<<<grid, threads>>>(
-            a.GetGPUValue(),
+            a.GetGPUValues(),
             b.GetConstGPUValues(),
             max);
 }
@@ -221,7 +221,7 @@ void TensorMath::AddConstant(Tensor &a, float v)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     AddConstKernel<<<grid, threads>>>(
-            a.GetGPUValue(),
+            a.GetGPUValues(),
             v,
             max);
 
@@ -234,9 +234,9 @@ void TensorMath::Subtract(const Tensor &a, const Tensor &b, Tensor &c)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MatSubKernel<<<grid, threads>>>(
-            a.GetConstGPUValue(),
-            b.GetConstGPUValue(),
-            c.GetGPUValue(),
+            a.GetConstGPUValues(),
+            b.GetConstGPUValues(),
+            c.GetGPUValues(),
             max);
 }
 
@@ -246,8 +246,8 @@ void TensorMath::SubtractIn(Tensor &a, const Tensor &b)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MatSubInKernel<<<grid, threads>>>(
-            a.GetGPUValue(),
-            b.GetConstGPUValue(),
+            a.GetGPUValues(),
+            b.GetConstGPUValues(),
             max);
 }
 
@@ -257,7 +257,7 @@ void TensorMath::SubtractIn(Tensor& a, const Matrix& b)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MatSubInKernel<<<grid, threads>>>(
-            a.GetGPUValue(),
+            a.GetGPUValues(),
             b.GetConstGPUValues(),
             max);
 }
@@ -267,7 +267,7 @@ void TensorMath::SubtractConstant(Tensor &a, float v)
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-    SubConstKernel <<<grid, threads >>> (a.GetConstGPUValue(), v, max);
+    SubConstKernel <<<grid, threads >>> (a.GetConstGPUValues(), v, max);
 }
 
 // Multiplication
@@ -281,9 +281,9 @@ void TensorMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
     for (unsigned int m = 0; m < a.GetMatrixCount(); m++)
     {
         MatMulKernel<<<blocks, threads>>>(
-                a.GetConstGPUValue() + m * rows * cols,
-                b.GetConstGPUValue() + m * rows * cols,
-                c.GetGPUValue() + m * rows * cols,
+                a.GetConstGPUValues() + m * rows * cols,
+                b.GetConstGPUValues() + m * rows * cols,
+                c.GetGPUValues() + m * rows * cols,
                 a.GetShapeAt(0),
                 a.GetShapeAt(1),
                 b.GetShapeAt(1)
@@ -301,9 +301,9 @@ void TensorMath::Multiplication(const Tensor& a, const Matrix& b, Tensor& c)
     for (unsigned int m = 0; m < a.GetMatrixCount(); m++)
     {
         MatMulKernel<<<blocks, threads>>>(
-                a.GetConstGPUValue() + m * rows * cols,
+                a.GetConstGPUValues() + m * rows * cols,
                 b.GetConstGPUValues(),
-                c.GetGPUValue() + m * rows * cols,
+                c.GetGPUValues() + m * rows * cols,
                 a.GetShapeAt(0),
                 a.GetShapeAt(1),
                 b.GetColumnCount()
@@ -317,7 +317,7 @@ void TensorMath::MultiplyConstant(Tensor &a, float v)
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     MulConstKernel<<<grid, threads>>>(
-            a.GetGPUValue(),
+            a.GetGPUValues(),
             v,
             max);
 }
@@ -327,7 +327,7 @@ void TensorMath::ElementwiseMultiply(Tensor &a, const Tensor &b)
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-    InnerProductKernel <<<grid, threads >>> (a.GetGPUValue(), b.GetConstGPUValue(), max);
+    InnerProductKernel <<<grid, threads >>> (a.GetGPUValues(), b.GetConstGPUValues(), max);
 }
 
 // Misc
@@ -337,5 +337,5 @@ void TensorMath::FillWith(Tensor &a, float value)
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
-    FillKernel <<<grid, threads >>> (a.GetGPUValue(),value, max);
+    FillKernel <<<grid, threads >>> (a.GetGPUValues(), value, max);
 }
