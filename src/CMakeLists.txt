@@ -32,6 +32,7 @@ set(CPP_FILES
 
 set(CUDA_FILES
         CUDAMath.cu
+        GPUActivation.cu
         ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/CUDAMath.cuh
 )
 

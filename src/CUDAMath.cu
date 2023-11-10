@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 #include "NeuralNetwork/CUDAMath.cuh"
+#include "NeuralNetwork/Constants.h"
 #if USE_CUBLAS
 #include <cublas_v2.h>
 #endif

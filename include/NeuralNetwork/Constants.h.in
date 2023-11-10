@@ -4,3 +4,5 @@
 #define USE_GPU @GPU_SETTING@
 #define TESTING true
 #define USE_CUBLAS @CUBLAS_ENABLED@
+
+#define BLOCK_SIZE 16

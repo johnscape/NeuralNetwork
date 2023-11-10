@@ -2,8 +2,6 @@
 #include "Matrix.h"
 #include "Tensor.h"
 
-#define BLOCK_SIZE 16
-
 /**
  * @brief A namespace containing CUDA functions for matrix and tensor operations
  * 
