@@ -390,7 +390,7 @@ public:
 	void CalculateInto(const Tensor& input, Tensor& target) override
 	{
 #if USE_GPU==CUDA
-        GPUActivation::TanhCalculate(input);
+        GPUActivation::TanhCalculate(input, target);
 #else
 		for (unsigned int i = 0; i < input.GetElementCount(); ++i)
 			target.SetValue(i, Calculate(input.GetValue(i)));

@@ -631,6 +631,7 @@ Matrix Matrix::Eye(unsigned int i)
 	Matrix eye(i, i);
 	for (unsigned int j = 0; j < i; j++)
 		eye.SetValue(j, j, 1);
+    eye.CopyToGPU();
 	return eye;
 }
 
