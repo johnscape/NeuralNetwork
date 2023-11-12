@@ -462,6 +462,7 @@ SCENARIO("using tensor-tensor arithmetics", "[tensor][math]")
 		WHEN("adding them together")
 		{
 			Tensor res = t1 + t2;
+            res.CopyFromGPU();
 			THEN("every value is 6")
 			{
 				for (unsigned int i = 0; i < res.GetElementCount(); i++)
@@ -471,6 +472,7 @@ SCENARIO("using tensor-tensor arithmetics", "[tensor][math]")
 		WHEN("substracting them from each other")
 		{
 			Tensor res = t1 - t2;
+            res.CopyFromGPU();
 			THEN("every value is 4")
 			{
 				for (unsigned int i = 0; i < res.GetElementCount(); i++)
@@ -480,6 +482,7 @@ SCENARIO("using tensor-tensor arithmetics", "[tensor][math]")
 		WHEN("adding the second one to the first")
 		{
 			t1 += t2;
+            t1.CopyFromGPU();
 			THEN("every value is 6")
 			{
 				for (unsigned int i = 0; i < t1.GetElementCount(); i++)
@@ -489,6 +492,7 @@ SCENARIO("using tensor-tensor arithmetics", "[tensor][math]")
 		WHEN("subtracting the second one from the first")
 		{
 			t1 -= t2;
+            t1.CopyFromGPU();
 			THEN("every value is 6")
 			{
 				for (unsigned int i = 0; i < t1.GetElementCount(); i++)
@@ -508,6 +512,7 @@ SCENARIO("using tensor-tensor arithmetics", "[tensor][math]")
 		WHEN("multiplying them together")
 		{
 			Tensor res = t1 * t2;
+            res.CopyFromGPU();
 			THEN("the resulting tensor is 3x5x2x4")
 			{
 				REQUIRE(res.GetShape().size() == 4);
@@ -523,7 +528,7 @@ SCENARIO("using tensor-tensor arithmetics", "[tensor][math]")
 		WHEN("multiplying the first with the second")
 		{
 			t1 *= t2;
-
+            t1.CopyFromGPU();
 			THEN("the resulting tensor is 3x5x2x4")
 			{
 				REQUIRE(t1.GetShape().size() == 4);

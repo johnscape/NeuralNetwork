@@ -48,6 +48,12 @@ void RecurrentLayer::Compute()
 			rowMat += Bias;
 			rowMat += RecursiveState * RecursiveWeight;
 			RecursiveState = rowMat;
+
+            // TODO: Optimize this for CUDA
+            RecursiveState.CopyFromGPU();
+            InnerState.CopyFromGPU();
+
+
 			for (unsigned int col = 0; col < InnerState.GetShapeAt(1); ++col)
 			{
 				unsigned int pos = mat * InnerState.GetShapeAt(0) * InnerState.GetShapeAt(1);
@@ -55,12 +61,15 @@ void RecurrentLayer::Compute()
 				pos += col;
 				InnerState.SetValue(pos, RecursiveState.GetValue(col));
 			}
+
+            InnerState.CopyToGPU();
 		}
 	}
 
 	if (!Output.IsSameShape(InnerState))
 		Output = Tensor(InnerState);
 
+    InnerState.CopyFromGPU();
 	function->CalculateInto(InnerState, Output);
 }
 

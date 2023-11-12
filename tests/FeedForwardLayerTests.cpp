@@ -57,6 +57,7 @@ SCENARIO("Getting the output from the Feed Forward Layer", "[layer][computation]
 				Tensor result = Sigmoid::GetInstance().CalculateTensor(inner);
 				Tensor output = feedForwardLayer.ComputeAndGetOutput();
 				Tensor diff = result - output;
+                diff.CopyFromGPU();
 				REQUIRE(abs(diff.Sum()) < 0.0001);
 			}
 		}

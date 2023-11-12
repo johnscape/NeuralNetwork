@@ -1,4 +1,5 @@
 #include <fstream>
+#include <utility>
 #include "NeuralNetwork/Layers/InputLayer.h"
 #include "NeuralNetwork/Constants.h"
 #include "NeuralNetwork/TensorException.hpp"
@@ -9,7 +10,7 @@ InputLayer::InputLayer(unsigned int size) : Layer(), Size(1, size)
 	Output = Tensor({1, size}, nullptr);
 }
 
-InputLayer::InputLayer(std::vector<unsigned int> size) : Layer(), Size(size)
+InputLayer::InputLayer(std::vector<unsigned int> size) : Layer(), Size(std::move(size))
 {
 	LayerInput = nullptr;
 	Output = Tensor(Size, nullptr);
