@@ -37,10 +37,8 @@ std::ostream& operator<<(std::ostream& os, const Matrix& m)
 	return os;
 }
 
-Matrix::Matrix() : GPUValues(nullptr), Values(nullptr)
+Matrix::Matrix() : GPUValues(nullptr), Values(nullptr), Columns(0), Rows(0)
 {
-	Columns = 1;
-	Rows = 1;
 }
 
 Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr)

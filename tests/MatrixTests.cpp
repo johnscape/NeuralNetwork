@@ -46,14 +46,14 @@ SCENARIO("matrix initialization", "[matrix]")
 		Matrix m;
 		WHEN("getting the properties of the matrix")
 		{
-			THEN("the row and column number is 1")
+			THEN("the row and column number is 0")
 			{
-				REQUIRE(m.GetColumnCount() == 1);
-				REQUIRE(m.GetRowCount() == 1);
+				REQUIRE(m.GetColumnCount() == 0);
+				REQUIRE(m.GetRowCount() == 0);
 			}
-			THEN("the only value is 0")
+			THEN("there is no value")
 			{
-				REQUIRE(m[0] == 0);
+                REQUIRE_THROWS(m.GetValue(0));
 			}
 		}
 	}
@@ -553,7 +553,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 
 		a.FillWith(3);
 		b.FillWith(2);
-                #if USE_GPU==CUDA
+                #if USE_GPU==USING_CUDA
                 a.CopyToGPU();
                 b.CopyToGPU();
                 #endif
@@ -569,7 +569,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 			}
 			THEN("every value in the new matrix is 6")
 			{
-                            #if USE_GPU==CUDA
+                            #if USE_GPU==USING_CUDA
                             c.CopyFromGPU();
                             #endif
 				for (unsigned int i = 0; i < 9; i++)
