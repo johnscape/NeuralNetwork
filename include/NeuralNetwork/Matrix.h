@@ -236,6 +236,15 @@ public:
 	Matrix& operator*=(float other);
 	Matrix operator*(float other);
 
+
+    /**
+     * Naive implementation of the matrix multiplication. Used only for testing purposes.
+     * @param other The matrix to multiply with
+     * @return The result matrix
+     */
+    [[deprecated("Use only for benchmarking purposes! Otherwise use the multiplication operator!")]]
+    Matrix SlowMultiply(const Matrix& other) const;
+
 	/**
 	 * @brief Gets the number of elements in the matrix
 	 * @return The product of the number of rows and columns.

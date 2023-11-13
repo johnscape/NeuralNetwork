@@ -1226,3 +1226,20 @@ void Matrix::FreeGPU()
     GPUValues = nullptr;
 #endif
 }
+
+Matrix Matrix::SlowMultiply(const Matrix &other) const
+{
+    if (Columns != other.Rows)
+        throw MatrixException();
+    Matrix result(Rows, other.GetColumnCount());
+    //a=n*k
+    //b=k*m
+    //c=n*m
+
+    for (int m = 0; m < Rows; ++m)
+        for (int n = 0; n < other.Columns; ++n)
+            for (int k = 0; k < Columns; ++k)
+                result.AdjustValue(result.RowColToPosition(m, n), Values[RowColToPosition(m, k)] * other.GetValue(other.RowColToPosition(k, n)));
+
+    return result;
+}
