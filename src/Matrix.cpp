@@ -14,7 +14,7 @@
 #include <rapidjson/writer.h>
 #include <fstream>
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 #include <cuda_runtime.h>
 #include "NeuralNetwork/CUDAMath.cuh"
 #define CUDA_MALLOC(s) cudaMalloc((void**)&GPUValues, sizeof(float) * s)
@@ -55,7 +55,7 @@ Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr
 	else
 		std::fill(Values, Values + count, 0);
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MallocGPU();
 	CopyToGPU();
 #endif // USE_GPU
@@ -70,7 +70,7 @@ Matrix::Matrix(const Matrix& other) : GPUValues(nullptr)
 
 	std::copy(other.Values, other.Values + count, Values);
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MallocGPU();
 	CopyToGPU();
 #endif // USE_GPU
@@ -223,7 +223,7 @@ Matrix& Matrix::operator+=(const Matrix& other)
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::AddIn(*this, other);
 #else
 	float floatRes[4];
@@ -270,7 +270,7 @@ Matrix& Matrix::operator-=(const Matrix& other)
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::SubtractIn(*this, other);
 #else
 	float floatRes[4];
@@ -317,7 +317,7 @@ Matrix& Matrix::operator*=(const Matrix& other)
 	if (Columns != other.Rows)
 		throw MatrixException();
     Matrix result(Rows, other.GetColumnCount());
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::Multiplication(*this, other, result);
 #else
 	//CacheVector col, row;
@@ -364,7 +364,7 @@ Matrix Matrix::operator+(const Matrix& other) const
 	if (!IsSameSize(other))
 		throw MatrixException();
     Matrix result(Rows, Columns);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::Add(*this, other, result);
 #else
 
@@ -413,7 +413,7 @@ Matrix Matrix::operator-(const Matrix& other) const
 	if (!IsSameSize(other))
 		throw MatrixException();
     Matrix result(Rows, Columns);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::Subtract(*this, other, result);
 #else
 
@@ -462,7 +462,7 @@ Matrix Matrix::operator*(const Matrix& other) const
 	if (Columns != other.Rows)
 		throw MatrixException();
     Matrix result(Rows, other.GetColumnCount());
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MatrixCUDAMath::Multiplication(*this, other, result);
 #else
 	//CacheVector col, row;
@@ -522,7 +522,7 @@ bool Matrix::operator!=(const Matrix& other) const
 
 Matrix& Matrix::operator*=(float other)
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::MultiplyConstant(*this, other);
 #else
 	for (size_t i = 0; i < GetElementCount(); i++)
@@ -534,7 +534,7 @@ Matrix& Matrix::operator*=(float other)
 Matrix Matrix::operator*(float other)
 {
 	Matrix res(*this);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::MultiplyConstant(res, other);
 #else
 	for (size_t i = 0; i < GetElementCount(); i++)
@@ -608,7 +608,7 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
 	if (!a.IsSameSize(b))
 		throw MatrixException();
 	Matrix c(a);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MatrixCUDAMath::ElementwiseMultiply(c, b);
 #else
 	float floatRes[4];
@@ -1022,7 +1022,7 @@ void Matrix::ReloadFromOther(const Matrix& m)
 	Rows = m.GetRowCount();
 	std::copy(m.Values, m.Values + count, Values);
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	if (count != GetElementCount())
 	{
 		FreeGPU();
@@ -1042,7 +1042,7 @@ void Matrix::Reset(size_t rows, size_t columns)
 		Rows = rows;
 		Columns = columns;
 		Values = new float[Rows * Columns];
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         FreeGPU();
         MallocGPU();
 #endif
@@ -1061,7 +1061,7 @@ void Matrix::Copy(const Matrix& from)
 void Matrix::FillWith(float value)
 {
 	std::fill(Values, Values + Rows * Columns, value);
-	#if USE_GPU==CUDA
+	#if USE_GPU==USING_CUDA
 	MatrixCUDAMath::FillWith(*this, value);
 	#endif
 }
@@ -1081,7 +1081,7 @@ void Matrix::FillWithRandom(float min, float max)
 
 	for (size_t i = 0; i < Rows * Columns; i++)
 		Values[i] = dist(engine);
-	#if USE_GPU==CUDA
+	#if USE_GPU==USING_CUDA
 	CopyToGPU();
 	#endif
 }
@@ -1169,7 +1169,7 @@ rapidjson::Value Matrix::SaveToJSONObject(rapidjson::Document& document) const
 
 void Matrix::CopyToGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     cudaError_t err = cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * MATRIX_SIZE, cudaMemcpyHostToDevice);
     if (err != cudaSuccess)
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
@@ -1178,7 +1178,7 @@ void Matrix::CopyToGPU()
 
 void Matrix::CopyFromGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     cudaError_t err = cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * MATRIX_SIZE, cudaMemcpyDeviceToHost);
     if (err != cudaSuccess)
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
@@ -1187,7 +1187,7 @@ void Matrix::CopyFromGPU()
 
 float* Matrix::GetGPUValues()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	return GPUValues;
 #else
 	return nullptr;
@@ -1196,7 +1196,7 @@ float* Matrix::GetGPUValues()
 
 float* Matrix::GetConstGPUValues() const
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 	return GPUValues;
 #else
 	return nullptr;
@@ -1210,7 +1210,7 @@ inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
 
 void Matrix::MallocGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     if (GPUValues)
         std::cerr << "GPU address is not null, possible memory leak!" << std::endl;
     cudaError_t err = cudaMalloc(&GPUValues, sizeof(float) * MATRIX_SIZE);
@@ -1221,7 +1221,7 @@ void Matrix::MallocGPU()
 
 void Matrix::FreeGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     cudaError_t err = cudaFree(GPUValues);
     if (err != cudaSuccess)
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;

@@ -9,7 +9,7 @@
 #define ACTIVATION_TANH &TanhFunction::GetInstance()
 #define ACTIVATION_LINEAR &IdentityFunction::GetInstance()
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 #include "GPUActivation.cuh"
 #endif // USE_GPU
 
@@ -199,7 +199,7 @@ public:
 	~Sigmoid() = default;
 	Matrix CalculateMatrix(const Matrix& input) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		return GPUActivation::SigmoidCalculate(input);
 #else
 		Matrix c(input);
@@ -210,7 +210,7 @@ public:
 	}
 	Matrix CalculateDerivateMatrix(const Matrix& output, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		return GPUActivation::SigmoidInvCalculate(output);
 #else
 		Matrix c(output);
@@ -223,7 +223,7 @@ public:
 
 	void CalculateInto(const Matrix& input, Matrix& target) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		GPUActivation::SigmoidCalculate(input, target);
 #else
 		for (size_t i = 0; i < input.GetRowCount() * input.GetColumnCount(); i++)
@@ -234,7 +234,7 @@ public:
 
 	void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		GPUActivation::SigmoidInvCalculate(output, target);
 #else
 		for (size_t i = 0; i < output.GetRowCount() * output.GetColumnCount(); i++)
@@ -245,7 +245,7 @@ public:
 
 	Tensor CalculateTensor(const Tensor& input) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         return GPUActivation::SigmoidCalculate(input);
 #else
 		Tensor t(input);
@@ -259,7 +259,7 @@ public:
 
 	Tensor CalculateDerivateTensor(const Tensor& output, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         return GPUActivation::SigmoidInvCalculate(output);
 #else
 		Tensor t(output);
@@ -273,7 +273,7 @@ public:
 
 	void CalculateInto(const Tensor& input, Tensor& target) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         GPUActivation::SigmoidCalculate(input, target);
 #else
 		for (unsigned int i = 0; i < input.GetElementCount(); ++i)
@@ -283,7 +283,7 @@ public:
 
 	void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         GPUActivation::SigmoidInvCalculate(output, target);
 #else
 		for (unsigned int i = 0; i < output.GetElementCount(); ++i)
@@ -314,7 +314,7 @@ public:
 	~TanhFunction() = default;
 	Matrix CalculateMatrix(const Matrix& input) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		return GPUActivation::TanhCalculate(input);
 #else
 		Matrix c(input);
@@ -326,7 +326,7 @@ public:
 	}
 	Matrix CalculateDerivateMatrix(const Matrix& output, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		return GPUActivation::TanhInvCalculate(output);
 #else
 		Matrix c(output);
@@ -339,7 +339,7 @@ public:
 
 	void CalculateInto(const Matrix& input, Matrix& target) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		GPUActivation::TanhCalculate(input, target);
 #else
 		for (size_t i = 0; i < input.GetRowCount() * input.GetColumnCount(); i++)
@@ -350,7 +350,7 @@ public:
 
 	void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 		GPUActivation::TanhInvCalculate(output, target);
 #else
 		for (size_t i = 0; i < output.GetRowCount() * output.GetColumnCount(); i++)
@@ -361,7 +361,7 @@ public:
 
 	Tensor CalculateTensor(const Tensor& input) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         return GPUActivation::TanhCalculate(input);
 #else
 		Tensor t(input);
@@ -375,7 +375,7 @@ public:
 
 	Tensor CalculateDerivateTensor(const Tensor& output, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         return GPUActivation::TanhInvCalculate(output);
 #else
 		Tensor t(output);
@@ -389,7 +389,7 @@ public:
 
 	void CalculateInto(const Tensor& input, Tensor& target) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         GPUActivation::TanhCalculate(input, target);
 #else
 		for (unsigned int i = 0; i < input.GetElementCount(); ++i)
@@ -399,7 +399,7 @@ public:
 
 	void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) override
 	{
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
         GPUActivation::TanhInvCalculate(output, target);
 #else
 		for (unsigned int i = 0; i < output.GetElementCount(); ++i)

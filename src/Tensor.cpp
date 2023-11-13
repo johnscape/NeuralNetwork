@@ -11,7 +11,7 @@
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
 #include <cuda_runtime.h>
 #include "NeuralNetwork/CUDAMath.cuh"
 #endif // USE_GPU
@@ -59,7 +59,7 @@ Tensor::Tensor(unsigned int* shape, unsigned int shapeCount, float* values) : El
 	else
 		std::fill(Values, Values + ElementCount, 0);
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MallocGPU();
     CopyToGPU();
 #endif
@@ -78,7 +78,7 @@ Tensor::Tensor(std::vector<unsigned int> shape, float* values) : ElementCount(1)
 	else
 		std::fill(Values, Values + ElementCount, 0);
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MallocGPU();
     CopyToGPU();
 #endif
@@ -93,7 +93,7 @@ Tensor::Tensor(const Matrix& mat) : GPUValues(nullptr)
 	Values = new float[ElementCount];
 	std::copy(mat.Values, mat.Values + ElementCount, Values);
 
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MallocGPU();
     CopyToGPU();
 #endif
@@ -104,7 +104,7 @@ Tensor::Tensor (Matrix&& mat) : Values(nullptr), GPUValues(nullptr)
 	Shape = {(unsigned int)mat.Rows, (unsigned int)mat.Columns};
 	Values = mat.Values;
 	mat.Values = nullptr;
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     std::swap(GPUValues, mat.GPUValues);
 #endif
 }
@@ -115,7 +115,7 @@ Tensor::Tensor(const Tensor &other) : GPUValues(nullptr)
 	Shape = other.Shape;
 	Values = new float[ElementCount];
 	std::copy(other.Values, other.Values + ElementCount, Values);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     MallocGPU();
     CopyToGPU();
 #endif
@@ -132,7 +132,7 @@ Shape(std::move(other.Shape)), GPUValues(std::exchange(other.GPUValues, nullptr)
 Tensor::~Tensor()
 {
     delete[] Values;
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     FreeGPU();
 #endif
 }
@@ -336,7 +336,7 @@ void Tensor::Squeeze()
 void Tensor::FillWith(float value)
 {
 	std::fill(Values, Values + GetElementCount(), value);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::FillWith(*this, value);
 #endif
 }
@@ -485,7 +485,7 @@ Tensor Tensor::operator+(const Matrix &other) const
 		throw TensorShapeException();
 
 	Tensor t(*this);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::AddIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
@@ -535,7 +535,7 @@ Tensor Tensor::operator-(const Matrix &other) const
 		throw TensorShapeException();
 
 	Tensor t(*this);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::SubtractIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
@@ -592,7 +592,7 @@ Tensor Tensor::operator*(const Matrix &other) const
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::Multiplication(*this, other, result);
 #else
 	__m128 fastCol, fastRow, fastRes;
@@ -648,7 +648,7 @@ Tensor &Tensor::operator+=(const Matrix &other)
 	}
 
 	Tensor t(*this);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::AddIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
@@ -703,7 +703,7 @@ Tensor &Tensor::operator-=(const Matrix &other)
 		throw TensorShapeException();
 
 	Tensor t(*this);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::SubtractIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
@@ -766,7 +766,7 @@ Tensor &Tensor::operator*=(const Matrix &other)
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::Multiplication(*this, other, result);
 #else
 	__m128 fastCol, fastRow, fastRes;
@@ -858,7 +858,7 @@ Tensor Tensor::operator+(const Tensor &other) const
 	Tensor result(*this);
 
     result.CopyToGPU();
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::AddIn(result, other);
 #else
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
@@ -912,7 +912,7 @@ Tensor Tensor::operator-(const Tensor &other) const
 		throw TensorShapeException();
 
 	Tensor result(*this);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::SubtractIn(result, other);
 #else
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
@@ -983,7 +983,7 @@ Tensor Tensor::operator*(const Tensor &other) const
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::Multiplication(*this, other, result);
 #else
 
@@ -1037,7 +1037,7 @@ Tensor &Tensor::operator+=(const Tensor &other)
 		throw TensorShapeException();
 
 	Tensor result(Shape);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::Add(*this, other, result);
 #else
 
@@ -1097,7 +1097,7 @@ Tensor &Tensor::operator-=(const Tensor &other)
 		throw TensorShapeException();
 
 	Tensor result(Shape);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::Add(*this, other, result);
 #else
 
@@ -1174,7 +1174,7 @@ Tensor &Tensor::operator*=(const Tensor &other)
 		newSize.push_back(Shape[i]);
 
 	Tensor result(newSize);
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     TensorMath::Multiplication(*this, other, result);
 #else
 
@@ -1333,7 +1333,7 @@ Tensor& Tensor::RowBasedAddition(const Matrix &mat, bool local)
 
 void Tensor::CopyToGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     cudaError_t err = cudaMemcpy((void*)GPUValues, (void*)Values, sizeof(float) * ElementCount, cudaMemcpyHostToDevice);
     if (err != cudaSuccess)
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
@@ -1342,7 +1342,7 @@ void Tensor::CopyToGPU()
 
 void Tensor::CopyFromGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     cudaError_t err = cudaMemcpy((void*)Values, (void*)GPUValues, sizeof(float) * ElementCount, cudaMemcpyDeviceToHost);
     if (err != cudaSuccess)
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
@@ -1361,7 +1361,7 @@ float* Tensor::GetConstGPUValues() const
 
 void Tensor::MallocGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     if (GPUValues)
         std::cerr << "GPU address is not null, possible memory leak!" << std::endl;
     cudaError_t err = cudaMalloc(&GPUValues, sizeof(float) * ElementCount);
@@ -1372,7 +1372,7 @@ void Tensor::MallocGPU()
 
 void Tensor::FreeGPU()
 {
-#if USE_GPU==CUDA
+#if USE_GPU==USING_CUDA
     cudaError_t err = cudaFree(GPUValues);
     if (err != cudaSuccess)
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;

@@ -1,8 +1,10 @@
 #pragma once
 
 #define DEBUG true
-#define USE_GPU @GPU_SETTING@
+#define USE_GPU @GPU_TYPE@
 #define TESTING true
 #define USE_CUBLAS @CUBLAS_ENABLED@
 
 #define BLOCK_SIZE 16
+#define NO_GPU 0
+#define USING_CUDA 1
