@@ -590,21 +590,27 @@ TempMatrix Matrix::GetTempRowMatrix(size_t row) const
 	return TempMatrix(1, Columns, Values + row * Columns);
 }
 
-void Matrix::CopyPartTo(Matrix &target, unsigned int start, unsigned int count) const
+void Matrix::CopyPartTo(Matrix &target, unsigned int startLocal, unsigned int startTarget, unsigned int count) const
 {
 #if DEBUG
     if (count > GetElementCount())
         throw MatrixSizeException();
 #endif
-    if (count == 0)
-    {
-        count = GetElementCount() - start;
-        if (target.GetElementCount() < count)
-            count = target.GetElementCount();
-    }
-    std::copy(Values + start, Values + start + count, target.Values);
+    std::copy(Values + startLocal, Values + startLocal + count, target.Values);
 #if USE_GPU==USING_CUDA
-    cudaMemcpy((void*)target.GPUValues, (void*)(GPUValues + start), sizeof(float) * count, cudaMemcpyDeviceToDevice);
+    cudaMemcpy((void*)target.GPUValues, (void*)(GPUValues + startLocal), sizeof(float) * count, cudaMemcpyDeviceToDevice);
+#endif
+}
+
+void Matrix::CopyPartTo(Tensor &target, unsigned int startLocal, unsigned int startTarget, unsigned int count) const
+{
+#if DEBUG
+    if (count > GetElementCount())
+        throw MatrixSizeException();
+#endif
+    std::copy(Values + startLocal, Values + startLocal + count, target.Values + startTarget);
+#if USE_GPU==USING_CUDA
+    cudaMemcpy((void*)(target.GPUValues + startTarget), (void*)(GPUValues + startLocal), sizeof(float) * count, cudaMemcpyDeviceToDevice);
 #endif
 }
 

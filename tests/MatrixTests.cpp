@@ -712,7 +712,7 @@ SCENARIO("getting sub-matrices", "[matrix]")
 
         WHEN("copying the first into the second")
         {
-            a.CopyPartTo(b, 0, 6);
+            a.CopyPartTo(b, 0, 0, 6);
             b.CopyFromGPU();
 
             THEN("all values are 1")

@@ -3,9 +3,9 @@
 #include <vector>
 #include <list>
 #include <string>
-#include "NeuralNetwork/Matrix.h"
 #include "NeuralNetwork/TempMatrix.h"
 
+class Matrix;
 
 class Tensor
 {
@@ -158,8 +158,8 @@ public:
 	 */
 	TempMatrix ToMatrixByRows() const;
 
-    void CopyPartTo(Tensor& target, unsigned int start, unsigned int count = 0) const;
-    void CopyPartTo(Matrix& target, unsigned int start, unsigned int count = 0) const;
+    void CopyPartTo(Tensor& target, unsigned int startLocal, unsigned int startTarget, unsigned int count) const;
+    void CopyPartTo(Matrix& target, unsigned int startLocal, unsigned int startTarget, unsigned int count) const;
 
 	/**
 	 * @brief Copies a matrix into a specified position in the tensor
@@ -263,6 +263,8 @@ public:
 
     float* GetGPUValues();
     float* GetConstGPUValues() const;
+
+    friend class Matrix;
 
 private:
 	std::vector<unsigned int> Shape;
