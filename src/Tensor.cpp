@@ -1098,7 +1098,7 @@ Tensor &Tensor::operator-=(const Tensor &other)
 
 	Tensor result(Shape);
 #if USE_GPU==USING_CUDA
-    TensorMath::Add(*this, other, result);
+    TensorMath::Subtract(*this, other, result);
 #else
 
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
