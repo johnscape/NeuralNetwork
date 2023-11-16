@@ -74,10 +74,10 @@ SCENARIO("Running a recurrent layer", "[layer][computation]")
 				expected.SetValue(6, 0.716297f);
 				expected.SetValue(7, 0.716297f);
 				expected.SetValue(8, 0.716297f);
+                expected.CopyToGPU();
 
 				Tensor res = expected - output;
                 res.CopyFromGPU();
-                output.CopyFromGPU();
 				REQUIRE(abs(res.Sum()) < 0.01f);
 
 			}

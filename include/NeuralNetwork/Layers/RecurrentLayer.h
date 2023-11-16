@@ -110,6 +110,7 @@ private:
 	Matrix RecursiveWeight;
 	Tensor InnerState;
 	Matrix RecursiveState;
+    Matrix InnerRow;
 
 	Matrix WeightError;
 	Matrix BiasError;

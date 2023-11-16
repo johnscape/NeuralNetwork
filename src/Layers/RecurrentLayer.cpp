@@ -11,7 +11,7 @@
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
 	Layer(inputLayer), TimeSteps(timeSteps), CurrentStep(0), Size(size),
-	Weights(), Bias(1, size), InnerState(), WeightError(), BiasError(1, size),
+	Weights(), Bias(1, size), InnerState(), WeightError(), BiasError(1, size), InnerRow(1, size),
 	RecursiveWeight(size, size), RecursiveWeightError(size, size), RecursiveState(1, size)
 {
 	Weights.Reset(inputLayer->GetOutput().GetShapeAt(1), size);
@@ -41,36 +41,21 @@ void RecurrentLayer::Compute()
 {
 	IncomingValues = LayerInput->ComputeAndGetOutput();
 	InnerState = IncomingValues * Weights;
-	for (unsigned int mat = 0; mat < InnerState.GetMatrixCount(); ++mat)
-	{
-		for (unsigned int row = 0; row < InnerState.GetShapeAt(0); ++row)
-		{
-			Matrix rowMat = InnerState.GetRowMatrix(mat, row);
-			rowMat += Bias;
-			rowMat += RecursiveState * RecursiveWeight;
-			RecursiveState = rowMat;
+    unsigned int elementPointer = 0;
+    while (elementPointer < InnerState.GetElementCount())
+    {
+        InnerState.CopyPartTo(InnerRow, elementPointer, 0, InnerRow.GetColumnCount());
+        InnerRow += Bias;
+        RecursiveState *= RecursiveWeight;
+        RecursiveState += InnerRow;
+        RecursiveState.CopyPartTo(InnerState, 0, elementPointer, RecursiveState.GetColumnCount());
 
-            // TODO: Optimize this for CUDA
-            RecursiveState.CopyFromGPU();
-            InnerState.CopyFromGPU();
-
-
-			for (unsigned int col = 0; col < InnerState.GetShapeAt(1); ++col)
-			{
-				unsigned int pos = mat * InnerState.GetShapeAt(0) * InnerState.GetShapeAt(1);
-				pos += row * InnerState.GetShapeAt(1);
-				pos += col;
-				InnerState.SetValue(pos, RecursiveState.GetValue(col));
-			}
-
-            InnerState.CopyToGPU();
-		}
-	}
+        elementPointer += Size;
+    }
 
 	if (!Output.IsSameShape(InnerState))
 		Output = Tensor(InnerState);
 
-    InnerState.CopyFromGPU();
 	function->CalculateInto(InnerState, Output);
 }
 
