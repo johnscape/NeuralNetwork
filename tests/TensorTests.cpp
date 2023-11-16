@@ -282,6 +282,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		{
 			Tensor res;
 			res = t + m;
+            res.CopyFromGPU();
 
 			THEN("every value is 6")
 			{
@@ -293,6 +294,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		{
 			Tensor res;
 			res = t - m;
+            res.CopyFromGPU();
 
 			THEN("every value is -4")
 			{
@@ -304,6 +306,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		WHEN("incrementing the tensor with the matrix")
 		{
 			t += m;
+            t.CopyFromGPU();
 
 			THEN("every value is 6")
 			{
@@ -315,6 +318,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		WHEN("decrementing the tensor with the matrix")
 		{
 			t -= m;
+            t.CopyFromGPU();
 
 			THEN("every value is -4")
 			{
@@ -335,6 +339,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		WHEN("multiplying them together")
 		{
 			Tensor res = t * m;
+            res.CopyFromGPU();
 			THEN("the result is a 3x4x4 tensor")
 			{
 				REQUIRE(res.GetShape().size() == 3);
@@ -351,6 +356,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		WHEN("multiplying the tensor with the matrix")
 		{
 			t *= m;
+            t.CopyFromGPU();
 			THEN("the result is a 3x4x4 tensor")
 			{
 				REQUIRE(t.GetShape().size() == 3);
@@ -396,6 +402,8 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		{
 			Tensor t1 = t + mat;
 			t += mat;
+            t.CopyFromGPU();
+            t1.CopyFromGPU();
 
 			float addingResult[60] = {
 					7, 11, 14, 11, 5, 12,
@@ -412,6 +420,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 			};
 
 			Tensor res({5, 6, 2}, addingResult);
+            res.CopyFromGPU();
 			THEN("the result is is the same")
 			{
 				REQUIRE(t1 == t);
@@ -423,6 +432,8 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 		{
 			Tensor t1 = t - mat;
 			t -= mat;
+            t.CopyFromGPU();
+            t1.CopyFromGPU();
 
 			float subResult[60] = {
 					3, -3, 6, 3, -1, -2,
@@ -439,6 +450,7 @@ SCENARIO("using tensor-matrix arithmetics", "[tensor][math]")
 			};
 
 			Tensor res({5, 6, 2}, subResult);
+            res.CopyFromGPU();
 			THEN("the results are the same")
 			{
 				REQUIRE(t1 == t);

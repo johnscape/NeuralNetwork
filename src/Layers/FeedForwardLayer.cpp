@@ -1,8 +1,9 @@
 #include "NeuralNetwork/Layers/FeedForwardLayer.h"
 #include "NeuralNetwork/Optimizers/Optimizer.h"
+#include "NeuralNetwork/Constants.h"
 
-#if USE_GPU
-#include "MatrixGPUMath.cuh"
+#if USE_GPU==USING_CUDA
+#include "NeuralNetwork/CUDAMath.cuh"
 #endif
 
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) :

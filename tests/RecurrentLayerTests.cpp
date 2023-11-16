@@ -78,7 +78,6 @@ SCENARIO("Running a recurrent layer", "[layer][computation]")
 				Tensor res = expected - output;
                 res.CopyFromGPU();
                 output.CopyFromGPU();
-                //std::cout << output << std::endl;
 				REQUIRE(abs(res.Sum()) < 0.01f);
 
 			}

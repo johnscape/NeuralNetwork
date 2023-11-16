@@ -166,7 +166,7 @@ void GeneticAlgorithm::ModifyWeights(Matrix& weights, const Matrix& errors)
 	for (size_t r = 0; r < weights.GetRowCount() * weights.GetColumnCount(); r++)
 		weights.AdjustValue(r, MutationGenerator());
 #if USE_GPU
-	weights->CopyToGPU();
+	weights.CopyToGPU();
 #endif // USE_GPU
 
 }

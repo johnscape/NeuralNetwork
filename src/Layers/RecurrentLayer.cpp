@@ -3,9 +3,10 @@
 #include "rapidjson/ostreamwrapper.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/istreamwrapper.h"
+#include "NeuralNetwork/Constants.h"
 
-#if USE_GPU
-#include "MatrixGPUMath.cuh"
+#if USE_GPU==USING_CUDA
+#include "NeuralNetwork/CUDAMath.cuh"
 #endif
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
@@ -97,7 +98,7 @@ void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 	Tensor derivate = function->CalculateDerivateTensor(Output);
 	LayerError = Tensor({(unsigned int)errorMatrix.GetRowCount(), LayerInput->OutputSize()}, nullptr);
 #if USE_GPU
-	derivate->CopyFromGPU();
+	derivate.CopyFromGPU();
 #endif // USE_GPU
 
 	TempMatrix states = InnerState.ToMatrixByRows();
@@ -159,9 +160,9 @@ void RecurrentLayer::Train(Optimizer* optimizer)
 	BiasError.FillWith(0);
 
 #if USE_GPU
-	Weights->CopyToGPU();
-	RecursiveWeight->CopyToGPU();
-	Bias->CopyToGPU();
+	Weights.CopyToGPU();
+	RecursiveWeight.CopyToGPU();
+	Bias.CopyToGPU();
 #endif // USE_GPU
 
 }
