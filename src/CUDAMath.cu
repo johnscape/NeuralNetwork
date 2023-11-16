@@ -246,7 +246,7 @@ void TensorMath::Add(const Tensor &a, const Tensor &b, Tensor &c)
 
 void TensorMath::AddIn(Tensor &a, const Tensor &b)
 {
-    unsigned int max = a.GetShapeAt(0) * a.GetShapeAt(1);
+    unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     AdditionKernel<<<grid, threads>>>(
@@ -336,9 +336,9 @@ void TensorMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
     for (unsigned int m = 0; m < a.GetMatrixCount(); m++)
     {
         MultiplicationKernel<<<blocks, threads>>>(
-                a.GetConstGPUValues() + m * rows * cols,
-                b.GetConstGPUValues() + m * rows * cols,
-                c.GetGPUValues() + m * rows * cols,
+                a.GetConstGPUValues() + m * a.GetShapeAt(0) * a.GetShapeAt(1),
+                b.GetConstGPUValues() + m * b.GetShapeAt(0) * b.GetShapeAt(1),
+                c.GetGPUValues() + m * c.GetShapeAt(0) * c.GetShapeAt(1),
                 a.GetShapeAt(0),
                 a.GetShapeAt(1),
                 b.GetShapeAt(1)
