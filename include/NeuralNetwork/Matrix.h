@@ -283,6 +283,14 @@ public:
 
 	TempMatrix GetTempRowMatrix(size_t row) const;
 
+    /**
+     * Copies from a target matrix to itself.
+     * @param from The target matrix
+     * @param start The index where the copying should start from
+     * @param count The amount of values to be copied. If 0, it will copy until either this matrix fills or the other ends.
+     */
+    void CopyPartTo(Matrix& target, unsigned int start, unsigned int count = 0) const;
+
 	/**
 	 * @brief Creates a copy from a specific column of the matrix
 	 * @param col The column to copy

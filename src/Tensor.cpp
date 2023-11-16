@@ -296,6 +296,43 @@ TempMatrix Tensor::ToMatrixByRows() const
 	return TempMatrix(Shape[0] * GetMatrixCount(), Shape[1], Values);
 }
 
+void Tensor::CopyPartTo(Tensor &target, unsigned int start, unsigned int count) const
+{
+#if DEBUG
+    if (count > GetElementCount())
+        throw TensorException();
+#endif
+    if (count == 0)
+    {
+        count = GetElementCount() - start;
+        if (target.GetElementCount() < count)
+            count = target.GetElementCount();
+    }
+    std::copy(Values + start, Values + start + count, target.Values);
+#if USE_GPU==USING_CUDA
+    cudaMemcpy((void*)target.GPUValues, (void*)(GPUValues + start), sizeof(float) * count, cudaMemcpyDeviceToDevice);
+#endif
+}
+
+void Tensor::CopyPartTo(Matrix &target, unsigned int start, unsigned int count) const
+{
+#if DEBUG
+    if (count > GetElementCount())
+        throw TensorException();
+#endif
+    if (count == 0)
+    {
+        count = GetElementCount() - start;
+        if (target.GetElementCount() < count)
+            count = target.GetElementCount();
+    }
+    std::copy(Values + start, Values + start + count, target.Values);
+#if USE_GPU==USING_CUDA
+    cudaMemcpy((void*)target.GPUValues, (void*)(GPUValues + start), sizeof(float) * count, cudaMemcpyDeviceToDevice);
+#endif
+}
+
+
 void Tensor::LoadMatrix(unsigned int n, Matrix* mat)
 {
 	if (n >= GetMatrixCount())

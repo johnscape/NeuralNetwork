@@ -702,6 +702,27 @@ SCENARIO("getting sub-matrices", "[matrix]")
 		}
 	}
 
+    GIVEN("a 6x6 matrix filled with 1s and an empty 1x6 matrix")
+    {
+        Matrix a(6, 6);
+        a.FillWith(1);
+
+        Matrix b(1, 6);
+        b.FillWithRandom();
+
+        WHEN("copying the first into the second")
+        {
+            a.CopyPartTo(b, 0, 6);
+            b.CopyFromGPU();
+
+            THEN("all values are 1")
+            {
+                for (int i = 0; i < 6; ++i)
+                    REQUIRE(b[i] == 1);
+            }
+        }
+
+    }
 }
 
 SCENARIO("using matrix comparation", "[matrix]")

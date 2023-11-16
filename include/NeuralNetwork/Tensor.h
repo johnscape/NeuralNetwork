@@ -158,6 +158,9 @@ public:
 	 */
 	TempMatrix ToMatrixByRows() const;
 
+    void CopyPartTo(Tensor& target, unsigned int start, unsigned int count = 0) const;
+    void CopyPartTo(Matrix& target, unsigned int start, unsigned int count = 0) const;
+
 	/**
 	 * @brief Copies a matrix into a specified position in the tensor
 	 * @param n The matrix to overwrite
