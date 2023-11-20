@@ -117,7 +117,9 @@ Tensor::Tensor(const Tensor &other) : GPUValues(nullptr)
 	std::copy(other.Values, other.Values + ElementCount, Values);
 #if USE_GPU==USING_CUDA
     MallocGPU();
-    CopyToGPU();
+    cudaError_t err = cudaMemcpy((void*)GPUValues, (void*)other.GPUValues, sizeof(float) * ElementCount, cudaMemcpyDeviceToDevice);
+    if (err != cudaSuccess)
+        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
 #endif
 }
 
