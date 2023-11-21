@@ -260,6 +260,7 @@ public:
 
     void CopyToGPU();
     void CopyFromGPU();
+    void CopyFromOtherGPU(const Tensor& other);
 
     float* GetGPUValues();
     float* GetConstGPUValues() const;

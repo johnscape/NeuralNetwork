@@ -117,9 +117,7 @@ Tensor::Tensor(const Tensor &other) : GPUValues(nullptr)
 	std::copy(other.Values, other.Values + ElementCount, Values);
 #if USE_GPU==USING_CUDA
     MallocGPU();
-    cudaError_t err = cudaMemcpy((void*)GPUValues, (void*)other.GPUValues, sizeof(float) * ElementCount, cudaMemcpyDeviceToDevice);
-    if (err != cudaSuccess)
-        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
+    CopyFromOtherGPU(other);
 #endif
 }
 
@@ -1329,7 +1327,7 @@ void Tensor::Copy(const Tensor& other)
 		throw TensorShapeException();
 #endif
 	std::copy(other.Values, other.Values + GetElementCount(), Values);
-    CopyToGPU();
+    CopyFromOtherGPU(other);
 }
 
 void Tensor::ReloadFromOther(const Matrix &other)
@@ -1375,6 +1373,18 @@ void Tensor::CopyFromGPU()
         std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
 #endif
 }
+
+void Tensor::CopyFromOtherGPU(const Tensor& other)
+{
+    if (GetElementCount() != other.GetElementCount())
+        throw TensorShapeException();
+#if USE_GPU==USING_CUDA
+    cudaError_t err = cudaMemcpy((void*)GPUValues, (void*)other.GPUValues, sizeof(float) * ElementCount, cudaMemcpyDeviceToDevice);
+    if (err != cudaSuccess)
+        std::cerr << "CUDA error: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err) << std::endl;
+#endif
+}
+
 
 float* Tensor::GetGPUValues()
 {
