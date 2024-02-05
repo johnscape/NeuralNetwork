@@ -9,7 +9,7 @@ class TempMatrix : public Matrix
 {
 public:
 	TempMatrix();
-	TempMatrix(size_t rows, size_t cols, float* values);
+	TempMatrix(size_t rows, size_t cols, unsigned int offset, float* values, float* gpu);
 	~TempMatrix();
 
 	Matrix ToMatrix();

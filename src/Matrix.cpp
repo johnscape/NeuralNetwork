@@ -110,7 +110,7 @@ Matrix::~Matrix()
 
 TempMatrix Matrix::ToTempMatrix()
 {
-	return {Rows, Columns, Values};
+	return {Rows, Columns, 0, Values, GPUValues};
 }
 
 size_t Matrix::GetColumnCount() const
@@ -587,7 +587,7 @@ TempMatrix Matrix::GetTempRowMatrix(size_t row) const
 {
 	if (row >= Rows)
 		throw MatrixIndexException();
-	return TempMatrix(1, Columns, Values + row * Columns);
+	return TempMatrix(1, Columns,  row * Columns, Values, GPUValues);
 }
 
 void Matrix::CopyPartTo(Matrix &target, unsigned int startLocal, unsigned int startTarget, unsigned int count) const

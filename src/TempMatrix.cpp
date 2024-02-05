@@ -1,14 +1,20 @@
 #include "NeuralNetwork/TempMatrix.h"
 #include "NeuralNetwork/MatrixException.hpp"
+#include "NeuralNetwork/Constants.h"
 
 TempMatrix::TempMatrix() : Matrix()
 {}
 
-TempMatrix::TempMatrix(size_t rows, size_t cols, float *values) : Matrix()
+TempMatrix::TempMatrix(size_t rows, size_t cols, unsigned int offset, float *values, float *gpu) : Matrix()
 {
 	Rows = rows;
 	Columns = cols;
-	Values = values;
+	Values = values + offset;
+#if USE_GPU==USING_CUDA
+    GPUValues = gpu + offset;
+#else
+    GPUValues = nullptr;
+#endif
 }
 
 TempMatrix::~TempMatrix()

@@ -283,7 +283,7 @@ TempMatrix Tensor::GetNthTempMatrix(unsigned int n) const
 		cols = Shape[1];
 	}
 
-	return TempMatrix(rows, cols, Values + n * matSize);
+	return TempMatrix(rows, cols, n * matSize, Values, GPUValues);
 }
 
 Matrix Tensor::GetRowMatrix(unsigned int matrix, unsigned int row) const
@@ -293,7 +293,9 @@ Matrix Tensor::GetRowMatrix(unsigned int matrix, unsigned int row) const
 
 TempMatrix Tensor::ToMatrixByRows() const
 {
-	return TempMatrix(Shape[0] * GetMatrixCount(), Shape[1], Values);
+    TempMatrix tmp(Shape[0] * GetMatrixCount(), Shape[1], 0, Values, GPUValues);
+    tmp.GPUValues = GPUValues;
+    return tmp;
 }
 
 void Tensor::CopyPartTo(Tensor &target, unsigned int startLocal, unsigned int startTarget, unsigned int count) const
@@ -607,7 +609,6 @@ Tensor Tensor::operator*(const Matrix &other) const
 {
 	unsigned int rows = !Shape.empty() ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
-	unsigned int matrixSize = rows * cols;
 
 	if (cols != other.Rows)
 		throw TensorShapeException();
