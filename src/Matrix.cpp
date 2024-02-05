@@ -703,8 +703,30 @@ void Matrix::ElementwiseMultiply(const Matrix& other)
 	float floatRes[4];
 	for (size_t i = 0; i < GetElementCount(); i += 4)
 	{
-		__m128 first = _mm_load_ps(Values + i);
-		__m128 second = _mm_load_ps(other.Values + i);
+        __m128 first, second;
+        if (i + 4 >= GetElementCount())
+        {
+            float firstVals[4] = {
+                    i >= GetElementCount() ? 0 : Values[i],
+                    i + 1 >= GetElementCount() ? 0 : Values[i + 1],
+                    i + 2 >= GetElementCount() ? 0 : Values[i + 2],
+                    0
+            };
+            float secondVals[4] = {
+                    i >= GetElementCount() ? 0 : other.Values[i],
+                    i + 1 >= GetElementCount() ? 0 : other.Values[i + 1],
+                    i + 2 >= GetElementCount() ? 0 : other.Values[i + 2],
+                    0
+            };
+
+            first = _mm_load_ps(firstVals);
+            second = _mm_load_ps(secondVals);
+        }
+        else
+        {
+            first = _mm_load_ps(Values + i);
+            second = _mm_load_ps(other.Values + i);
+        }
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second));
 		size_t addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
