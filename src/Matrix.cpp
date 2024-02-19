@@ -24,9 +24,9 @@
 
 std::ostream& operator<<(std::ostream& os, const Matrix& m)
 {
-	for (size_t row = 0; row < m.GetRowCount(); row++)
+	for (unsigned int row = 0; row < m.GetRowCount(); row++)
 	{
-		for (size_t col = 0; col < m.GetColumnCount(); col++)
+		for (unsigned int col = 0; col < m.GetColumnCount(); col++)
 		{
 			os << m.GetValue(row, col) << '\t';
 		}
@@ -41,11 +41,11 @@ Matrix::Matrix() : GPUValues(nullptr), Values(nullptr), Columns(0), Rows(0)
 {
 }
 
-Matrix::Matrix(size_t rows, size_t columns, float* elements) : GPUValues(nullptr)
+Matrix::Matrix(unsigned int rows, unsigned int columns, float* elements) : GPUValues(nullptr)
 {
 	Columns = columns;
 	Rows = rows;
-	size_t count = GetElementCount();
+	unsigned int count = GetElementCount();
 	Values = new float[count];
 
 	if (elements)
@@ -63,7 +63,7 @@ Matrix::Matrix(const Matrix& other) : GPUValues(nullptr)
 {
 	Columns = other.GetColumnCount();
 	Rows = other.GetRowCount();
-	size_t count = GetElementCount();
+	unsigned int count = GetElementCount();
 	Values = new float[count];
 
 	std::copy(other.Values, other.Values + count, Values);
@@ -113,19 +113,19 @@ TempMatrix Matrix::ToTempMatrix()
 	return {Rows, Columns, 0, Values, GPUValues};
 }
 
-size_t Matrix::GetColumnCount() const
+unsigned int Matrix::GetColumnCount() const
 {
 	return Columns;
 }
 
-size_t Matrix::GetRowCount() const
+unsigned int Matrix::GetRowCount() const
 {
 	return Rows;
 }
 
-float Matrix::GetValue(size_t row, size_t col) const
+float Matrix::GetValue(unsigned int row, unsigned int col) const
 {
-	size_t pos = RowColToPosition(row, col);
+	unsigned int pos = RowColToPosition(row, col);
 #if DEBUG
 	if (pos < 0 || pos >= GetElementCount())
 		return 0;
@@ -133,7 +133,7 @@ float Matrix::GetValue(size_t row, size_t col) const
 	return Values[pos];
 }
 
-float Matrix::GetValue(size_t pos) const
+float Matrix::GetValue(unsigned int pos) const
 {
 #if DEBUG
 	if (pos < 0 || pos >= GetElementCount())
@@ -142,9 +142,9 @@ float Matrix::GetValue(size_t pos) const
 	return Values[pos];
 }
 
-void Matrix::SetValue(size_t row, size_t col, float val)
+void Matrix::SetValue(unsigned int row, unsigned int col, float val)
 {
-	size_t pos = RowColToPosition(row, col);
+	unsigned int pos = RowColToPosition(row, col);
 #if DEBUG
 	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
@@ -152,7 +152,7 @@ void Matrix::SetValue(size_t row, size_t col, float val)
 	Values[pos] = val;
 }
 
-void Matrix::SetValue(size_t pos, float val)
+void Matrix::SetValue(unsigned int pos, float val)
 {
 #if DEBUG
 	if (pos < 0 || pos >= GetElementCount())
@@ -161,9 +161,9 @@ void Matrix::SetValue(size_t pos, float val)
 	Values[pos] = val;
 }
 
-void Matrix::AdjustValue(size_t row, size_t col, float val)
+void Matrix::AdjustValue(unsigned int row, unsigned int col, float val)
 {
-	size_t pos = RowColToPosition(row, col);
+	unsigned int pos = RowColToPosition(row, col);
 #if DEBUG
 	if (pos < 0 || pos >= GetElementCount())
 		throw MatrixIndexException();
@@ -171,7 +171,7 @@ void Matrix::AdjustValue(size_t row, size_t col, float val)
 	Values[pos] += val;
 }
 
-void Matrix::AdjustValue(size_t pos, float val)
+void Matrix::AdjustValue(unsigned int pos, float val)
 {
 #if DEBUG
 	if (pos < 0 || pos >= GetElementCount())
@@ -185,7 +185,7 @@ bool Matrix::IsVector() const
 	return Rows == 1 || Columns == 1;
 }
 
-float Matrix::operator[](size_t id) const
+float Matrix::operator[](unsigned int id) const
 {
 #if DEBUG
 	if (id < 0 || GetElementCount() <= id)
@@ -227,7 +227,7 @@ Matrix& Matrix::operator+=(const Matrix& other)
 	float floatRes[4];
 	float currentValues[4];
 	float otherValues[4];
-	for (size_t i = 0; i < GetElementCount(); i += 4)
+	for (unsigned int i = 0; i < GetElementCount(); i += 4)
 	{
 		__m128 first, second;
 
@@ -255,7 +255,7 @@ Matrix& Matrix::operator+=(const Matrix& other)
 			second = _mm_load_ps(otherValues);
 		}
 		_mm_store_ps(floatRes, _mm_add_ps(first, second));
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
@@ -274,7 +274,7 @@ Matrix& Matrix::operator-=(const Matrix& other)
 	float floatRes[4];
 	float currentValues[4];
 	float otherValues[4];
-	for (size_t i = 0; i < GetElementCount(); i += 4)
+	for (unsigned int i = 0; i < GetElementCount(); i += 4)
 	{
 		__m128 first, second;
 		if (i + 4 < GetElementCount())
@@ -301,7 +301,7 @@ Matrix& Matrix::operator-=(const Matrix& other)
 			second = _mm_load_ps(otherValues);
 		}
 		_mm_store_ps(floatRes, _mm_sub_ps(first, second));
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
@@ -321,8 +321,8 @@ Matrix& Matrix::operator*=(const Matrix& other)
 	//CacheVector col, row;
 	float col[4];
 	float row[4];
-	size_t br;
-	for (size_t bc = 0; bc < other.GetColumnCount(); bc++)
+	unsigned int br;
+	for (unsigned int bc = 0; bc < other.GetColumnCount(); bc++)
 	{
 		br = 0;
 		while (br < other.GetRowCount())
@@ -330,9 +330,9 @@ Matrix& Matrix::operator*=(const Matrix& other)
 			for (unsigned char i = 0; i < 4; i++)
 				col[i] = other.GetValue(br + i, bc);
 			__m128 colVec = _mm_load_ps(col);
-			for (size_t ar = 0; ar < GetRowCount(); ar++)
+			for (unsigned int ar = 0; ar < GetRowCount(); ar++)
 			{
-				for (size_t i = 0; i < 4; i++)
+				for (unsigned int i = 0; i < 4; i++)
 					row[i] = GetValue(ar, br + i);
 				__m128 rowVec = _mm_load_ps(row);
 				__m128 mul = _mm_mul_ps(colVec, rowVec);
@@ -370,7 +370,7 @@ Matrix Matrix::operator+(const Matrix& other) const
 	float floatRes[4];
 	float currentValues[4];
 	float otherValues[4];
-	for (size_t i = 0; i < GetElementCount(); i += 4)
+	for (unsigned int i = 0; i < GetElementCount(); i += 4)
 	{
 		__m128 first, second;
 		if (i + 4 < GetElementCount())
@@ -397,7 +397,7 @@ Matrix Matrix::operator+(const Matrix& other) const
 			second = _mm_load_ps(otherValues);
 		}
 		_mm_store_ps(floatRes, _mm_add_ps(first, second));
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, result.Values + i);
@@ -419,7 +419,7 @@ Matrix Matrix::operator-(const Matrix& other) const
 	float floatRes[4];
 	float currentValues[4];
 	float otherValues[4];
-	for (size_t i = 0; i < GetElementCount(); i += 4)
+	for (unsigned int i = 0; i < GetElementCount(); i += 4)
 	{
 		__m128 first, second;
 		if (i + 4 < GetElementCount())
@@ -446,7 +446,7 @@ Matrix Matrix::operator-(const Matrix& other) const
 			second = _mm_load_ps(otherValues);
 		}
 		_mm_store_ps(floatRes, _mm_sub_ps(first, second));
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, result.Values + i);
@@ -466,8 +466,8 @@ Matrix Matrix::operator*(const Matrix& other) const
 	//CacheVector col, row;
 	float col[4];
 	float row[4];
-	size_t br;
-	for (size_t bc = 0; bc < other.GetColumnCount(); bc++)
+	unsigned int br;
+	for (unsigned int bc = 0; bc < other.GetColumnCount(); bc++)
 	{
 		br = 0;
 		while (br < other.GetRowCount())
@@ -475,9 +475,9 @@ Matrix Matrix::operator*(const Matrix& other) const
 			for (unsigned char i = 0; i < 4; i++)
 				col[i] = other.GetValue(br + i, bc);
 			__m128 colVec = _mm_load_ps(col);
-			for (size_t ar = 0; ar < GetRowCount(); ar++)
+			for (unsigned int ar = 0; ar < GetRowCount(); ar++)
 			{
-				for (size_t i = 0; i < 4; i++)
+				for (unsigned int i = 0; i < 4; i++)
 					row[i] = GetValue(ar, br + i);
 				__m128 rowVec = _mm_load_ps(row);
 				__m128 mul = _mm_mul_ps(colVec, rowVec);
@@ -523,7 +523,7 @@ Matrix& Matrix::operator*=(float other)
 #if USE_GPU==USING_CUDA
 	MatrixCUDAMath::MultiplyConstant(*this, other);
 #else
-	for (size_t i = 0; i < GetElementCount(); i++)
+	for (unsigned int i = 0; i < GetElementCount(); i++)
 		Values[i] *= other;
 #endif
 	return *this;
@@ -535,13 +535,13 @@ Matrix Matrix::operator*(float other)
 #if USE_GPU==USING_CUDA
 	MatrixCUDAMath::MultiplyConstant(res, other);
 #else
-	for (size_t i = 0; i < GetElementCount(); i++)
+	for (unsigned int i = 0; i < GetElementCount(); i++)
 		res.SetValue(i, res[i] * other);
 #endif
 	return res;
 }
 
-size_t Matrix::GetElementCount() const
+unsigned int Matrix::GetElementCount() const
 {
 	return Rows * Columns;
 }
@@ -556,7 +556,7 @@ inline bool Matrix::IsSquare() const
 	return Rows == Columns;
 }
 
-Matrix Matrix::GetSubMatrix(size_t startRow, size_t startColumn, size_t rowNum, size_t colNum) const
+Matrix Matrix::GetSubMatrix(unsigned int startRow, unsigned int startColumn, unsigned int rowNum, unsigned int colNum) const
 {
 	if (startColumn + colNum > Columns || startRow + rowNum > Rows)
 		throw MatrixIndexException();
@@ -565,17 +565,17 @@ Matrix Matrix::GetSubMatrix(size_t startRow, size_t startColumn, size_t rowNum, 
 
 	Matrix sub(rowNum, colNum);
 
-	for (size_t r = 0; r < rowNum; r++)
+	for (unsigned int r = 0; r < rowNum; r++)
 	{
-		size_t startValue = (startRow + r) * Columns + startColumn;
-		size_t endValue = (startRow + r) * Columns + startColumn + colNum;
+		unsigned int startValue = (startRow + r) * Columns + startColumn;
+		unsigned int endValue = (startRow + r) * Columns + startColumn + colNum;
 		std::copy(Values + startValue, Values + endValue, sub.Values + r * colNum);
 	}
 
 	return sub;
 }
 
-Matrix Matrix::GetRowMatrix(size_t row) const
+Matrix Matrix::GetRowMatrix(unsigned int row) const
 {
 	if (row >= Rows)
 		throw MatrixIndexException();
@@ -583,7 +583,7 @@ Matrix Matrix::GetRowMatrix(size_t row) const
 	return Matrix(1, Columns, Values + row * Columns);
 }
 
-TempMatrix Matrix::GetTempRowMatrix(size_t row) const
+TempMatrix Matrix::GetTempRowMatrix(unsigned int row) const
 {
 	if (row >= Rows)
 		throw MatrixIndexException();
@@ -615,13 +615,13 @@ void Matrix::CopyPartTo(Tensor &target, unsigned int startLocal, unsigned int st
 }
 
 
-Matrix Matrix::GetColumnMatrix(size_t col) const
+Matrix Matrix::GetColumnMatrix(unsigned int col) const
 {
 	if (col >= Columns)
 		throw MatrixIndexException();
 
 	Matrix colmat(Rows, 1);
-	for (size_t i = 0; i < Rows; i++)
+	for (unsigned int i = 0; i < Rows; i++)
 		colmat.SetValue(i, GetValue(i, col));
 	return colmat;
 }
@@ -635,12 +635,12 @@ Matrix Matrix::ElementwiseMultiply(const Matrix& a, const Matrix& b)
     MatrixCUDAMath::ElementwiseMultiply(c, b);
 #else
 	float floatRes[4];
-	for (size_t i = 0; i < a.GetRowCount() * a.GetColumnCount(); i+=4)
+	for (unsigned int i = 0; i < a.GetRowCount() * a.GetColumnCount(); i+=4)
 	{
 		__m128 first = _mm_load_ps(a.Values + i);
 		__m128 second = _mm_load_ps(b.Values + i);
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second)); 
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > a.GetRowCount() * a.GetColumnCount())
 			addressEnd = (a.GetRowCount() * a.GetColumnCount()) - i;
 		std::copy(floatRes, floatRes + addressEnd, c.Values + i);
@@ -700,8 +700,11 @@ void Matrix::ElementwiseMultiply(const Matrix& other)
 {
 	if (!IsSameSize(other))
 		throw MatrixException();
+#if USE_GPU==USING_CUDA
+    MatrixCUDAMath::ElementwiseMultiply(*this, other);
+#else
 	float floatRes[4];
-	for (size_t i = 0; i < GetElementCount(); i += 4)
+	for (unsigned int i = 0; i < GetElementCount(); i += 4)
 	{
         __m128 first, second;
         if (i + 4 >= GetElementCount())
@@ -728,11 +731,12 @@ void Matrix::ElementwiseMultiply(const Matrix& other)
             second = _mm_load_ps(other.Values + i);
         }
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second));
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		std::copy(floatRes, floatRes + addressEnd, Values + i);
 	}
+#endif
 }
 
 Matrix Matrix::OuterProduct(const Matrix& vector) const
@@ -755,12 +759,12 @@ float Matrix::DotProcudt(const Matrix& vector) const
 
 	float sum = 0;
 	float floatRes[4];
-	for (size_t i = 0; i < GetElementCount(); i += 4)
+	for (unsigned int i = 0; i < GetElementCount(); i += 4)
 	{
 		__m128 first = _mm_load_ps(Values + i);
 		__m128 second = _mm_load_ps(vector.Values + i);
 		_mm_store_ps(floatRes, _mm_mul_ps(first, second));
-		size_t addressEnd = 4;
+		unsigned int addressEnd = 4;
 		if (i + addressEnd > GetElementCount())
 			addressEnd = GetElementCount() - i;
 		for (unsigned int i = 0; i < addressEnd; i++)
@@ -855,11 +859,11 @@ void Matrix::Clamp(float min, float max)
 
 void Matrix::RoundToInt()
 {
-	for (size_t i = 0; i < GetElementCount(); i++)
+	for (unsigned int i = 0; i < GetElementCount(); i++)
 		Values[i] = roundf(Values[i]);
 }
 
-bool Matrix::IsOutOfBounds(size_t row, size_t col) const
+bool Matrix::IsOutOfBounds(unsigned int row, unsigned int col) const
 {
 	return (row >= Rows || col >= Columns);
 }
@@ -877,7 +881,7 @@ void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsig
 		break;
 	}
 
-	for (size_t i = 0; i < Rows; i++)
+	for (unsigned int i = 0; i < Rows; i++)
 		std::copy(Values + i * Columns, Values + (i + 1) * Columns, padded.Values + left + (top + i) * padded.GetColumnCount());
 
 	if (result == nullptr)
@@ -981,7 +985,7 @@ void Matrix::Normalize(float maxValue)
 	if (max < 0)
 		max *= -1;
 
-	for (size_t i = 0; i < GetElementCount(); i++)
+	for (unsigned int i = 0; i < GetElementCount(); i++)
 		Values[i] /= max;
 }
 
@@ -1024,15 +1028,15 @@ void Matrix::Transpose()
 {
 	if (Rows == 1 || Columns == 1)
 	{
-		size_t tmp = Rows;
+		unsigned int tmp = Rows;
 		Rows = Columns;
 		Columns = tmp;
 		return;
 	}
 	Matrix trans(Columns, Rows);
-	for (size_t r = 0; r < Rows; r++)
+	for (unsigned int r = 0; r < Rows; r++)
 	{
-		for (size_t c = 0; c < Columns; c++)
+		for (unsigned int c = 0; c < Columns; c++)
 		{
 			trans.SetValue(c, r, GetValue(r, c));
 		}
@@ -1041,7 +1045,7 @@ void Matrix::Transpose()
 	ReloadFromOther(trans);
 }
 
-size_t Matrix::GetVectorSize() const
+unsigned int Matrix::GetVectorSize() const
 {
 	if (Columns == 1)
 		return Rows;
@@ -1056,7 +1060,7 @@ size_t Matrix::GetVectorSize() const
 
 void Matrix::ReloadFromOther(const Matrix& m)
 {
-	size_t count = m.GetElementCount();
+	unsigned int count = m.GetElementCount();
 	if (count != GetElementCount())
 	{
 		if (Values)
@@ -1079,7 +1083,7 @@ void Matrix::ReloadFromOther(const Matrix& m)
 
 }
 
-void Matrix::Reset(size_t rows, size_t columns)
+void Matrix::Reset(unsigned int rows, unsigned int columns)
 {
 	if (rows != Rows || columns != Columns)
 	{
@@ -1124,7 +1128,7 @@ void Matrix::FillWithRandom(float min, float max)
 	engine.seed(device());
 	std::uniform_real_distribution<> dist(min, max);
 
-	for (size_t i = 0; i < Rows * Columns; i++)
+	for (unsigned int i = 0; i < Rows * Columns; i++)
 		Values[i] = dist(engine);
 	#if USE_GPU==USING_CUDA
 	CopyToGPU();
@@ -1248,7 +1252,7 @@ float* Matrix::GetConstGPUValues() const
 #endif // 0
 }
 
-inline size_t Matrix::RowColToPosition(size_t row, size_t col) const
+inline unsigned int Matrix::RowColToPosition(unsigned int row, unsigned int col) const
 {
 	return row * Columns + col;
 }

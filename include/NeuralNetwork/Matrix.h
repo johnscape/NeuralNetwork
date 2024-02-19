@@ -45,7 +45,7 @@ public:
 	 * @param columns The number of the columns
 	 * @param elements An array, containing the values, to fill the matrix. Default: nullptr
 	*/
-	Matrix(size_t rows, size_t columns, float* elements = nullptr);
+	Matrix(unsigned int rows, unsigned int columns, float* elements = nullptr);
 
 	/**
 	 * @brief A copy constructor for the class
@@ -69,13 +69,13 @@ public:
 	 * @brief Returns the number of the columns.
 	 * @return Number of the columns
 	*/
-	size_t GetColumnCount() const;
+	unsigned int GetColumnCount() const;
 
 	/**
 	 * @brief Returns the number of the rows.
 	 * @return Number of the rows.
 	*/
-	size_t GetRowCount() const;
+	unsigned int GetRowCount() const;
 
 	/**
 	 * @brief Returns with the value at the position of row and col. Return 0 if out of bounds.
@@ -83,14 +83,14 @@ public:
 	 * @param col The selected column
 	 * @return The value of the cell
 	*/
-	float GetValue(size_t row, size_t col) const;
+	float GetValue(unsigned int row, unsigned int col) const;
 
 	/**
 	 * @brief Returns with the value at the position. Return 0 if out of bounds.
 	 * @param pos The position in the matrix
 	 * @return The value of the cell
 	*/
-	float GetValue(size_t pos) const;
+	float GetValue(unsigned int pos) const;
 
 	/**
 	 * @brief Sets the value of the matrix at row and col.
@@ -98,14 +98,14 @@ public:
 	 * @param col The selected column
 	 * @param val The new value
 	*/
-	void SetValue(size_t row, size_t col, float val);
+	void SetValue(unsigned int row, unsigned int col, float val);
 
 	/**
 	 * @brief Sets the value of the matrix at the desired position.
 	 * @param pos The matrix pos-th element
 	 * @param val The new value
 	*/
-	void SetValue(size_t pos, float val);
+	void SetValue(unsigned int pos, float val);
 
 	/**
 	 * @brief Increments the value at the selected cell.
@@ -113,14 +113,14 @@ public:
 	 * @param col The selected column
 	 * @param val The value to be added
 	*/
-	void AdjustValue(size_t row, size_t col, float val);
+	void AdjustValue(unsigned int row, unsigned int col, float val);
 
 	/**
 	 * @brief Increments the value at the selected cell.
 	 * @param pos The selected cell's index.
 	 * @param val The value to be added
 	*/
-	void AdjustValue(size_t pos, float val);
+	void AdjustValue(unsigned int pos, float val);
 
 	/**
 	 * @brief Checks is the matrix is a vector
@@ -132,7 +132,7 @@ public:
 	 * @brief If the matrix is a vector, returns its size
 	 * @return 0 if the matrix is 2D, the size of the vector otherwise
 	*/
-	size_t GetVectorSize() const;
+	unsigned int GetVectorSize() const;
 
 	/**
 	 * @brief Copies the values from another matrix.
@@ -146,7 +146,7 @@ public:
 	 * @param rows The new row number
 	 * @param columns The new column number
 	*/
-	void Reset(size_t rows, size_t columns);
+	void Reset(unsigned int rows, unsigned int columns);
 
 	/**
 	 * @brief Copies the content of another matrix. The two matrices must be the same size, use ReladFromOtherInstead.
@@ -220,7 +220,7 @@ public:
 	 * @param id The index of the value
 	 * @return The value at the specified index
 	*/
-	float operator[](size_t id) const;
+	float operator[](unsigned int id) const;
 
 	//Operators
 
@@ -249,7 +249,7 @@ public:
 	 * @brief Gets the number of elements in the matrix
 	 * @return The product of the number of rows and columns.
 	*/
-	inline size_t GetElementCount() const;
+	inline unsigned int GetElementCount() const;
 
 	/**
 	 * @brief Checks if two matrices are same sized.
@@ -272,16 +272,16 @@ public:
 	 * @param colNum The number of columns to select
 	 * @return A rowNum x colNum matrix, copied from this
 	*/
-	Matrix GetSubMatrix(size_t startRow, size_t startColumn, size_t rowNum, size_t colNum) const;
+	Matrix GetSubMatrix(unsigned int startRow, unsigned int startColumn, unsigned int rowNum, unsigned int colNum) const;
 
 	/**
 	 * @brief Creates a copy from a specific row of the matrix
 	 * @param row The row to copy
 	 * @return A matrix with one row. Throws MatrixIndexException if row parameter is too big.
 	*/
-	Matrix GetRowMatrix(size_t row) const;
+	Matrix GetRowMatrix(unsigned int row) const;
 
-	TempMatrix GetTempRowMatrix(size_t row) const;
+	TempMatrix GetTempRowMatrix(unsigned int row) const;
 
     /**
      * Copies a specified set of values from this matrix into another.
@@ -306,7 +306,7 @@ public:
 	 * @param col The column to copy
 	 * @return A matrix with one column. Throws MatrixIndexException if col parameter is too big.
 	*/
-	Matrix GetColumnMatrix(size_t col) const;
+	Matrix GetColumnMatrix(unsigned int col) const;
 
 	/**
 	 * @brief Multiplies the matrix with another, elementwise
@@ -364,7 +364,7 @@ public:
 	 * @param col The column of the position
 	 * @return true if the set position is invalid (i.e.: the position points to a non-existing element), false otherwise
 	*/
-	bool IsOutOfBounds(size_t row, size_t col) const;
+	bool IsOutOfBounds(unsigned int row, unsigned int col) const;
 	
 	/**
 	 * @brief Adds a paddig to the matrix
@@ -462,10 +462,10 @@ public:
 
 protected:
 	float* Values;
-	size_t Rows;
-	size_t Columns;
+	unsigned int Rows;
+	unsigned int Columns;
 
-	inline size_t RowColToPosition(size_t row, size_t col) const;
+	inline unsigned int RowColToPosition(unsigned int row, unsigned int col) const;
 
 	float* GPUValues;
 
