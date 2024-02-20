@@ -16,7 +16,7 @@
 
 #if USE_GPU==USING_CUDA
 #include <cuda_runtime.h>
-#include "NeuralNetwork/CUDAMath.cuh"
+#include "NeuralNetwork/CUDAFunctions.cuh"
 #define CUDA_MALLOC(s) cudaMalloc((void**)&GPUValues, sizeof(float) * s)
 #endif // USE_GPU
 
@@ -598,7 +598,7 @@ void Matrix::CopyPartTo(Matrix &target, unsigned int startLocal, unsigned int st
 #endif
     std::copy(Values + startLocal, Values + startLocal + count, target.Values);
 #if USE_GPU==USING_CUDA
-    cudaMemcpy((void*)target.GPUValues, (void*)(GPUValues + startLocal), sizeof(float) * count, cudaMemcpyDeviceToDevice);
+    CUDAOperations::CopyPartTo(target, *this, startTarget, startLocal, count);
 #endif
 }
 
@@ -610,7 +610,7 @@ void Matrix::CopyPartTo(Tensor &target, unsigned int startLocal, unsigned int st
 #endif
     std::copy(Values + startLocal, Values + startLocal + count, target.Values + startTarget);
 #if USE_GPU==USING_CUDA
-    cudaMemcpy((void*)(target.GPUValues + startTarget), (void*)(GPUValues + startLocal), sizeof(float) * count, cudaMemcpyDeviceToDevice);
+    CUDAOperations::CopyPartTo(target, *this, startTarget, startLocal, count);
 #endif
 }
 
@@ -1105,6 +1105,9 @@ void Matrix::Copy(const Matrix& from)
 	if (Rows != from.Rows || Columns != from.Columns)
 		throw MatrixException();
 	std::copy(from.Values, from.Values + Rows * Columns, Values);
+#if USE_GPU==USING_CUDA
+    CUDAOperations::CopyPartTo(*this, from, 0, 0, Rows * Columns);
+#endif
 }
 
 void Matrix::FillWith(float value)
