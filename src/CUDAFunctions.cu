@@ -416,3 +416,11 @@ void CUDAOperations::CopyPartTo(Tensor& target, const Tensor& origin, unsigned i
     dim3 grid(ceil((double)count / (double)threads.x), ceil((double)count / (double)threads.y));
     CopyKernel<<<grid, threads>>>(origin.GetConstGPUValues(), target.GetGPUValues(), originOffset, targetOffset, count);
 }
+
+void CUDAOperations::CopyPartTo(Tensor& target, const Matrix& origin, unsigned int targetOffset,
+                                unsigned int originOffset, unsigned int count)
+{
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(ceil((double)count / (double)threads.x), ceil((double)count / (double)threads.y));
+    CopyKernel<<<grid, threads>>>(origin.GetConstGPUValues(), target.GetGPUValues(), originOffset, targetOffset, count);
+}

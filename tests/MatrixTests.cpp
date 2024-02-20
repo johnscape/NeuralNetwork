@@ -283,6 +283,31 @@ SCENARIO("setting and getting matrix values", "[matrix]")
 			}
 		}
 	}
+    GIVEN("a 3x3 matrix with values of 1 and a 4x4 matrix with values of 2")
+    {
+        Matrix a(3, 3);
+        Matrix b(4, 4);
+
+        a.FillWith(1);
+        b.FillWith(2);
+
+        WHEN("copying part of the second matrix to the last row of the first one")
+        {
+            b.CopyPartTo(a, 3, 6, 3);
+            a.CopyFromGPU();
+
+            THEN("the first 6 values will be 1")
+            {
+                for (int i = 0; i < 6; i++)
+                    REQUIRE(a[i] == 1);
+            }
+            THEN("the last 3 values will be 2")
+            {
+                for (int i = 6; i < 9; i++)
+                    REQUIRE(a[i] == 2);
+            }
+        }
+    }
 }
 
 SCENARIO("using vector operations", "[matrix][vector]")
@@ -553,10 +578,9 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 
 		a.FillWith(3);
 		b.FillWith(2);
-                #if USE_GPU==USING_CUDA
-                a.CopyToGPU();
-                b.CopyToGPU();
-                #endif
+
+        a.CopyToGPU();
+        b.CopyToGPU();
 
 		WHEN("creating a new matrix with elementwise multiplaction")
 		{
@@ -569,9 +593,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 			}
 			THEN("every value in the new matrix is 6")
 			{
-                            #if USE_GPU==USING_CUDA
-                            c.CopyFromGPU();
-                            #endif
+                c.CopyFromGPU();
 				for (unsigned int i = 0; i < 9; i++)
 					REQUIRE(c[i] == 6);
 			}
@@ -579,6 +601,7 @@ SCENARIO("using matrix arithmetics", "[matrix][math]")
 		WHEN("multiplying a with b, elementwise")
 		{
 			a.ElementwiseMultiply(b);
+            a.CopyFromGPU();
 
 			THEN("the matrix is still 3x3")
 			{
@@ -643,6 +666,8 @@ SCENARIO("using non square matrices", "[matrix][math]")
 
         WHEN("multiplying them together")
         {
+            a.CopyFromGPU();
+            std::cout << a << std::endl;
             Matrix c = a * b;
             c.CopyFromGPU();
 

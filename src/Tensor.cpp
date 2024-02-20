@@ -13,7 +13,7 @@
 
 #if USE_GPU==USING_CUDA
 #include <cuda_runtime.h>
-#include "NeuralNetwork/CUDAMath.cuh"
+#include "NeuralNetwork/CUDAFunctions.cuh"
 #endif // USE_GPU
 
 std::ostream& operator<<(std::ostream& os, const Tensor& tensor)
@@ -364,7 +364,7 @@ void Tensor::FillWith(float value)
 {
 	std::fill(Values, Values + GetElementCount(), value);
 #if USE_GPU==USING_CUDA
-    TensorMath::FillWith(*this, value);
+    TensorCUDAMath::FillWith(*this, value);
 #endif
 }
 
@@ -513,7 +513,7 @@ Tensor Tensor::operator+(const Matrix &other) const
 
 	Tensor t(*this);
 #if USE_GPU==USING_CUDA
-    TensorMath::AddIn(t, other);
+    TensorCUDAMath::AddIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
 
@@ -563,7 +563,7 @@ Tensor Tensor::operator-(const Matrix &other) const
 
 	Tensor t(*this);
 #if USE_GPU==USING_CUDA
-    TensorMath::SubtractIn(t, other);
+    TensorCUDAMath::SubtractIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
 
@@ -619,7 +619,7 @@ Tensor Tensor::operator*(const Matrix &other) const
 
 	Tensor result(newSize);
 #if USE_GPU==USING_CUDA
-    TensorMath::Multiplication(*this, other, result);
+    TensorCUDAMath::Multiplication(*this, other, result);
 #else
 	__m128 fastCol, fastRow, fastRes;
 
@@ -675,7 +675,7 @@ Tensor &Tensor::operator+=(const Matrix &other)
 
 	Tensor t(*this);
 #if USE_GPU==USING_CUDA
-    TensorMath::AddIn(t, other);
+    TensorCUDAMath::AddIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
 
@@ -730,7 +730,7 @@ Tensor &Tensor::operator-=(const Matrix &other)
 
 	Tensor t(*this);
 #if USE_GPU==USING_CUDA
-    TensorMath::SubtractIn(t, other);
+    TensorCUDAMath::SubtractIn(t, other);
 #else
 	unsigned matrixCount = other.GetElementCount();
 
@@ -793,7 +793,7 @@ Tensor &Tensor::operator*=(const Matrix &other)
 
 	Tensor result(newSize);
 #if USE_GPU==USING_CUDA
-    TensorMath::Multiplication(*this, other, result);
+    TensorCUDAMath::Multiplication(*this, other, result);
 #else
 	__m128 fastCol, fastRow, fastRes;
 
@@ -885,7 +885,7 @@ Tensor Tensor::operator+(const Tensor &other) const
 
     result.CopyToGPU();
 #if USE_GPU==USING_CUDA
-    TensorMath::AddIn(result, other);
+    TensorCUDAMath::AddIn(result, other);
 #else
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
@@ -939,7 +939,7 @@ Tensor Tensor::operator-(const Tensor &other) const
 
 	Tensor result(*this);
 #if USE_GPU==USING_CUDA
-    TensorMath::SubtractIn(result, other);
+    TensorCUDAMath::SubtractIn(result, other);
 #else
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
 	unsigned int cols = Shape.size() > 1 ? Shape[1] : 1;
@@ -1010,7 +1010,7 @@ Tensor Tensor::operator*(const Tensor &other) const
 
 	Tensor result(newSize);
 #if USE_GPU==USING_CUDA
-    TensorMath::Multiplication(*this, other, result);
+    TensorCUDAMath::Multiplication(*this, other, result);
 #else
 
 	__m128 fastCol, fastRow, fastRes;
@@ -1064,7 +1064,7 @@ Tensor &Tensor::operator+=(const Tensor &other)
 
 	Tensor result(Shape);
 #if USE_GPU==USING_CUDA
-    TensorMath::Add(*this, other, result);
+    TensorCUDAMath::Add(*this, other, result);
 #else
 
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
@@ -1124,7 +1124,7 @@ Tensor &Tensor::operator-=(const Tensor &other)
 
 	Tensor result(Shape);
 #if USE_GPU==USING_CUDA
-    TensorMath::Subtract(*this, other, result);
+    TensorCUDAMath::Subtract(*this, other, result);
 #else
 
 	unsigned int rows = Shape.size() > 0 ? Shape[0] : 1;
@@ -1201,7 +1201,7 @@ Tensor &Tensor::operator*=(const Tensor &other)
 
 	Tensor result(newSize);
 #if USE_GPU==USING_CUDA
-    TensorMath::Multiplication(*this, other, result);
+    TensorCUDAMath::Multiplication(*this, other, result);
 #else
 
 	__m128 fastCol, fastRow, fastRes;

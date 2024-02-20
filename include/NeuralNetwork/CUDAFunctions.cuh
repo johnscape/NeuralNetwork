@@ -213,4 +213,14 @@ namespace CUDAOperations
      * @param count The count of elements to copy
      */
     void CopyPartTo(Tensor& target, const Tensor& origin, unsigned int targetOffset, unsigned int originOffset, unsigned int count);
+
+    /**
+     * Copies part of the GPU values from an origin to a target.
+     * @param target The target to copy to and override
+     * @param origin The origin to copy from
+     * @param targetOffset The offset of the target, where the overriding should start
+     * @param originOffset The offset of the origin, where the values will be copied from
+     * @param count The count of elements to copy
+     */
+    void CopyPartTo(Tensor& target, const Matrix& origin, unsigned int targetOffset, unsigned int originOffset, unsigned int count);
 }

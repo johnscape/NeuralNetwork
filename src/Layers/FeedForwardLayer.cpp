@@ -3,7 +3,7 @@
 #include "NeuralNetwork/Constants.h"
 
 #if USE_GPU==USING_CUDA
-#include "NeuralNetwork/CUDAMath.cuh"
+#include "NeuralNetwork/CUDAFunctions.cuh"
 #endif
 
 FeedForwardLayer::FeedForwardLayer(Layer* inputLayer, unsigned int count) :
