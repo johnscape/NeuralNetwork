@@ -31,9 +31,9 @@ set(CPP_FILES
     
 
 set(CUDA_FILES
-        CUDAMath.cu
+        CUDAFunctions.cu
         GPUActivation.cu
-        ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/CUDAMath.cuh
+        ${PROJECT_SOURCE_DIR}/include/NeuralNetwork/CUDAFunctions.cuh
 )
 
 if (${GPU_SETTING} STREQUAL "None")

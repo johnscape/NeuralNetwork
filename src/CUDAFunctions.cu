@@ -1,5 +1,5 @@
 #include <cuda_runtime.h>
-#include "NeuralNetwork/CUDAMath.cuh"
+#include "NeuralNetwork/CUDAFunctions.cuh"
 #include "NeuralNetwork/Constants.h"
 #if USE_CUBLAS
 #include <cublas_v2.h>
@@ -138,6 +138,13 @@ __global__ void ConstantMultiplyingKernel(float* A, float v, unsigned int maxNum
 		A[i] *= v;
 }
 
+__global__ void CopyKernel(const float* from, float* to, unsigned int fromOffset, unsigned int toOffset, unsigned int count)
+{
+    const unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i < count)
+        to[i + toOffset] = from[i + fromOffset];
+}
+
 //// Matrix math
 
 // Addition
@@ -232,7 +239,7 @@ void MatrixCUDAMath::FillWith(Matrix& a, float value)
 //// Tensor math
 
 // Addition
-void TensorMath::Add(const Tensor &a, const Tensor &b, Tensor &c)
+void TensorCUDAMath::Add(const Tensor &a, const Tensor &b, Tensor &c)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -244,7 +251,7 @@ void TensorMath::Add(const Tensor &a, const Tensor &b, Tensor &c)
             max);
 }
 
-void TensorMath::AddIn(Tensor &a, const Tensor &b)
+void TensorCUDAMath::AddIn(Tensor &a, const Tensor &b)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -255,7 +262,7 @@ void TensorMath::AddIn(Tensor &a, const Tensor &b)
             max);
 }
 
-void TensorMath::AddIn(Tensor& a, const Matrix& b)
+void TensorCUDAMath::AddIn(Tensor& a, const Matrix& b)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -268,7 +275,7 @@ void TensorMath::AddIn(Tensor& a, const Matrix& b)
             );
 }
 
-void TensorMath::AddConstant(Tensor &a, float v)
+void TensorCUDAMath::AddConstant(Tensor &a, float v)
 {
     unsigned int max = a.GetShapeAt(0) * a.GetShapeAt(1);
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -281,7 +288,7 @@ void TensorMath::AddConstant(Tensor &a, float v)
 }
 
 // Subtraction
-void TensorMath::Subtract(const Tensor &a, const Tensor &b, Tensor &c)
+void TensorCUDAMath::Subtract(const Tensor &a, const Tensor &b, Tensor &c)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -293,7 +300,7 @@ void TensorMath::Subtract(const Tensor &a, const Tensor &b, Tensor &c)
             max);
 }
 
-void TensorMath::SubtractIn(Tensor &a, const Tensor &b)
+void TensorCUDAMath::SubtractIn(Tensor &a, const Tensor &b)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -304,7 +311,7 @@ void TensorMath::SubtractIn(Tensor &a, const Tensor &b)
             max);
 }
 
-void TensorMath::SubtractIn(Tensor& a, const Matrix& b)
+void TensorCUDAMath::SubtractIn(Tensor& a, const Matrix& b)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -317,7 +324,7 @@ void TensorMath::SubtractIn(Tensor& a, const Matrix& b)
     );
 }
 
-void TensorMath::SubtractConstant(Tensor &a, float v)
+void TensorCUDAMath::SubtractConstant(Tensor &a, float v)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -326,7 +333,7 @@ void TensorMath::SubtractConstant(Tensor &a, float v)
 }
 
 // Multiplication
-void TensorMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
+void TensorCUDAMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
 {
     unsigned int rows = ceil((double)(a.GetShapeAt(0) + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
     unsigned int cols = ceil((double)(b.GetShapeAt(1) + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
@@ -346,7 +353,7 @@ void TensorMath::Multiplication(const Tensor &a, const Tensor &b, Tensor &c)
     }
 }
 
-void TensorMath::Multiplication(const Tensor& a, const Matrix& b, Tensor& c)
+void TensorCUDAMath::Multiplication(const Tensor& a, const Matrix& b, Tensor& c)
 {
     unsigned int rows = ceil((double)(a.GetShapeAt(0) + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
     unsigned int cols = ceil((double)(b.GetColumnCount() + BLOCK_SIZE - 1) / (double)BLOCK_SIZE);
@@ -365,7 +372,7 @@ void TensorMath::Multiplication(const Tensor& a, const Matrix& b, Tensor& c)
             );
 }
 
-void TensorMath::MultiplyConstant(Tensor &a, float v)
+void TensorCUDAMath::MultiplyConstant(Tensor &a, float v)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -376,7 +383,7 @@ void TensorMath::MultiplyConstant(Tensor &a, float v)
             max);
 }
 
-void TensorMath::ElementwiseMultiply(Tensor &a, const Tensor &b)
+void TensorCUDAMath::ElementwiseMultiply(Tensor &a, const Tensor &b)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -386,10 +393,26 @@ void TensorMath::ElementwiseMultiply(Tensor &a, const Tensor &b)
 
 // Misc
 
-void TensorMath::FillWith(Tensor &a, float value)
+void TensorCUDAMath::FillWith(Tensor &a, float value)
 {
     unsigned int max = a.GetElementCount();
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(ceil((double)max / (double)threads.x), ceil((double)max / (double)threads.y));
     FillKernel <<<grid, threads >>> (a.GetGPUValues(), value, max);
+}
+
+void CUDAOperations::CopyPartTo(Matrix& target, const Matrix& origin, unsigned int targetOffset,
+                                unsigned int originOffset, unsigned int count)
+{
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(ceil((double)count / (double)threads.x), ceil((double)count / (double)threads.y));
+    CopyKernel<<<grid, threads>>>(origin.GetConstGPUValues(), target.GetGPUValues(), originOffset, targetOffset, count);
+}
+
+void CUDAOperations::CopyPartTo(Tensor& target, const Tensor& origin, unsigned int targetOffset,
+                                unsigned int originOffset, unsigned int count)
+{
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(ceil((double)count / (double)threads.x), ceil((double)count / (double)threads.y));
+    CopyKernel<<<grid, threads>>>(origin.GetConstGPUValues(), target.GetGPUValues(), originOffset, targetOffset, count);
 }
