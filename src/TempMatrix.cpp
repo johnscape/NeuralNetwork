@@ -20,6 +20,7 @@ TempMatrix::TempMatrix(size_t rows, size_t cols, unsigned int offset, float *val
 TempMatrix::~TempMatrix()
 {
 	Values = nullptr;
+    GPUValues = nullptr;
 }
 
 Matrix TempMatrix::ToMatrix()
