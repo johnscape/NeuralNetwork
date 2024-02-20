@@ -88,39 +88,51 @@ SCENARIO("Training a recurrent layer", "[layer][training]")
 {
 	GIVEN("A predictable RNN and a 4x2 input")
 	{
+        // test data
+        float inputValues[10] = {
+                0, 0,
+                0, 1,
+                1, 0,
+                1, 1,
+                0, 1
+        };
+
+        float WVals[4] = {
+                0.1f, 0.2f,
+                0.3f, 0.4f
+        };
+
+        float BVals[2] = {
+                0.1f, 0.2f
+        };
+
+        float RVals[4] = {
+                0.4f, 0.5f,
+                0.5f, 0.4f
+        };
+
+        float expectedValues[10] = {
+                0, 0,
+                0, 0,
+                0, 0,
+                1, 0,
+                0, 1
+        };
+
+        Tensor input({5, 2}, inputValues);
+        Matrix W(2, 2, WVals);
+        Matrix R(2, 2, RVals);
+        Matrix B(1, 2, BVals);
+        Tensor expected({5, 2}, expectedValues);
+
 		InputLayer inputLayer(2);
 		RecurrentLayer rnn(&inputLayer, 2);
 
-		for (unsigned int i = 0; i < 4; i++)
-		{
-			rnn.GetWeights().SetValue(i, 1);
-			rnn.GetRecurrentWeights().SetValue(i, 2);
-			rnn.GetBias().SetValue(i % 2, 1);
-		}
+        rnn.GetWeights().Copy(W);
+        rnn.GetRecurrentWeights().Copy(R);
+        rnn.GetBias().Copy(B);
 
 		rnn.SetActivationFunction(ACTIVATION_LINEAR);
-
-		Tensor input({4, 2}, nullptr);
-
-		input.SetValue(0, 0);
-		input.SetValue(1, 0);
-		input.SetValue(2, 1);
-		input.SetValue(3, 0);
-		input.SetValue(4, 0);
-		input.SetValue(5, 1);
-		input.SetValue(6, 1);
-		input.SetValue(7, 1);
-
-		Tensor expected({4, 2}, nullptr);
-
-		expected.SetValue(0, 0);
-		expected.SetValue(1, 0);
-		expected.SetValue(2, 1);
-		expected.SetValue(3, 0);
-		expected.SetValue(4, 0);
-		expected.SetValue(5, 0);
-		expected.SetValue(6, 0);
-		expected.SetValue(7, 1);
 
 		GradientDescent trainer(new MSE(), &rnn, 0.5f);
 
@@ -128,20 +140,19 @@ SCENARIO("Training a recurrent layer", "[layer][training]")
 		{
 			inputLayer.SetInput(input);
 			Tensor result = rnn.ComputeAndGetOutput();
+            result.CopyFromGPU();
 
-			Tensor output({4, 2}, nullptr);
-
-
-			output.SetValue(0, 1);
-			output.SetValue(1, 1);
-			output.SetValue(2, 6);
-			output.SetValue(3, 6);
-			output.SetValue(4, 26);
-			output.SetValue(5, 26);
-			output.SetValue(6, 107);
-			output.SetValue(7, 107);
+            float calculatedOutputVale[10] = {
+                    0.1f, 0.2f,
+                    0.54f, 0.73f,
+                    0.781f, 0.962f,
+                    1.2934f, 1.5753f,
+                    1.70501f, 1.87682f
+            };
+			Tensor output({5, 2}, calculatedOutputVale);
 
 			Tensor diff = output - result;
+            diff.CopyFromGPU();
 			REQUIRE(abs(diff.Sum()) < 0.01f);
 		}
 
@@ -149,25 +160,32 @@ SCENARIO("Training a recurrent layer", "[layer][training]")
 		{
 			trainer.Train(input, expected);
 
-			Matrix wantedWeight(2, 2);
-			Matrix wantedRecWeight(2, 2);
+            float targetWeightValues[4] = {
+                    0.0565f, -0.0053f,
+                    0.0871f, 0.1635f
+            };
 
-			wantedWeight.SetValue(0, 1 - 112 * 0.25 * 0.5);
-			wantedWeight.SetValue(2, 1 - 133 * 0.25 * 0.5);
-			wantedWeight.SetValue(1, 1 - 112 * 0.25 * 0.5);
-			wantedWeight.SetValue(3, 1 - 132 * 0.25 * 0.5);
+            float targetRecurrentWeightValues[4] = {
+                    0.3403f, 0.4099f,
+                    0.4408f, 0.31085f
+            };
 
-			wantedRecWeight.SetValue(0, 2 - 915.875f);
-			wantedRecWeight.SetValue(2, 2 - 915.875f);
-			wantedRecWeight.SetValue(1, 2 - 907.75f);
-			wantedRecWeight.SetValue(3, 2 - 907.75f);
+            float targetBiasValues[2] = {
+                    -0.1497f, -0.0968f
+            };
+
+			Matrix targetWeight(2, 2, targetWeightValues);
+			Matrix targetRecurrentWeight(2, 2, targetRecurrentWeightValues);
+            Matrix targetBias(1, 2, targetBiasValues);
 
 
-			Matrix weightDiff = wantedWeight - rnn.GetWeights();
-			Matrix recDiff = wantedRecWeight - rnn.GetRecurrentWeights();
+			Matrix weightDiff = targetWeight - rnn.GetWeights();
+			Matrix recDiff = targetRecurrentWeight - rnn.GetRecurrentWeights();
+            Matrix biasDiff = targetBias - rnn.GetBias();
 
 			REQUIRE(abs(weightDiff.Sum()) < 0.001f);
 			REQUIRE(abs(recDiff.Sum()) < 0.001f);
+            REQUIRE(abs(biasDiff.Sum()) < 0.001f);
 		}
 	}
 }

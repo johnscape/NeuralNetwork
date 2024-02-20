@@ -6,7 +6,7 @@
 #include "NeuralNetwork/Constants.h"
 
 #if USE_GPU==USING_CUDA
-#include "NeuralNetwork/CUDAMath.cuh"
+#include "NeuralNetwork/CUDAFunctions.cuh"
 #endif
 
 RecurrentLayer::RecurrentLayer(Layer* inputLayer, unsigned int size, unsigned int timeSteps) :
@@ -55,6 +55,7 @@ void RecurrentLayer::Compute()
 
 	if (!Output.IsSameShape(InnerState))
 		Output = Tensor(InnerState);
+    Output.CopyFromGPU();
 
 	function->CalculateInto(InnerState, Output);
 }
@@ -77,58 +78,60 @@ void RecurrentLayer::SetActivationFunction(ActivationFunction* func)
 
 void RecurrentLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
-	//TODO: Implement tensor elementwise multiply
-	//LayerError = weight * (error .* derivate)
-	TempMatrix errorMatrix = error.ToMatrixByRows();
-	Tensor derivate = function->CalculateDerivateTensor(Output);
-	LayerError = Tensor({(unsigned int)errorMatrix.GetRowCount(), LayerInput->OutputSize()}, nullptr);
-#if USE_GPU
-	derivate.CopyFromGPU();
-#endif // USE_GPU
+    Tensor derivates = function->CalculateDerivateTensor(Output);
+    TempMatrix inputs = IncomingValues.ToMatrixByRows();
+    TempMatrix states = InnerState.ToMatrixByRows();
+    TempMatrix outputs = derivates.ToMatrixByRows();
+    TempMatrix errors = error.ToMatrixByRows();
 
-	TempMatrix states = InnerState.ToMatrixByRows();
+    Matrix recursiveWeightPower(RecursiveWeight);
+    Matrix delta(1, Size);
 
-	//If I call this function for once at every batch, this can stay, otherwise create a parameter
-	std::vector<Matrix> powers;
-	for (unsigned int i = 0; i < 3; ++i)
-	{
-		if (i == 0)
-			powers.push_back(RecursiveWeight);
-		else
-			powers.push_back(RecursiveWeight.Power(i + 1));
-	}
+    LayerError = Tensor({inputs.GetRowCount(), Weights.GetRowCount()}, nullptr);
+    Matrix LayerErrorRow( Weights.GetRowCount(), 1);
 
-	for (unsigned int mat = 0; mat < error.GetMatrixCount(); ++mat)
-	{
-		for (unsigned int row = 0; row < error.GetShapeAt(0); ++row)
-		{
-			Matrix incoming = IncomingValues.GetRowMatrix(mat, row); //i_t
-			incoming.Transpose();
+    unsigned char currentPower = TimeSteps;
+    recursiveWeightPower = RecursiveWeight.Power(currentPower);
 
-			Matrix derivated = derivate.GetRowMatrix(mat, row); //o_t/s_t
-			derivated.ElementwiseMultiply(error.GetRowMatrix(mat, row)); //E_t/s_t
-			Matrix weightErr = incoming * derivated; //E_t/W
 
-			for (int i = 0; i < TimeSteps; ++i) //Do I need to update for every timestep, or just for i=3?
-			{
-				if (i >= row)
-					break;
-				TempMatrix state = states.GetTempRowMatrix(row - i - 1);
-				state.Transpose();
-				if (i == 0)
-					RecursiveWeightError += state * derivated;
-				else
-				{
-					Matrix tmp = powers[i - 1] * state;
-					tmp *= derivated;
-					RecursiveWeightError += tmp;
-				}
+    for (unsigned int timeStep = outputs.GetRowCount() - 1; timeStep > 0; timeStep--)
+    {
+        delta.FillWith(1);
 
-			}
-			WeightError += weightErr;
-			BiasError += derivated;
-		}
-	}
+        TempMatrix errorRow = errors.GetTempRowMatrix(timeStep);
+        TempMatrix derivateRow = outputs.GetTempRowMatrix(timeStep);
+
+        delta.ElementwiseMultiply(errorRow);
+        delta.ElementwiseMultiply(derivateRow);
+
+        // Bias
+        BiasError += delta;
+        delta.Transpose();
+
+        // Input weights
+        WeightError += delta * inputs.GetTempRowMatrix(timeStep);
+
+        // Recurrent weights
+        if (currentPower > timeStep)
+        {
+            currentPower--;
+            recursiveWeightPower = RecursiveWeight.Power(currentPower);
+        }
+
+        // TODO: Check if order works
+        RecursiveWeightError += recursiveWeightPower * delta * states.GetTempRowMatrix(timeStep - currentPower);
+
+        // Layer error
+        LayerErrorRow = Weights * delta;
+        LayerErrorRow.CopyPartTo(LayerError, 0, timeStep * Weights.GetRowCount(), Weights.GetRowCount());
+
+        delta.Transpose();
+
+    }
+
+    BiasError *= (1 / (float)outputs.GetRowCount());
+    WeightError *= (1 / (float)outputs.GetRowCount());
+    RecursiveWeightError *= (1 / (float)outputs.GetRowCount());
 
 	if (recursive)
 		LayerInput->GetBackwardPass(LayerError);
