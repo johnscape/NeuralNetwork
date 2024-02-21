@@ -199,7 +199,15 @@ Matrix& Matrix::operator=(const Matrix& other)
 	if (this == &other)
 		return *this;
 
-	ReloadFromOther(other);
+    delete[] Values;
+    FreeGPU();
+
+    Rows = other.Rows;
+    Columns = other.Columns;
+    Values = new float[Rows * Columns];
+    std::copy(other.Values, other.Values + GetColumnCount(), Values);
+    MallocGPU();
+    CopyToGPU();
 
 	return *this;
 }
@@ -209,7 +217,6 @@ Matrix& Matrix::operator=(Matrix&& other) noexcept
 	if (this == &other)
 		return *this;
 
-	delete[] Values;
 	Rows = std::exchange(other.Rows, 0);
 	Columns = std::exchange(other.Columns, 0);
 	Values = std::exchange(other.Values, nullptr);
@@ -885,9 +892,19 @@ void Matrix::Pad(unsigned int top, unsigned int left, unsigned int bottom, unsig
 		std::copy(Values + i * Columns, Values + (i + 1) * Columns, padded.Values + left + (top + i) * padded.GetColumnCount());
 
 	if (result == nullptr)
-		ReloadFromOther(padded);
+    {
+        Rows = std::exchange(padded.Rows, 0);
+        Columns = std::exchange(padded.Columns, 0);
+        Values = std::exchange(padded.Values, nullptr);
+        GPUValues = std::exchange(padded.GPUValues, nullptr);
+    }
 	else if (result->Columns == padded.Columns && result->Rows == padded.Rows)
-		result->ReloadFromOther(padded);
+    {
+        result->Rows = std::exchange(padded.Rows, 0);
+        result->Columns = std::exchange(padded.Columns, 0);
+        result->Values = std::exchange(padded.Values, nullptr);
+        result->GPUValues = std::exchange(padded.GPUValues, nullptr);
+    }
 	else
 		throw MatrixSizeException();
 }

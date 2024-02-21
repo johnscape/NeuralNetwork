@@ -399,18 +399,6 @@ SCENARIO("reseting matrix", "[matrix]")
 					REQUIRE(a[i] == 0);
 			}
 		}
-		WHEN("reloading by from a")
-		{
-			b.ReloadFromOther(a);
-			THEN("a is still randomly initialized")
-			{
-				REQUIRE(a[0] != 0);
-			}
-			THEN("a and b are equal")
-			{
-				REQUIRE(a == b);
-			}
-		}
 	}
 }
 
@@ -667,7 +655,6 @@ SCENARIO("using non square matrices", "[matrix][math]")
         WHEN("multiplying them together")
         {
             a.CopyFromGPU();
-            std::cout << a << std::endl;
             Matrix c = a * b;
             c.CopyFromGPU();
 
