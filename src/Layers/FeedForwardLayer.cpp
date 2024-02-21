@@ -72,43 +72,33 @@ void FeedForwardLayer::SetActivationFunction(ActivationFunction* func)
 
 void FeedForwardLayer::GetBackwardPass(const Tensor& error, bool recursive)
 {
-	//TODO: Revise this
-	Tensor derivate = function->CalculateDerivateTensor(Output);
-	std::vector<unsigned int> newShape = error.GetShape();
-	newShape[1] = LayerInput->OutputSize();
-	LayerError = Tensor(newShape);
-	unsigned int matrixSize = error.GetShapeAt(0) * error.GetShapeAt(1);
+    Tensor derivates = function->CalculateDerivateTensor(Output);
+    TempMatrix derivateRows = derivates.ToMatrixByRows();
+    TempMatrix errorRows = error.ToMatrixByRows();
+    TempMatrix inputRows = LayerInput->GetOutput().ToMatrixByRows();
 
-#if USE_GPU
-	//MatrixCUDAMath::FillWith(LayerError, 0); //do i even need this?
-	derivate.CopyFromGPU();
-#endif
+    LayerError = Tensor(LayerInput->GetOutput().GetShape());
 
-	for (unsigned int matrix = 0; matrix < error.GetMatrixCount(); matrix++)
-	{
-		for (unsigned int row = 0; row < error.GetShapeAt(0); row++)
-		{
-			for (unsigned int neuron = 0; neuron < Size; neuron++)
-			{
-				float delta = error.GetValue(matrix * matrixSize + row * error.GetShapeAt(1) + neuron);
-				delta *= derivate.GetValue(matrix * matrixSize + row * error.GetShapeAt(1) + neuron);
-				for (unsigned int incoming = 0; incoming < LayerInput->OutputSize(); incoming++)
-				{
-					float wt = LayerInput->GetOutput().GetValue(
-							matrix * matrixSize + row * error.GetShapeAt(1) + incoming) * delta;
-					float lt = Weights.GetValue(incoming, neuron) * delta;
-					WeightError.AdjustValue(incoming, neuron, wt);
-					LayerError.AdjustValue(matrix * matrixSize + row * error.GetShapeAt(1) + incoming, lt);
-				}
+    Matrix delta(errorRows.GetRowCount(), Size);
+    Matrix layerErrorRow;
+    delta.FillWith(1);
 
-				BiasError.AdjustValue(neuron, delta);
-			}
-		}
-	}
+    delta.ElementwiseMultiply(errorRows);
+    delta.ElementwiseMultiply(derivateRows);
 
-#if USE_GPU
-	//WeightError.CopyToGPU();
-#endif // USE_GPU
+    for (unsigned int i = 0; i < delta.GetRowCount(); i++)
+    {
+        TempMatrix deltaRow = delta.GetTempRowMatrix(i);
+        BiasError += deltaRow;
+
+        deltaRow.Transpose();
+        TempMatrix inputRow = inputRows.GetTempRowMatrix(i);
+        WeightError += deltaRow * inputRow;
+
+        deltaRow.Transpose();
+        layerErrorRow = delta * Weights;
+        layerErrorRow.CopyPartTo(LayerError, 0, i * Weights.GetRowCount(), Weights.GetRowCount());
+    }
 
 	if (recursive)
 		LayerInput->GetBackwardPass(LayerError);

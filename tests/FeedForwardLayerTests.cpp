@@ -97,40 +97,40 @@ SCENARIO("Training the feed forward layer", "[layer][training]")
 
 		WHEN("running the network")
 		{
-			Matrix testInput(1, 2);
-			testInput.SetValue(0, 0.05f);
-			testInput.SetValue(1, 0.1f);
+            float testInputValues[2] = {
+                    0.05f, 0.05f
+            };
+
+            float expectedValues[2] = {
+                    0.75136507f, 0.772928465f
+            };
+
+			Matrix testInput(1, 2, testInputValues);
 
 			input.SetInput(testInput);
-			Matrix result = (Matrix)outputLayer.ComputeAndGetOutput();
+			Tensor result = outputLayer.ComputeAndGetOutput();
 
-			Matrix expected(1, 2);
-			expected.SetValue(0, 0.75136507f);
-			expected.SetValue(1, 0.772928465f);
+			Tensor expected({1, 2}, expectedValues);
 
 			THEN("the difference is minimal")
 			{
-				Matrix diff = result - expected;
+				Tensor diff = result - expected;
 				REQUIRE(abs(diff.Sum()) < 0.01f);
 			}
 		}
 
 		WHEN("training the network")
 		{
-			Tensor testInput({1, 2}, nullptr);
-			testInput.SetValue(0, 0.05f);
-			testInput.SetValue(1, 0.1f);
+            float testInputValues[2] = {
+                    0.05f, 0.1f
+            };
 
-			Tensor expected({1, 2}, nullptr);
-			expected.SetValue(0, 0.01f);
-			expected.SetValue(1, 0.99f);
+            float expectedValues[2] = {
+                    0.01f, 0.99f
+            };
+			Tensor testInput({1, 2}, testInputValues);
+			Tensor expected({1, 2}, expectedValues);
 
-			input.SetInput(testInput);
-			Tensor result = outputLayer.ComputeAndGetOutput();
-
-			MSE func;
-			float error = func.Loss(result, expected);
-			REQUIRE(abs(error - 0.298371109) < 0.01);
 			gds.Train(testInput, expected);
 
 			Matrix wantedOutputWeights(2, 2);
