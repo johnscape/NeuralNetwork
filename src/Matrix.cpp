@@ -674,6 +674,10 @@ Matrix Matrix::Concat(const Matrix& a, const Matrix& b, unsigned int dim)
 		Matrix result(a.GetRowCount() + b.GetRowCount(), a.GetColumnCount());
 		std::copy(a.Values, a.Values + a.GetElementCount(), result.Values);
 		std::copy(b.Values, b.Values + b.GetElementCount(), result.Values + a.GetElementCount());
+#if USE_GPU==USING_CUDA
+        CUDAOperations::CopyPartTo(result, a, 0, 0, a.GetElementCount());
+        CUDAOperations::CopyPartTo(result, b, a.GetColumnCount(), 0, b.GetElementCount());
+#endif
 		return result;
 	}
 	else
@@ -691,6 +695,10 @@ Matrix Matrix::Concat(const Matrix& a, const Matrix& b, unsigned int dim)
 					b.Values + row * b.GetColumnCount(),
 					b.Values + (row + 1) * b.GetColumnCount(),
 					result.Values + row * result.GetColumnCount() + a.GetColumnCount());
+#if USE_GPU==USING_CUDA
+            CUDAOperations::CopyPartTo(result, a, row * result.GetColumnCount(), row * a.GetColumnCount(), a.GetColumnCount());
+            CUDAOperations::CopyPartTo(result, b, row * result.GetColumnCount(), row * b.GetColumnCount(), b.GetColumnCount());
+#endif
 		}
 		return result;
 	}
@@ -698,9 +706,7 @@ Matrix Matrix::Concat(const Matrix& a, const Matrix& b, unsigned int dim)
 
 Matrix Matrix::Concat(const Matrix& a, const Matrix& b, Matrix::ConcatType type)
 {
-	if (type == Matrix::ConcatType::BY_ROW)
-		return Matrix::Concat(a, b, 0);
-        return Matrix::Concat(a, b, 1);
+    return Matrix::Concat(a, b, type == Matrix::ConcatType::BY_ROW ? 0 : 1);
 }
 
 void Matrix::ElementwiseMultiply(const Matrix& other)

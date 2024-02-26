@@ -114,6 +114,57 @@ SCENARIO("matrix initialization", "[matrix]")
 			}
 		}
 	}
+    GIVEN("three matrices: 2x3, 2x5, 6x3")
+    {
+        Matrix a(2, 3);
+        Matrix b(2, 5);
+        Matrix c(6, 3);
+
+        a.FillWith(1);
+        b.FillWith(2);
+        c.FillWith(3);
+
+        WHEN("concatenating the first 2 matrices")
+        {
+            Matrix result = Matrix::Concat(a, b, Matrix::ConcatType::BY_COLUMN);
+            THEN("the resulting matrix will be 2x8")
+            {
+                REQUIRE(result.GetRowCount() == 2);
+                REQUIRE(result.GetColumnCount() == 8);
+            }
+            THEN("the resulting matrix will contain values from both matrices")
+            {
+                // matrix a
+                for (int row = 0; row < 2; ++row)
+                    for (int col = 0; col < 3; ++col)
+                        REQUIRE(result.GetValue(row, col) == 1);
+                // matrix b
+                for (int row = 0; row < 2; ++row)
+                    for (int col = 3; col < 8; ++col)
+                        REQUIRE(result.GetValue(row, col) == 2);
+            }
+        }
+        WHEN("concatenating the first and third matrix")
+        {
+            Matrix result = Matrix::Concat(a, c, Matrix::ConcatType::BY_ROW);
+            THEN("the resulting matrix will be 8x3")
+            {
+                REQUIRE(result.GetRowCount() == 8);
+                REQUIRE(result.GetColumnCount() == 3);
+            }
+            THEN("the resulting matrix will contain values from both matrices")
+            {
+                // matrix a
+                for (int row = 0; row < 2; ++row)
+                    for (int col = 0; col < 3; ++col)
+                        REQUIRE(result.GetValue(row, col) == 1);
+                // matrix b
+                for (int row = 2; row < 8; ++row)
+                    for (int col = 0; col < 3; ++col)
+                        REQUIRE(result.GetValue(row, col) == 3);
+            }
+        }
+    }
 	//TODO: Test concat
 }
 

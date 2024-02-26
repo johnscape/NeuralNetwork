@@ -28,8 +28,8 @@ public:
 	 */
 	enum class ConcatType
 	{
-		BY_ROW,
-		BY_COLUMN
+		BY_ROW, /// Concatenate the matrix by adding the new rows
+		BY_COLUMN /// Concatenate the matrix by adding new columns
 	};
 
 	/**
