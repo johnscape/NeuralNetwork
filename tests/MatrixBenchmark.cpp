@@ -1,7 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 #include "../include/NeuralNetwork/Matrix.h"
-#include "../include/NeuralNetwork/MatrixException.hpp"
 
 TEST_CASE("Matrix benchmarks")
 {
@@ -13,7 +12,7 @@ TEST_CASE("Matrix benchmarks")
     medium.FillWithRandom();
     large.FillWithRandom();
 
-    /*BENCHMARK("Matrix addition small")
+    BENCHMARK("Matrix addition small")
     {
         return small + small;
     };
@@ -39,35 +38,6 @@ TEST_CASE("Matrix benchmarks")
     };
 
     BENCHMARK("Matrix multiplication large")
-    {
-        return large * large;
-    };*/
-    BENCHMARK("Matrix multiplication - small naive")
-    {
-        return small.SlowMultiply(small);
-    };
-
-    BENCHMARK("Matrix multiplication - medium naive")
-    {
-        return medium.SlowMultiply(medium);
-    };
-
-    BENCHMARK("Matrix multiplication - large naive")
-    {
-        return large.SlowMultiply(large);
-    };
-
-    BENCHMARK("Matrix multiplication - small SIMD")
-    {
-        return small * small;
-    };
-
-    BENCHMARK("Matrix multiplication - medium SIMD")
-    {
-        return medium * medium;
-    };
-
-    BENCHMARK("Matrix multiplication - large SIMD")
     {
         return large * large;
     };
