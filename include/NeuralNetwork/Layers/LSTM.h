@@ -72,20 +72,6 @@ public:
     */
     virtual void SetTrainingMode(bool mode, bool recursive = false);
 
-    /**
-     * @brief Returns the input weight from a selected gate.
-     * @param weight The selected gate
-     * @return Matrix pointer of the specified input weight
-    */
-    Matrix& GetWeight(unsigned char weight);
-
-    /**
-     * @brief Returns the bias from a selected gate.
-     * @param weight The selected gate
-     * @return Matrix pointer of the specified bias
-    */
-    Matrix& GetBias(unsigned char weight);
-
 	/**
 	 * @brief Returns the input weight from a selected gate.
 	 * @param gate The selected gate
@@ -114,18 +100,34 @@ public:
 	virtual rapidjson::Value SaveToJSONObject(rapidjson::Document& document) const;
 
 private:
-    std::list<Matrix> Weights;
-    std::list<Matrix> Biases;
+    Matrix ForgetGateWeight;
+    Matrix ForgetGateBias;
 
-	std::list<Matrix> WeightErrors;
-	std::list<Matrix> BiasErrors;
+    Matrix InputGateSigmoidWeight;
+    Matrix InputGateSigmoidBias;
+    Matrix InputGateTanhWeight;
+    Matrix InputGateTanhBias;
 
-    std::list<Matrix> SavedStates, SavedCells, Gate1, Gate2, Gate3, Gate4;
+    Matrix OutputGateWeight;
+    Matrix OutputGateBias;
 
     Matrix CellState;
     Matrix InnerState;
 
     unsigned int CellStateSize;
+    unsigned int InputSize;
+
+    Matrix ForgetGateWeightError;
+    Matrix ForgetGateBiasError;
+
+    Matrix InputGateSigmoidWeightError;
+    Matrix InputGateSigmoidBiasError;
+    Matrix InputGateTanhWeightError;
+    Matrix InputGateTanhBiasError;
+
+    Matrix OutputGateWeightError;
+    Matrix OutputGateBiasError;
+
 
     ActivationFunction* Tanh;
     ActivationFunction* Sig;

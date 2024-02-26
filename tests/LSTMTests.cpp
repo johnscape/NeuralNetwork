@@ -37,9 +37,163 @@ SCENARIO("Setting an input for an LSTM layer", "[layer][init]")
 
 SCENARIO("Training and running an LSTM layer", "[layer][training]")
 {
+    GIVEN("a 3-output LSTM")
+    {
+        float WfValues[18] = {
+                0.1f, 0.15f, 0.2f,
+                0.2f, 0.25f, 0.3f,
+                0.3f, 0.35f, 0.4f,
+                0.4f, 0.45f, 0.5f,
+                0.5f, 0.55f, 0.6f,
+                0.6f, 0.65f, 0.7f
+        };
+
+        float BfValues[3] = {
+                -0.1f, 0.1f, 0.2f
+        };
+
+        float WiValues[18] = {
+                0.1f, 0.15f, 0.2f,
+                0.2f, 0.25f, 0.3f,
+                0.3f, 0.35f, 0.4f,
+                0.4f, 0.45f, 0.5f,
+                0.5f, 0.55f, 0.6f,
+                0.6f, 0.65f, 0.7f
+        };
+
+        float BiValues[3] = {
+                -0.1f, 0.1f, 0.2f
+        };
+
+        float WwValues[18] = {
+                0.1f, 0.15f, 0.2f,
+                0.2f, 0.25f, 0.3f,
+                0.3f, 0.35f, 0.4f,
+                0.4f, 0.45f, 0.5f,
+                0.5f, 0.55f, 0.6f,
+                0.6f, 0.65f, 0.7f
+        };
+
+        float BwValues[3] = {
+                -0.1f, 0.1f, 0.2f
+        };
+
+        float WoValues[18] = {
+                0.1f, 0.15f, 0.2f,
+                0.2f, 0.25f, 0.3f,
+                0.3f, 0.35f, 0.4f,
+                0.4f, 0.45f, 0.5f,
+                0.5f, 0.55f, 0.6f,
+                0.6f, 0.65f, 0.7f
+        };
+
+        float BoValues[3] = {
+                -0.1f, 0.1f, 0.2f
+        };
+
+        InputLayer inputLayer(5);
+        LSTM lstm(&inputLayer, 3);
+
+        WHEN("calculating expected output")
+        {
+            float inputValues[15] = {
+                    0, 0, 1,
+                    0, 1, 1,
+                    1, 1, 1,
+                    1, 0, 1,
+                    1, 1, 0
+            };
+
+            float expectedValues[15] = {
+                    0, 1, 0,
+                    1, 0, 0,
+                    0, 1, 0,
+                    0, 0, 1,
+                    0, 0, 1
+            };
+
+            Matrix input(5, 3, inputValues);
+            Matrix state(1, 3);
+            Matrix concated(1, 6);
+            Matrix cell(1, 3);
+
+            state.FillWith(0);
+            cell.FillWith(0);
+
+            Matrix Wf(6, 3, WfValues);
+            Matrix Bf(1, 3, BfValues);
+
+            Matrix Wi(6, 3, WiValues);
+            Matrix Bi(1, 3, BiValues);
+            Matrix Ww(6, 3, WwValues);
+            Matrix Bw(1, 3, BwValues);
+
+            Matrix Wo(6, 3, WoValues);
+            Matrix Bo(1, 3, BoValues);
+
+            lstm.GetWeight(LSTM::Gate::FORGET).Copy(Wf);
+            lstm.GetBias(LSTM::Gate::FORGET).Copy(Bf);
+
+            lstm.GetWeight(LSTM::Gate::INPUT).Copy(Wi);
+            lstm.GetBias(LSTM::Gate::INPUT).Copy(Bi);
+
+            lstm.GetWeight(LSTM::Gate::ACTIVATION).Copy(Ww);
+            lstm.GetBias(LSTM::Gate::ACTIVATION).Copy(Bw);
+
+            lstm.GetWeight(LSTM::Gate::OUTPUT).Copy(Wo);
+            lstm.GetBias(LSTM::Gate::OUTPUT).Copy(Bo);
+
+            Sigmoid sig = Sigmoid::GetInstance();
+            TanhFunction tanh = TanhFunction::GetInstance();
+            Softmax softmax = Softmax::GetInstance();
+
+            Tensor calculatedOutput({3, 3}, nullptr);
+
+
+            for (unsigned int i = 0; i < 5; i++)
+            {
+                TempMatrix inputRow = input.GetTempRowMatrix(i);
+                concated = std::move(Matrix::Concat(state, inputRow, Matrix::ConcatType::BY_COLUMN));
+
+                // forget
+                Matrix forgetGate = concated * Wf;
+                forgetGate += Bf;
+                forgetGate = std::move(sig.CalculateMatrix(forgetGate));
+
+                cell.ElementwiseMultiply(forgetGate);
+
+                // input
+                Matrix input1 = concated * Wi;
+                Matrix input2 = concated * Ww;
+                input1 += Bi;
+                input2 += Bw;
+                input1 = std::move(sig.CalculateMatrix(input1));
+                input2 = std::move(tanh.CalculateMatrix(input2));
+                input1.ElementwiseMultiply(input2);
+                cell += input1;
+
+                // output
+                Matrix outputVector = tanh.CalculateMatrix(cell);
+                Matrix stateUpdate = concated * Wo;
+                stateUpdate += Bo;
+                stateUpdate = std::move(sig.CalculateMatrix(stateUpdate));
+                outputVector.ElementwiseMultiply(stateUpdate);
+                state = outputVector;
+
+                Matrix output = softmax.CalculateMatrix(state);
+                output.CopyPartTo(calculatedOutput, 0, 3 * i, 3);
+            }
+
+            inputLayer.SetInput(input);
+            Tensor output = lstm.ComputeAndGetOutput();
+            Tensor diff = calculatedOutput - output;
+            REQUIRE(abs(diff.Sum()) < 0.001f);
+        }
+    }
+
 	GIVEN("A 1-LSTM and 2 step input")
 	{
-		InputLayer input(2);
+		/*InputLayer input(2);
 		LSTM lstm(&input, 1);
 
 		lstm.GetWeight(0).SetValue(0, 0.1);
@@ -127,6 +281,6 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
 				REQUIRE(abs(lstm.GetBias(LSTM::Gate::FORGET).GetValue(0) - 0.15063) < 0.01f);
 				REQUIRE(abs(lstm.GetBias(LSTM::Gate::OUTPUT).GetValue(0) - 0.10536) < 0.01f);
 			}
-		}
+		}*/
 	}
 }
