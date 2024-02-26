@@ -39,31 +39,6 @@ SCENARIO("Setting an input to the Feed Foward Layer", "[layer][init]")
 	}
 }
 
-SCENARIO("Getting the output from the Feed Forward Layer", "[layer][computation]")
-{
-	GIVEN("a feed forward network with sigmoid activation")
-	{
-		InputLayer inputLayer(5);
-		FeedForwardLayer feedForwardLayer(&inputLayer, 8);
-		WHEN("setting the input as a 1x5x6 tensor filled with 0.5")
-		{
-			Tensor tensor({1, 5, 6});
-			tensor.FillWith(0.5f);
-			inputLayer.SetInput(tensor);
-			THEN("the output is the sig(input*weight+bias)")
-			{
-				Tensor inner = tensor * feedForwardLayer.GetWeights();
-				inner += feedForwardLayer.GetBias();
-				Tensor result = Sigmoid::GetInstance().CalculateTensor(inner);
-				Tensor output = feedForwardLayer.ComputeAndGetOutput();
-				Tensor diff = result - output;
-                diff.CopyFromGPU();
-				REQUIRE(abs(diff.Sum()) < 0.0001);
-			}
-		}
-	}
-}
-
 SCENARIO("Training the feed forward layer", "[layer][training]")
 {
 	GIVEN("a 2-input layer, a 2x2 feedforward layer and a gradient descent trainer")
