@@ -19,7 +19,8 @@ enum class ActivationFunctionType
 	BINARYSTEP,
 	SIGMOID,
 	TANH,
-	RELU
+	RELU,
+    SOFTMAX
 };
 
 /**
@@ -419,6 +420,9 @@ private:
 	TanhFunction() = default;
 };
 
+/**
+ * @brief RELU activation function
+ */
 class RELU : public ActivationFunction
 {
 public:
@@ -536,6 +540,100 @@ private:
 	RELU() = default;
 };
 
+/**
+ * @brief Softmax activation function
+ */
+class Softmax : public ActivationFunction
+{
+public:
+    static Softmax& GetInstance()
+    {
+        static Softmax func;
+        return func;
+    }
+
+    Matrix CalculateMatrix(const Matrix& input) override
+    {
+        float sum = 0;
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            sum += expf(input[i]);
+        Matrix result(input);
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            result.SetValue(i, expf(input[i]) / sum);
+        return result;
+    }
+
+    Matrix CalculateDerivateMatrix(const Matrix& output, float extra) override
+    {
+        Matrix result(output);
+        for (unsigned int i = 0; i < result.GetElementCount(); i++)
+            result.SetValue(i, Derivate(result.GetValue(i)));
+        return result;
+    }
+
+    void CalculateInto(const Matrix& input, Matrix& target) override
+    {
+        float sum = 0;
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            sum += expf(input[i]);
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            target.SetValue(i, expf(input[i]) / sum);
+    }
+
+    void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra) override
+    {
+        for (unsigned int i = 0; i < target.GetElementCount(); i++)
+            target.SetValue(i, Derivate(output.GetValue(i)));
+    }
+
+    Tensor CalculateTensor(const Tensor& input) override
+    {
+        float sum = 0;
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            sum += expf(input.GetValue(i));
+        Tensor result(input);
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            result.SetValue(i, expf(input.GetValue(i)) / sum);
+        return result;
+    }
+
+    Tensor CalculateDerivateTensor(const Tensor& output, float extra) override
+    {
+        Tensor result(output);
+        for (unsigned int i = 0; i < result.GetElementCount(); i++)
+            result.SetValue(i, Derivate(result.GetValue(i)));
+        return result;
+    }
+
+    void CalculateInto(const Tensor& input, Tensor& target) override
+    {
+        float sum = 0;
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            sum += expf(input.GetValue(i));
+        for (unsigned int i = 0; i < input.GetElementCount(); i++)
+            target.SetValue(i, expf(input.GetValue(i)) / sum);
+    }
+
+    void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) override
+    {
+        for (unsigned int i = 0; i < target.GetElementCount(); i++)
+            target.SetValue(i, Derivate(output.GetValue(i)));
+    }
+
+    ActivationFunctionType GetActivationFunctionType() override
+    {
+        return ActivationFunctionType::SOFTMAX;
+    }
+
+private:
+    static float Derivate(float value)
+    {
+        return value * (1 - value);
+    }
+
+    Softmax() = default;
+};
+
 class ActivationFunctionLibrary
 {
 public:
@@ -552,5 +650,7 @@ public:
 			return &Sigmoid::GetInstance();
 		if (type == ActivationFunctionType::RELU)
 			return &RELU::GetInstance();
+        if (type == ActivationFunctionType::SOFTMAX)
+            return &Softmax::GetInstance();
 	}
 };
