@@ -169,6 +169,11 @@ public:
 	*/
 	void SetId(unsigned int id);
 
+    /**
+     * Resets a layer's internal state, if it has one
+     */
+    virtual void Reset();
+
 protected:
 	Layer* LayerInput;
 	Tensor Output;

@@ -163,3 +163,8 @@ std::string Layer::SaveToJSON(const char *fileName) const
 
 	return std::string(buffer.GetString());
 }
+
+void Layer::Reset()
+{
+
+}
