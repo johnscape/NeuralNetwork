@@ -99,6 +99,11 @@ public:
 	 */
 	virtual rapidjson::Value SaveToJSONObject(rapidjson::Document& document) const;
 
+    /**
+     * Resets the cell and hidden state
+     */
+    void Reset();
+
 private:
     Matrix ForgetGateWeight;
     Matrix ForgetGateBias;
@@ -131,6 +136,9 @@ private:
 
     ActivationFunction* Tanh;
     ActivationFunction* Sig;
+    ActivationFunction* Soft;
+
+    Matrix SavedCellStates;
 
     void UpdateWeightErrors(Matrix& gateIError, Matrix& gateRError, Matrix& inputTranspose, Matrix& dGate, Matrix& outputTranspose, int weight);
 };

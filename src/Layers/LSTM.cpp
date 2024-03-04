@@ -6,30 +6,31 @@
 
 LSTM::LSTM(Layer* inputLayer, unsigned int cellStateSize) :
     Layer(inputLayer), CellStateSize(cellStateSize), CellState(1, cellStateSize), InputSize(inputLayer->OutputSize()),
-	InnerState(1, cellStateSize + inputLayer->OutputSize())
+	InnerState(1, cellStateSize)
 {
-    ForgetGateWeight.Reset(InnerState.GetColumnCount(), CellStateSize);
+    ForgetGateWeight.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     ForgetGateBias.Reset(1, CellStateSize);
-    ForgetGateWeightError.Reset(InnerState.GetColumnCount(), CellStateSize);
+    ForgetGateWeightError.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     ForgetGateBiasError.Reset(1, CellStateSize);
 
-    InputGateSigmoidWeight.Reset(InnerState.GetColumnCount(), CellStateSize);
+    InputGateSigmoidWeight.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     InputGateSigmoidBias.Reset(1, CellStateSize);
-    InputGateSigmoidWeightError.Reset(InnerState.GetColumnCount(), CellStateSize);
+    InputGateSigmoidWeightError.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     InputGateSigmoidBiasError.Reset(1, CellStateSize);
 
-    InputGateTanhWeight.Reset(InnerState.GetColumnCount(), CellStateSize);
+    InputGateTanhWeight.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     InputGateTanhBias.Reset(1, CellStateSize);
-    InputGateTanhWeightError.Reset(InnerState.GetColumnCount(), CellStateSize);
+    InputGateTanhWeightError.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     InputGateTanhBiasError.Reset(1, CellStateSize);
 
-    OutputGateWeight.Reset(InnerState.GetColumnCount(), CellStateSize);
+    OutputGateWeight.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     OutputGateBias.Reset(1, CellStateSize);
-    OutputGateWeightError.Reset(InnerState.GetColumnCount(), CellStateSize);
+    OutputGateWeightError.Reset(InnerState.GetColumnCount() + inputLayer->OutputSize(), CellStateSize);
     OutputGateBiasError.Reset(1, CellStateSize);
 
     Tanh = &TanhFunction::GetInstance();
     Sig = &Sigmoid::GetInstance();
+    Soft = &Softmax::GetInstance();
 }
 
 LSTM::~LSTM()
@@ -57,7 +58,54 @@ Layer* LSTM::Clone()
 
 void LSTM::Compute()
 {
+    Matrix hiddenState(1, CellStateSize + LayerInput->OutputSize());
+    Matrix gateA, gateB;
 
+    Tensor input = LayerInput->ComputeAndGetOutput();
+    TempMatrix inputAsRows = input.ToMatrixByRows();
+    Output = Tensor({inputAsRows.GetRowCount(), CellStateSize}, nullptr);
+
+    if (TrainingMode)
+        SavedCellStates = Matrix(inputAsRows.GetRowCount() + 1, inputAsRows.GetColumnCount());
+
+    for (unsigned int r = 0; r < inputAsRows.GetRowCount(); ++r)
+    {
+        InnerState.CopyPartTo(hiddenState, 0, 0, CellStateSize);
+        inputAsRows.CopyPartTo(hiddenState, r * inputAsRows.GetColumnCount(), CellStateSize, inputAsRows.GetColumnCount());
+
+        // Forget gate
+        gateA = std::move(hiddenState * ForgetGateWeight);
+        gateA += ForgetGateBias;
+        gateB = std::move(Sig->CalculateMatrix(gateA));
+        CellState.ElementwiseMultiply(gateB);
+
+        // Input gate
+        gateA = std::move(hiddenState * InputGateSigmoidWeight);
+        gateA += InputGateSigmoidBias;
+        gateA = std::move(Sig->CalculateMatrix(gateA));
+
+        gateB = std::move(hiddenState * InputGateTanhWeight);
+        gateB += InputGateTanhBias;
+        gateB = std::move(Tanh->CalculateMatrix(gateB));
+
+        gateA.ElementwiseMultiply(gateB);
+        CellState += gateA;
+
+        if (TrainingMode)
+            CellState.CopyPartTo(SavedCellStates, 0, (r + 1) * CellStateSize, CellStateSize);
+
+        // Output gate
+        Tanh->CalculateInto(CellState, gateB);
+        gateA = std::move(hiddenState * OutputGateWeight);
+        gateA += OutputGateBias;
+        gateA = std::move(Sig->CalculateMatrix(gateA));
+        gateA.ElementwiseMultiply(gateB);
+        InnerState.Copy(gateA);
+
+        CellState.CopyPartTo(Output, 0, r * CellStateSize, CellStateSize);
+    }
+
+    Output = std::move(Soft->CalculateTensor(Output));
 }
 
 Tensor& LSTM::GetOutput()
@@ -186,4 +234,10 @@ rapidjson::Value LSTM::SaveToJSONObject(rapidjson::Document& document) const
 	layer.AddMember("biases", biases, document.GetAllocator());*/
 
 	return layer;
+}
+
+void LSTM::Reset()
+{
+    CellState.FillWith(0);
+    InnerState.FillWith(0);
 }

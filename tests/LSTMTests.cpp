@@ -91,28 +91,23 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
                 -0.1f, 0.1f, 0.2f
         };
 
-        InputLayer inputLayer(5);
+        float inputValues[15] = {
+                0, 0, 1,
+                0, 1, 1,
+                1, 1, 1,
+                1, 0, 1,
+                1, 1, 0
+        };
+
+        Matrix input(5, 3, inputValues);
+
+        InputLayer inputLayer(3);
         LSTM lstm(&inputLayer, 3);
+
+        inputLayer.SetInput(input);
 
         WHEN("calculating expected output")
         {
-            float inputValues[15] = {
-                    0, 0, 1,
-                    0, 1, 1,
-                    1, 1, 1,
-                    1, 0, 1,
-                    1, 1, 0
-            };
-
-            float expectedValues[15] = {
-                    0, 1, 0,
-                    1, 0, 0,
-                    0, 1, 0,
-                    0, 0, 1,
-                    0, 0, 1
-            };
-
-            Matrix input(5, 3, inputValues);
             Matrix state(1, 3);
             Matrix concated(1, 6);
             Matrix cell(1, 3);
@@ -147,7 +142,7 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
             TanhFunction tanh = TanhFunction::GetInstance();
             Softmax softmax = Softmax::GetInstance();
 
-            Tensor calculatedOutput({3, 3}, nullptr);
+            Tensor calculatedOutput({5, 3}, nullptr);
 
 
             for (unsigned int i = 0; i < 5; i++)
@@ -184,103 +179,41 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
                 output.CopyPartTo(calculatedOutput, 0, 3 * i, 3);
             }
 
-            inputLayer.SetInput(input);
             Tensor output = lstm.ComputeAndGetOutput();
             Tensor diff = calculatedOutput - output;
+            calculatedOutput.CopyFromGPU();
             REQUIRE(abs(diff.Sum()) < 0.001f);
         }
+        WHEN("training the layer")
+        {
+            float expectedValues[15] = {
+                    0, 1, 0,
+                    1, 0, 0,
+                    0, 1, 0,
+                    0, 0, 1,
+                    0, 0, 1
+            };
+
+            lstm.Reset();
+
+            Tensor expectedOutput({5, 3}, expectedValues);
+            Tensor firstOutput = lstm.ComputeAndGetOutput();
+
+            MSE mse;
+            float firstError = mse.Loss(firstOutput, expectedOutput);
+            GradientDescent trainer(&mse, &lstm, 0.5f);
+
+            Tensor inputTensor(input);
+            trainer.Train(inputTensor, expectedOutput);
+
+            lstm.Reset();
+            Tensor secondOutput = lstm.ComputeAndGetOutput();
+            float secondError = mse.Loss(secondOutput, expectedOutput);
+
+            THEN("the second error is lower")
+            {
+                REQUIRE(secondError < firstError);
+            }
+        }
     }
-
-	GIVEN("A 1-LSTM and 2 step input")
-	{
-		/*InputLayer input(2);
-		LSTM lstm(&input, 1);
-
-		lstm.GetWeight(0).SetValue(0, 0.1);
-		lstm.GetWeight(0).SetValue(1, 0.7);
-		lstm.GetWeight(0).SetValue(2, 0.45);
-
-		lstm.GetWeight(1).SetValue(0, 0.8);
-		lstm.GetWeight(1).SetValue(1, 0.95);
-		lstm.GetWeight(1).SetValue(2, 0.8);
-
-		lstm.GetWeight(2).SetValue(0, 0.15);
-		lstm.GetWeight(2).SetValue(1, 0.45);
-		lstm.GetWeight(2).SetValue(2, 0.25);
-
-		lstm.GetWeight(3).SetValue(0, 0.25);
-		lstm.GetWeight(3).SetValue(1, 0.6);
-		lstm.GetWeight(3).SetValue(2, 0.4);
-
-		lstm.GetBias(0).SetValue(0, 0.15);
-		lstm.GetBias(1).SetValue(0, 0.65);
-		lstm.GetBias(2).SetValue(0, 0.2);
-		lstm.GetBias(3).SetValue(0, 0.1);
-
-		Tensor inputValue({2, 2}, nullptr);
-		inputValue.SetValue(0, 1);
-		inputValue.SetValue(1, 2);
-		inputValue.SetValue(2, 0.5);
-		inputValue.SetValue(3, 3);
-
-		Tensor expectedValues({2, 1}, nullptr);
-		expectedValues.SetValue(0, 0.5);
-		expectedValues.SetValue(1, 1.25);
-
-		WHEN("Running the network")
-		{
-			input.SetInput(inputValue);
-			Tensor output = lstm.ComputeAndGetOutput();
-
-			THEN("The difference between the expected one is negligible")
-			{
-				REQUIRE(abs(output.GetValue(0) - 0.53631) < 0.001);
-				REQUIRE(abs(output.GetValue(1) - 0.77197) < 0.001);
-			}
-		}
-		WHEN("training the network")
-		{
-			GradientDescent trainer(new MSE(), &lstm, 0.1);
-			trainer.Train(inputValue, expectedValues);
-
-			THEN("The new weights should be different")
-			{
-				Matrix wa(3, 1);
-				Matrix wi(3, 1);
-				Matrix wf(3, 1);
-				Matrix wo(3, 1);
-
-				wa.SetValue(0, 0.45267);
-				wa.SetValue(1, 0.25922);
-				wa.SetValue(2, 0.15104);
-
-				wi.SetValue(0, 0.95022);
-				wi.SetValue(1, 0.80067);
-				wi.SetValue(2, 0.80006);
-
-				wf.SetValue(0, 0.70031);
-				wf.SetValue(1, 0.45189);
-				wf.SetValue(2, 0.10034);
-
-				wo.SetValue(0, 0.60259);
-				wo.SetValue(1, 0.41626);
-				wo.SetValue(2, 0.25297);
-
-				Matrix waDiff = wa - lstm.GetWeight(LSTM::Gate::ACTIVATION);
-				Matrix wiDiff = wi - lstm.GetWeight(LSTM::Gate::INPUT);
-				Matrix wfDiff = wf - lstm.GetWeight(LSTM::Gate::FORGET);
-				Matrix woDiff = wo - lstm.GetWeight(LSTM::Gate::OUTPUT);
-
-				REQUIRE(abs(waDiff.Sum()) < 0.01f);
-				REQUIRE(abs(wiDiff.Sum()) < 0.01f);
-				REQUIRE(abs(wfDiff.Sum()) < 0.01f);
-				REQUIRE(abs(woDiff.Sum()) < 0.01f);
-
-				REQUIRE(abs(lstm.GetBias(LSTM::Gate::ACTIVATION).GetValue(0) - 0.20364) < 0.01f);
-				REQUIRE(abs(lstm.GetBias(LSTM::Gate::INPUT).GetValue(0) - 0.65028) < 0.01f);
-				REQUIRE(abs(lstm.GetBias(LSTM::Gate::FORGET).GetValue(0) - 0.15063) < 0.01f);
-				REQUIRE(abs(lstm.GetBias(LSTM::Gate::OUTPUT).GetValue(0) - 0.10536) < 0.01f);
-			}
-		}*/
-	}
 }
