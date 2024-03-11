@@ -5,6 +5,8 @@
 #include <cublas_v2.h>
 #endif
 
+#define GLOBAL_ID (blockIdx.x + gridDim.x * blockIdx.y) * (blockDim.x * blockDim.y) + (threadIdx.x + blockDim.x * threadIdx.y)
+
 // Kernels
 
 // A: aRows x aCols -

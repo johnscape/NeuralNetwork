@@ -19,6 +19,14 @@ namespace GPUActivation
 	Matrix TanhInvCalculate(const Matrix& original);
 	void TanhInvCalculate(const Matrix& from, Matrix& to);
 
+    /// Softmax
+
+    Matrix SoftmaxCalculate(const Matrix& original);
+    void SoftmaxCalculate(const Matrix& from, Matrix& to);
+
+    Matrix SoftmaxInvCalculate(const Matrix& original);
+    void SoftmaxInvCalculate(const Matrix& from, Matrix& to);
+
     // Tensors
 
     ///Sigmoid
@@ -34,4 +42,12 @@ namespace GPUActivation
 
     Tensor TanhInvCalculate(const Tensor& original);
     void TanhInvCalculate(const Tensor& from, Tensor& to);
+
+    /// Softmax
+    Tensor SoftmaxCalculate(const Tensor& original);
+    void SoftmaxCalculate(const Tensor& from, Tensor& to);
+
+    Tensor SoftmaxInvCalculate(const Tensor& original);
+    void SoftmaxInvCalculate(const Tensor& from, Tensor& to);
+
 }

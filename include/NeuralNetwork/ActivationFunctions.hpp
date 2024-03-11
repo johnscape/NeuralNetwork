@@ -554,6 +554,7 @@ public:
 
     Matrix CalculateMatrix(const Matrix& input) override
     {
+#if USE_GPU==NO_GPU
         float sum = 0;
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             sum += expf(input[i]);
@@ -561,33 +562,49 @@ public:
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             result.SetValue(i, expf(input[i]) / sum);
         return result;
+#elif USE_GPU==USING_CUDA
+        return GPUActivation::SoftmaxCalculate(input);
+#endif
     }
 
     Matrix CalculateDerivateMatrix(const Matrix& output, float extra) override
     {
+#if USE_GPU==NO_GPU
         Matrix result(output);
         for (unsigned int i = 0; i < result.GetElementCount(); i++)
             result.SetValue(i, Derivate(result.GetValue(i)));
         return result;
+#elif USE_GPU==USING_CUDA
+        return GPUActivation::SoftmaxInvCalculate(output);
+#endif
     }
 
     void CalculateInto(const Matrix& input, Matrix& target) override
     {
+#if USE_GPU==NO_GPU
         float sum = 0;
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             sum += expf(input[i]);
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             target.SetValue(i, expf(input[i]) / sum);
+#elif USE_GPU==USING_CUDA
+        GPUActivation::SoftmaxCalculate(input, target);
+#endif
     }
 
     void CalculateDerivateInto(const Matrix& output, Matrix& target, float extra) override
     {
+#if USE_GPU==NO_GPU
         for (unsigned int i = 0; i < target.GetElementCount(); i++)
             target.SetValue(i, Derivate(output.GetValue(i)));
+#elif USE_GPU==USING_CUDA
+        GPUActivation::SoftmaxInvCalculate(output, target);
+#endif
     }
 
     Tensor CalculateTensor(const Tensor& input) override
     {
+#if USE_GPU==NO_GPU
         float sum = 0;
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             sum += expf(input.GetValue(i));
@@ -595,29 +612,44 @@ public:
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             result.SetValue(i, expf(input.GetValue(i)) / sum);
         return result;
+#elif USE_GPU==USING_CUDA
+        return GPUActivation::SoftmaxCalculate(input);
+#endif
     }
 
     Tensor CalculateDerivateTensor(const Tensor& output, float extra) override
     {
+#if USE_GPU==NO_GPU
         Tensor result(output);
         for (unsigned int i = 0; i < result.GetElementCount(); i++)
             result.SetValue(i, Derivate(result.GetValue(i)));
         return result;
+#elif USE_GPU==USING_CUDA
+        return GPUActivation::SoftmaxInvCalculate(output);
+#endif
     }
 
     void CalculateInto(const Tensor& input, Tensor& target) override
     {
+#if USE_GPU==NO_GPU
         float sum = 0;
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             sum += expf(input.GetValue(i));
         for (unsigned int i = 0; i < input.GetElementCount(); i++)
             target.SetValue(i, expf(input.GetValue(i)) / sum);
+#elif USE_GPU==USING_CUDA
+        GPUActivation::SoftmaxCalculate(input, target);
+#endif
     }
 
     void CalculateDerivateInto(const Tensor& output, Tensor& target, float extra) override
     {
+#if USE_GPU==NO_GPU
         for (unsigned int i = 0; i < target.GetElementCount(); i++)
             target.SetValue(i, Derivate(output.GetValue(i)));
+#elif USE_GPU==USING_CUDA
+        GPUActivation::SoftmaxInvCalculate(output, target);
+#endif
     }
 
     ActivationFunctionType GetActivationFunctionType() override
