@@ -164,6 +164,7 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
                 input2 += Bw;
                 input1 = std::move(sig.CalculateMatrix(input1));
                 input2 = std::move(tanh.CalculateMatrix(input2));
+
                 input1.ElementwiseMultiply(input2);
                 cell += input1;
 
@@ -173,15 +174,16 @@ SCENARIO("Training and running an LSTM layer", "[layer][training]")
                 stateUpdate += Bo;
                 stateUpdate = std::move(sig.CalculateMatrix(stateUpdate));
                 outputVector.ElementwiseMultiply(stateUpdate);
-                state = outputVector;
+                state = std::move(outputVector);
 
-                Matrix output = softmax.CalculateMatrix(state);
-                output.CopyPartTo(calculatedOutput, 0, 3 * i, 3);
+                Matrix o = softmax.CalculateMatrix(state);
+                o.CopyPartTo(calculatedOutput, 0, 3 * i, 3);
             }
 
             Tensor output = lstm.ComputeAndGetOutput();
             Tensor diff = calculatedOutput - output;
-            calculatedOutput.CopyFromGPU();
+            diff.CopyFromGPU();
+
             REQUIRE(abs(diff.Sum()) < 0.001f);
         }
         WHEN("training the layer")

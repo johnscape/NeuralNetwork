@@ -17,7 +17,6 @@
 #if USE_GPU==USING_CUDA
 #include <cuda_runtime.h>
 #include "NeuralNetwork/CUDAFunctions.cuh"
-#define CUDA_MALLOC(s) cudaMalloc((void**)&GPUValues, sizeof(float) * s)
 #endif // USE_GPU
 
 #define MATRIX_SIZE Rows * Columns
@@ -696,8 +695,19 @@ Matrix Matrix::Concat(const Matrix& a, const Matrix& b, unsigned int dim)
 					b.Values + (row + 1) * b.GetColumnCount(),
 					result.Values + row * result.GetColumnCount() + a.GetColumnCount());
 #if USE_GPU==USING_CUDA
-            CUDAOperations::CopyPartTo(result, a, row * result.GetColumnCount(), row * a.GetColumnCount(), a.GetColumnCount());
-            CUDAOperations::CopyPartTo(result, b, row * result.GetColumnCount(), row * b.GetColumnCount(), b.GetColumnCount());
+            CUDAOperations::CopyPartTo(
+                    result,
+                    a,
+                    row * result.GetColumnCount(),
+                    row * a.GetColumnCount(),
+                    a.GetColumnCount());
+
+            CUDAOperations::CopyPartTo(
+                    result,
+                    b,
+                    row * result.GetColumnCount() + a.GetColumnCount(),
+                    row * b.GetColumnCount(),
+                    b.GetColumnCount());
 #endif
 		}
 		return result;

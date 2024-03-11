@@ -59,7 +59,7 @@ Layer* LSTM::Clone()
 void LSTM::Compute()
 {
     Matrix hiddenState(1, CellStateSize + LayerInput->OutputSize());
-    Matrix gateA, gateB;
+    Matrix gateA, gateB, outputStep;
 
     Tensor input = LayerInput->ComputeAndGetOutput();
     TempMatrix inputAsRows = input.ToMatrixByRows();
@@ -102,10 +102,10 @@ void LSTM::Compute()
         gateA.ElementwiseMultiply(gateB);
         InnerState.Copy(gateA);
 
-        CellState.CopyPartTo(Output, 0, r * CellStateSize, CellStateSize);
+        outputStep = std::move(Soft->CalculateMatrix(InnerState));
+        outputStep.CopyPartTo(Output, 0, r * CellStateSize, CellStateSize);
     }
 
-    Output = std::move(Soft->CalculateTensor(Output));
 }
 
 Tensor& LSTM::GetOutput()

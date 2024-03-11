@@ -666,12 +666,8 @@ Tensor Tensor::operator*(const Matrix &other) const
 
 Tensor &Tensor::operator+=(const Matrix &other)
 {
-	if (!IsSameShape(other))
-	{
-		if (Shape[1] == other.GetColumnCount())
-			return RowBasedAddition(other, true);
-		throw TensorShapeException();
-	}
+    if (!IsSameShape(other))
+        throw TensorShapeException();
 
 	Tensor t(*this);
 #if USE_GPU==USING_CUDA
